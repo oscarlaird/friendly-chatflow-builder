@@ -6,8 +6,8 @@ import { MessageInput } from './MessageInput';
 import { Workflow } from '../workflow/Workflow';
 import { useChats } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { MessageCircle, GitBranch } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -60,32 +60,36 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         </Tabs>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Chat Section */}
-        <div 
-          className={`flex-1 flex flex-col ${
-            activeView === 'workflow' ? 'hidden md:flex' : 'flex'
-          }`}
-        >
-          <MessageList dataState={dataState} loading={loading} />
-          <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
-        </div>
-
-        {/* Vertical separator for desktop view */}
-        <div className="hidden md:block">
-          <Separator orientation="vertical" />
-        </div>
-
-        {/* Workflow Section */}
-        <div 
-          className={`md:w-1/2 flex-shrink-0 overflow-hidden ${
-            activeView === 'chat' ? 'hidden md:block' : 'block'
-          }`}
-        >
-          <div className="h-[calc(100vh-180px)] overflow-auto p-4">
+      {/* Mobile view (tabs) */}
+      <div className="md:hidden flex-1">
+        {activeView === 'chat' ? (
+          <div className="flex-1 flex flex-col h-full">
+            <MessageList dataState={dataState} loading={loading} />
+            <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
+          </div>
+        ) : (
+          <div className="h-[calc(100vh-180px)] overflow-auto">
             <Workflow steps={workflowSteps} />
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Desktop view (resizable panels) */}
+      <div className="hidden md:block flex-1">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className="flex-1 flex flex-col h-full">
+              <MessageList dataState={dataState} loading={loading} />
+              <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
+            </div>
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Workflow steps={workflowSteps} />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );

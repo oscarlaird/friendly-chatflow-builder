@@ -1,7 +1,7 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
-import { Info } from "lucide-react";
 
 interface WorkflowStep {
   function_name: string;
@@ -16,25 +16,32 @@ interface WorkflowProps {
 }
 
 export const Workflow = ({ steps }: WorkflowProps) => {
+  const handleRunWorkflow = () => {
+    console.log("Running workflow...");
+    // Implementation for running the workflow would go here
+  };
+
   if (!steps || steps.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 flex items-center justify-center">
-          <div className="flex flex-col items-center text-center gap-2">
-            <Info className="h-10 w-10 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center text-center gap-2">
+          <Info className="h-10 w-10 text-muted-foreground opacity-50" />
+          <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="h-full overflow-hidden flex flex-col">
-      <CardHeader className="bg-muted/30 border-b">
-        <CardTitle>Workflow Steps</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 overflow-y-auto">
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
+        <h2 className="text-lg font-semibold">Workflow Steps</h2>
+        <Button size="sm" className="gap-1" onClick={handleRunWorkflow}>
+          <Play className="h-4 w-4" />
+          Run Workflow
+        </Button>
+      </div>
+      <div className="p-4 overflow-y-auto flex-1">
         <div className="space-y-1">
           {steps.map((step, index) => (
             <WorkflowStep
@@ -49,7 +56,7 @@ export const Workflow = ({ steps }: WorkflowProps) => {
             />
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
