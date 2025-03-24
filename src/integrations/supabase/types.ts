@@ -71,7 +71,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id: string
+          id?: string
           is_example?: boolean | null
           title: string
           uid: string

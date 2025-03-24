@@ -130,7 +130,7 @@ export const useMessages = (chatId: string | null) => {
         chat_id: chatId,
         role,
         content,
-        type: 'text_message',
+        type: 'text_message' as const, // Using a const assertion to match the enum type
         uid: user.id,
       };
       
