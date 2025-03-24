@@ -151,11 +151,19 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 export const useSelectedChat = (chatId: string | null) => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(false);
+  const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const { user } = useAuth();
+
+  // Function to update status based on chat data
+  const updateStatus = (chatData: Chat | null) => {
+    const newStatus = getCodeRewritingStatus(chatData || undefined);
+    setCodeRewritingStatus(newStatus);
+  };
 
   useEffect(() => {
     if (!user || !chatId) {
       setSelectedChat(null);
+      setCodeRewritingStatus('thinking');
       return;
     }
 
@@ -174,6 +182,7 @@ export const useSelectedChat = (chatId: string | null) => {
         }
 
         setSelectedChat(data);
+        updateStatus(data);
       } catch (error) {
         console.error('Error fetching chat:', error);
       } finally {
@@ -201,9 +210,18 @@ export const useSelectedChat = (chatId: string | null) => {
           if (payload.eventType === 'DELETE') {
             // Handle chat deletion if needed
             setSelectedChat(null);
+            setCodeRewritingStatus('thinking');
           } else {
             // Handle chat insertion or update
-            setSelectedChat(payload.new as Chat);
+            const updatedChat = payload.new as Chat;
+            setSelectedChat(updatedChat);
+            
+            // Force update the status on every chat update
+            console.log('Forcefully updating code rewriting status for:', updatedChat);
+            console.log('requires_code_rewrite:', updatedChat.requires_code_rewrite);
+            console.log('code_approved:', updatedChat.code_approved);
+            
+            updateStatus(updatedChat);
           }
         }
       )
@@ -216,8 +234,6 @@ export const useSelectedChat = (chatId: string | null) => {
       supabase.removeChannel(channel);
     };
   }, [chatId, user]);
-
-  const codeRewritingStatus = getCodeRewritingStatus(selectedChat || undefined);
 
   return {
     selectedChat,
