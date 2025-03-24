@@ -26,7 +26,7 @@ export const useMessages = (chatId: string | null) => {
     messagesData.forEach((message) => {
       newState.messages[message.id] = {
         ...message,
-        coderunEvents: [],
+        coderunEvents: [] as string[],
       };
     });
 
@@ -34,15 +34,12 @@ export const useMessages = (chatId: string | null) => {
     codeRunEventsData.forEach((event) => {
       newState.coderunEvents[event.id] = {
         ...event,
-        browserEvents: [],
+        browserEvents: [] as string[],
       };
 
       // Link this event to its parent message
       if (newState.messages[event.message_id]) {
-        newState.messages[event.message_id].coderunEvents = [
-          ...(newState.messages[event.message_id].coderunEvents || []),
-          event.id,
-        ];
+        newState.messages[event.message_id].coderunEvents.push(event.id);
       }
     });
 
@@ -52,10 +49,7 @@ export const useMessages = (chatId: string | null) => {
 
       // Link this event to its parent coderun event
       if (newState.coderunEvents[event.coderun_event_id]) {
-        newState.coderunEvents[event.coderun_event_id].browserEvents = [
-          ...(newState.coderunEvents[event.coderun_event_id].browserEvents || []),
-          event.id,
-        ];
+        newState.coderunEvents[event.coderun_event_id].browserEvents.push(event.id);
       }
     });
 
@@ -147,7 +141,7 @@ export const useMessages = (chatId: string | null) => {
         const newState = { ...prevState };
         newState.messages[data.id] = {
           ...data,
-          coderunEvents: [],
+          coderunEvents: [] as string[],
         };
         return newState;
       });
@@ -189,7 +183,7 @@ export const useMessages = (chatId: string | null) => {
             const newState = { ...prevState };
             newState.messages[newMessage.id] = {
               ...newMessage,
-              coderunEvents: [],
+              coderunEvents: [] as string[],
             };
             return newState;
           });
@@ -205,7 +199,7 @@ export const useMessages = (chatId: string | null) => {
             const newState = { ...prevState };
             if (newState.messages[updatedMessage.id]) {
               // Preserve the coderunEvents references
-              const coderunEvents = newState.messages[updatedMessage.id].coderunEvents;
+              const coderunEvents = newState.messages[updatedMessage.id].coderunEvents || [];
               newState.messages[updatedMessage.id] = {
                 ...updatedMessage,
                 coderunEvents,
@@ -233,15 +227,13 @@ export const useMessages = (chatId: string | null) => {
               // Add the new coderun event
               newState.coderunEvents[newEvent.id] = {
                 ...newEvent,
-                browserEvents: [],
+                browserEvents: [] as string[],
               };
               
               // Link to parent message
               if (newState.messages[newEvent.message_id]) {
-                newState.messages[newEvent.message_id].coderunEvents = [
-                  ...(newState.messages[newEvent.message_id].coderunEvents || []),
-                  newEvent.id,
-                ];
+                const currentEvents = newState.messages[newEvent.message_id].coderunEvents || [];
+                newState.messages[newEvent.message_id].coderunEvents = [...currentEvents, newEvent.id];
               }
               
               return newState;
@@ -258,7 +250,7 @@ export const useMessages = (chatId: string | null) => {
             const newState = { ...prevState };
             if (newState.coderunEvents[updatedEvent.id]) {
               // Preserve the browserEvents references
-              const browserEvents = newState.coderunEvents[updatedEvent.id].browserEvents;
+              const browserEvents = newState.coderunEvents[updatedEvent.id].browserEvents || [];
               newState.coderunEvents[updatedEvent.id] = {
                 ...updatedEvent,
                 browserEvents,
@@ -286,10 +278,8 @@ export const useMessages = (chatId: string | null) => {
             
             // Link to parent coderun event
             if (newState.coderunEvents[newEvent.coderun_event_id]) {
-              newState.coderunEvents[newEvent.coderun_event_id].browserEvents = [
-                ...(newState.coderunEvents[newEvent.coderun_event_id].browserEvents || []),
-                newEvent.id,
-              ];
+              const currentEvents = newState.coderunEvents[newEvent.coderun_event_id].browserEvents || [];
+              newState.coderunEvents[newEvent.coderun_event_id].browserEvents = [...currentEvents, newEvent.id];
             }
             
             return newState;
