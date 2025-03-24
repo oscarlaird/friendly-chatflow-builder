@@ -39,7 +39,8 @@ export const useMessages = (chatId: string | null) => {
 
       // Link this event to its parent message
       if (newState.messages[event.message_id]) {
-        newState.messages[event.message_id].coderunEvents.push(event.id);
+        const currentEvents = newState.messages[event.message_id].coderunEvents || [];
+        newState.messages[event.message_id].coderunEvents = [...currentEvents, event.id];
       }
     });
 
@@ -49,7 +50,8 @@ export const useMessages = (chatId: string | null) => {
 
       // Link this event to its parent coderun event
       if (newState.coderunEvents[event.coderun_event_id]) {
-        newState.coderunEvents[event.coderun_event_id].browserEvents.push(event.id);
+        const currentEvents = newState.coderunEvents[event.coderun_event_id].browserEvents || [];
+        newState.coderunEvents[event.coderun_event_id].browserEvents = [...currentEvents, event.id];
       }
     });
 
@@ -124,7 +126,7 @@ export const useMessages = (chatId: string | null) => {
         chat_id: chatId,
         role,
         content,
-        type: 'text_message' as const, // Using a const assertion to match the enum type
+        type: 'text_message' as const,
         uid: user.id,
       };
       
@@ -172,10 +174,13 @@ export const useMessages = (chatId: string | null) => {
           const newMessage = payload.new as Message;
           setDataState(prevState => {
             const newState = { ...prevState };
-            newState.messages[newMessage.id] = {
-              ...newMessage,
-              coderunEvents: [] as string[],
-            };
+            // Check if the message already exists to avoid duplicates
+            if (!newState.messages[newMessage.id]) {
+              newState.messages[newMessage.id] = {
+                ...newMessage,
+                coderunEvents: [] as string[],
+              };
+            }
             return newState;
           });
         }

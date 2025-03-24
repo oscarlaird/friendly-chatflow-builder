@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useChats } from '@/hooks/useChats';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -23,6 +24,18 @@ const SidebarIcon = () => {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const { chats, loading: chatsLoading } = useChats();
+  
+  // Automatically select the most recent chat
+  useEffect(() => {
+    if (!chatsLoading && chats.length > 0 && !selectedChatId) {
+      // Sort chats by created_at date (newest first) and select the first one
+      const sortedChats = [...chats].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setSelectedChatId(sortedChats[0].id);
+    }
+  }, [chats, chatsLoading, selectedChatId]);
 
   if (loading) {
     return (

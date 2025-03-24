@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
@@ -10,6 +10,19 @@ interface MessageListProps {
 }
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
+  // Add a ref to track content changes for highlighting
+  const contentRef = useRef<HTMLParagraphElement>(null);
+  const [highlight, setHighlight] = useState(false);
+  
+  // Highlight content when it changes
+  useEffect(() => {
+    if (contentRef.current) {
+      setHighlight(true);
+      const timer = setTimeout(() => setHighlight(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [message.content]);
+  
   return (
     <div
       className={`flex ${
@@ -17,13 +30,13 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
       } mb-4`}
     >
       <div
-        className={`max-w-[80%] rounded-lg p-4 ${
+        className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
           message.role === 'user'
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted'
-        }`}
+        } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p ref={contentRef} className="whitespace-pre-wrap">{message.content}</p>
       </div>
     </div>
   );
@@ -34,10 +47,23 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
   coderunEvents: Record<string, any>;
   browserEvents: Record<string, any>;
 }) => {
+  // Add a ref to track content changes for highlighting
+  const contentRef = useRef<HTMLParagraphElement>(null);
+  const [highlight, setHighlight] = useState(false);
+  
+  // Highlight content when it changes
+  useEffect(() => {
+    if (contentRef.current) {
+      setHighlight(true);
+      const timer = setTimeout(() => setHighlight(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [message.content]);
+  
   return (
     <div className="flex justify-start mb-4">
-      <Card className="max-w-[80%] p-4">
-        <p className="whitespace-pre-wrap mb-2">{message.content}</p>
+      <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <p ref={contentRef} className="whitespace-pre-wrap mb-2">{message.content}</p>
         
         {message.coderunEvents && message.coderunEvents.length > 0 && (
           <div className="mt-2 border-t pt-2">
@@ -67,10 +93,23 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
 };
 
 const ScreenRecordingBubble = ({ message }: { message: Message }) => {
+  // Add a ref to track content changes for highlighting
+  const contentRef = useRef<HTMLParagraphElement>(null);
+  const [highlight, setHighlight] = useState(false);
+  
+  // Highlight content when it changes
+  useEffect(() => {
+    if (contentRef.current) {
+      setHighlight(true);
+      const timer = setTimeout(() => setHighlight(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [message.content]);
+  
   return (
     <div className="flex justify-start mb-4">
-      <Card className="max-w-[80%] p-4">
-        <p className="whitespace-pre-wrap mb-2">{message.content}</p>
+      <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <p ref={contentRef} className="whitespace-pre-wrap mb-2">{message.content}</p>
         {message.screenrecording_url && (
           <div className="mt-2 border-t pt-2">
             <p className="text-sm font-medium mb-1">Screen Recording:</p>
@@ -91,7 +130,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [Object.keys(messages).length, messages]);
 
   const messageList = Object.values(messages).sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
