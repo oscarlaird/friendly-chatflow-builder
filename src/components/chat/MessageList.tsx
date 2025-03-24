@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
+import { IntroMessage } from './IntroMessage';
 
 interface MessageListProps {
   dataState: DataState;
@@ -164,10 +165,12 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
         </div>
       ) : messageList.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-40 text-center">
+          <IntroMessage />
           <p className="text-muted-foreground">No messages yet. Start a conversation!</p>
         </div>
       ) : (
         <>
+          <IntroMessage />
           {messageList.map(renderMessage)}
           <div ref={scrollRef} />
         </>
