@@ -1,3 +1,4 @@
+
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -77,6 +78,19 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
         <h2 className="text-lg font-semibold">Workflow</h2>
         <div className="flex items-center gap-2">
           <StatusBadge status={codeRewritingStatus} />
+          
+          {/* Debug badges for raw values */}
+          {selectedChat && (
+            <>
+              <Badge variant="outline" className={selectedChat.code_approved ? "bg-green-100" : "bg-red-100"}>
+                code_approved: {selectedChat.code_approved ? "true" : "false"}
+              </Badge>
+              <Badge variant="outline" className={selectedChat.requires_code_rewrite === true ? "bg-blue-100" : selectedChat.requires_code_rewrite === false ? "bg-green-100" : "bg-gray-100"}>
+                requires_rewrite: {selectedChat.requires_code_rewrite === null ? "null" : selectedChat.requires_code_rewrite.toString()}
+              </Badge>
+            </>
+          )}
+          
           <Button size="sm" className="gap-1" onClick={handleRunWorkflow} disabled={codeRewritingStatus !== 'done'}>
             <Play className="h-4 w-4" />
             Run Workflow
