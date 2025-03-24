@@ -151,13 +151,11 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 export const useSelectedChat = (chatId: string | null) => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(false);
-  const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user || !chatId) {
       setSelectedChat(null);
-      setCodeRewritingStatus('thinking');
       return;
     }
 
@@ -176,8 +174,6 @@ export const useSelectedChat = (chatId: string | null) => {
         }
 
         setSelectedChat(data);
-        // Calculate status when chat is initially loaded
-        setCodeRewritingStatus(getCodeRewritingStatus(data));
       } catch (error) {
         console.error('Error fetching chat:', error);
       } finally {
@@ -202,44 +198,12 @@ export const useSelectedChat = (chatId: string | null) => {
         },
         (payload) => {
           console.log('Real-time chat update received:', payload);
-          
           if (payload.eventType === 'DELETE') {
             // Handle chat deletion if needed
             setSelectedChat(null);
-            setCodeRewritingStatus('thinking');
           } else {
             // Handle chat insertion or update
-            const oldChat = selectedChat;
-            const newChat = payload.new as Chat;
-            
-            // Log changes to requires_code_rewrite and code_approved
-            if (oldChat) {
-              if (oldChat.requires_code_rewrite !== newChat.requires_code_rewrite) {
-                console.log('Chat update details:', {
-                  id: newChat.id,
-                  requires_code_rewrite: {
-                    old: oldChat.requires_code_rewrite,
-                    new: newChat.requires_code_rewrite,
-                    changed: true
-                  },
-                  code_approved: {
-                    old: oldChat.code_approved,
-                    new: newChat.code_approved,
-                    changed: oldChat.code_approved !== newChat.code_approved
-                  },
-                  status: {
-                    old: getCodeRewritingStatus(oldChat),
-                    new: getCodeRewritingStatus(newChat)
-                  }
-                });
-              }
-            }
-            
-            setSelectedChat(newChat);
-            
-            // Recalculate the status whenever the chat is updated
-            const newStatus = getCodeRewritingStatus(newChat);
-            setCodeRewritingStatus(newStatus);
+            setSelectedChat(payload.new as Chat);
           }
         }
       )
@@ -252,6 +216,8 @@ export const useSelectedChat = (chatId: string | null) => {
       supabase.removeChannel(channel);
     };
   }, [chatId, user]);
+
+  const codeRewritingStatus = getCodeRewritingStatus(selectedChat || undefined);
 
   return {
     selectedChat,
