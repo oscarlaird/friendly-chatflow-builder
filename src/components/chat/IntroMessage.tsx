@@ -24,9 +24,10 @@ export const IntroMessage = () => {
       <Card className="max-w-[85%] p-5 shadow-md border-l-4 border-l-primary">
         <div className="flex items-center gap-3 mb-5">
           <Avatar className="h-12 w-12 bg-primary/10 ring-2 ring-primary/20">
+            <AvatarImage src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=150&q=80" alt="Robot Avatar" />
             <AvatarFallback className="text-primary font-semibold">M</AvatarFallback>
           </Avatar>
-          <p className="text-xl font-semibold text-primary">I am Marco, your ai underling</p>
+          <p className="text-xl font-semibold text-primary">I am Marco, your AI underling</p>
         </div>
         
         <p className="text-lg mb-5">You can teach me to do your job</p>
@@ -84,8 +85,7 @@ export const IntroMessage = () => {
         </div>
         
         <div className="mb-4">
-          <p className="text-lg font-medium mb-2">What do you want me to do?</p>
-          <p className="text-lg">Try to be detailed</p>
+          <p className="text-lg font-medium mb-2">What do you want me to do? (Try to be detailed)</p>
         </div>
         
         <p className="text-lg mt-4 text-primary">
