@@ -66,6 +66,8 @@ export type Database = {
           created_at: string | null
           id: string
           is_example: boolean | null
+          script: string | null
+          steps: Json | null
           title: string
           uid: string
         }
@@ -73,6 +75,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          script?: string | null
+          steps?: Json | null
           title: string
           uid: string
         }
@@ -80,6 +84,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          script?: string | null
+          steps?: Json | null
           title?: string
           uid?: string
         }

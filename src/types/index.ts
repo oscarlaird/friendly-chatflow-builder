@@ -28,6 +28,8 @@ export interface Chat {
   created_at: string;
   uid: string;
   is_example?: boolean;
+  steps?: any;
+  script?: string;
 }
 
 export interface CoderunEvent {
