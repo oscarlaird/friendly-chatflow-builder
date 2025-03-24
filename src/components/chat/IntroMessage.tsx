@@ -13,9 +13,9 @@ import {
   Slack,
   Trello,
   Figma,
-  Jira,
-  Vscode,
-  Notion
+  Code,           // Instead of Vscode
+  ClipboardList,  // Instead of Notion
+  Briefcase      // Instead of Jira
 } from 'lucide-react';
 
 export const IntroMessage = () => {
@@ -70,10 +70,10 @@ export const IntroMessage = () => {
               <div className="flex items-center gap-2">
                 <Slack size={22} />
                 <Trello size={22} />
-                <Jira size={22} />
+                <Briefcase size={22} />
                 <Figma size={22} />
-                <Vscode size={22} />
-                <Notion size={22} />
+                <Code size={22} />
+                <ClipboardList size={22} />
               </div>
             </li>
             <li className="flex items-center gap-3">
