@@ -63,27 +63,33 @@ export type Database = {
       }
       chats: {
         Row: {
+          code_approved: boolean | null
           created_at: string | null
           id: string
           is_example: boolean | null
+          requires_code_rewrite: boolean | null
           script: string | null
           steps: Json | null
           title: string
           uid: string
         }
         Insert: {
+          code_approved?: boolean | null
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
           title: string
           uid: string
         }
         Update: {
+          code_approved?: boolean | null
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
           title?: string

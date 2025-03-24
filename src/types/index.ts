@@ -30,6 +30,8 @@ export interface Chat {
   is_example?: boolean;
   steps?: any;
   script?: string;
+  requires_code_rewrite?: boolean | null;
+  code_approved?: boolean;
 }
 
 export interface CoderunEvent {
@@ -72,3 +74,5 @@ export interface DataState {
     [eventId: string]: BrowserEvent;
   };
 }
+
+export type CodeRewritingStatus = 'thinking' | 'rewriting_code' | 'done';

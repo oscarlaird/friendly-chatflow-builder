@@ -4,7 +4,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { Workflow } from '../workflow/Workflow';
-import { useChats } from '@/hooks/useChats';
+import { useChats, useSelectedChat } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, GitBranch } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -16,11 +16,11 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
   const { chats } = useChats();
+  const { selectedChat } = useSelectedChat(chatId);
   const [sending, setSending] = useState(false);
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>('chat');
 
-  const currentChat = chats.find(chat => chat.id === chatId);
-  const workflowSteps = currentChat?.steps as any[] || [];
+  const workflowSteps = selectedChat?.steps as any[] || [];
 
   const handleSendMessage = async (content: string) => {
     if (!chatId) return;

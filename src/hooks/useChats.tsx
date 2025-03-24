@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Chat } from '@/types';
+import { Chat, CodeRewritingStatus } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -130,5 +130,87 @@ export const useChats = () => {
     deleteChat,
     updateChatTitle,
     refreshChats: fetchChats,
+  };
+};
+
+// Helper utility to determine code rewriting status
+export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingStatus => {
+  if (!chat) return 'thinking';
+  
+  if (chat.requires_code_rewrite === null) {
+    return 'thinking';
+  } else if (chat.requires_code_rewrite === false) {
+    return 'done';
+  } else {
+    // requires_code_rewrite is true
+    return chat.code_approved ? 'done' : 'rewriting_code';
+  }
+};
+
+// Hook to subscribe to a specific chat's updates
+export const useSelectedChat = (chatId: string | null) => {
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user || !chatId) {
+      setSelectedChat(null);
+      return;
+    }
+
+    const fetchChat = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('id', chatId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching chat:', error);
+          return;
+        }
+
+        setSelectedChat(data);
+      } catch (error) {
+        console.error('Error fetching chat:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChat();
+
+    // Subscribe to changes for this specific chat
+    const channel = supabase
+      .channel(`chat-updates-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chats',
+          filter: `id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log('Chat updated:', payload);
+          setSelectedChat(payload.new as Chat);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, user]);
+
+  const codeRewritingStatus = getCodeRewritingStatus(selectedChat || undefined);
+
+  return {
+    selectedChat,
+    loading,
+    codeRewritingStatus
   };
 };

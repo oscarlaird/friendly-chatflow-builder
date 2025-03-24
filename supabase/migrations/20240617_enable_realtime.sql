@@ -10,3 +10,9 @@ BEGIN
   EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I;', table_name);
 END;
 $$;
+
+-- Enable realtime for needed tables
+SELECT enable_realtime('chats');
+SELECT enable_realtime('messages');
+SELECT enable_realtime('coderun_events');
+SELECT enable_realtime('browser_events');

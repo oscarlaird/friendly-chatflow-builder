@@ -3,6 +3,9 @@ import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
 import { useMessages } from "@/hooks/useMessages";
+import { Badge } from "@/components/ui/badge";
+import { CodeRewritingStatus } from "@/types";
+import { useSelectedChat } from "@/hooks/useChats";
 
 interface WorkflowStep {
   function_name: string;
@@ -17,8 +20,22 @@ interface WorkflowProps {
   chatId: string | null;
 }
 
+const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
+  switch (status) {
+    case 'thinking':
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Thinking...</Badge>;
+    case 'rewriting_code':
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">Rewriting Code</Badge>;
+    case 'done':
+      return <Badge variant="outline" className="bg-green-100 text-green-800">Ready</Badge>;
+    default:
+      return null;
+  }
+};
+
 export const Workflow = ({ steps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
+  const { codeRewritingStatus } = useSelectedChat(chatId);
 
   const handleRunWorkflow = async () => {
     if (!chatId) return;
@@ -46,10 +63,13 @@ export const Workflow = ({ steps, chatId }: WorkflowProps) => {
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
         <h2 className="text-lg font-semibold">Workflow</h2>
-        <Button size="sm" className="gap-1" onClick={handleRunWorkflow}>
-          <Play className="h-4 w-4" />
-          Run Workflow
-        </Button>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={codeRewritingStatus} />
+          <Button size="sm" className="gap-1" onClick={handleRunWorkflow} disabled={codeRewritingStatus !== 'done'}>
+            <Play className="h-4 w-4" />
+            Run Workflow
+          </Button>
+        </div>
       </div>
       <div className="p-4 overflow-y-auto flex-1">
         <div className="space-y-1">
