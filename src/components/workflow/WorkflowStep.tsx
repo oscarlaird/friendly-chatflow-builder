@@ -11,8 +11,8 @@ interface WorkflowStepProps {
   stepNumber: number;
   functionName: string;
   description: string;
-  exampleInput?: Record<string, any>;
-  exampleOutput?: Record<string, any>;
+  input?: Record<string, any>;
+  output?: Record<string, any>;
   requiresBrowser?: boolean;
   isLast?: boolean;
 }
@@ -21,16 +21,16 @@ export const WorkflowStep = ({
   stepNumber,
   functionName,
   description,
-  exampleInput,
-  exampleOutput,
+  input,
+  output,
   requiresBrowser = false,
   isLast = false,
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
   
-  const hasInput = exampleInput && Object.keys(exampleInput).length > 0;
-  const hasOutput = exampleOutput && Object.keys(exampleOutput).length > 0;
+  const hasInput = input && Object.keys(input).length > 0;
+  const hasOutput = output && Object.keys(output).length > 0;
   
   return (
     <div className="relative">
@@ -68,7 +68,7 @@ export const WorkflowStep = ({
                       Example Input
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-2">
-                      <KeyValueDisplay data={exampleInput} />
+                      <KeyValueDisplay data={input} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
@@ -80,7 +80,7 @@ export const WorkflowStep = ({
                       Example Output
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-2">
-                      <KeyValueDisplay data={exampleOutput} />
+                      <KeyValueDisplay data={output} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}

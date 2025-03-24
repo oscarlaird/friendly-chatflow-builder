@@ -7,8 +7,8 @@ import { useMessages } from "@/hooks/useMessages";
 interface WorkflowStep {
   function_name: string;
   description: string;
-  example_input?: Record<string, any>;
-  example_output?: Record<string, any>;
+  input?: Record<string, any>;
+  output?: Record<string, any>;
   requires_browser?: boolean;
 }
 
@@ -59,8 +59,8 @@ export const Workflow = ({ steps, chatId }: WorkflowProps) => {
               stepNumber={index + 1}
               functionName={step.function_name}
               description={step.description}
-              exampleInput={step.example_input}
-              exampleOutput={step.example_output}
+              input={step.input}
+              output={step.output}
               requiresBrowser={step.requires_browser}
               isLast={index === steps.length - 1}
             />
