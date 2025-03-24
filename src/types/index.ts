@@ -11,7 +11,7 @@ export interface Message {
   content: string;
   created_at: string;
   type: 'text_message' | 'code_run' | 'screen_recording';
-  coderunEvents?: string[];
+  coderunEvents: string[];
   // Additional fields from Supabase schema
   code_output?: any;
   steps?: any;
