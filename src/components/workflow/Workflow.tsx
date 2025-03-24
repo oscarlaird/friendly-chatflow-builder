@@ -37,7 +37,6 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
 export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId);
-  // Keep local steps in sync with the selected chat
   const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
   
   // Update steps when selectedChat changes
@@ -49,6 +48,12 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       setSteps(propSteps);
     }
   }, [selectedChat, propSteps]);
+
+  // Force render when these values change
+  useEffect(() => {
+    console.log("Workflow rendering with status:", codeRewritingStatus);
+    console.log("Selected chat:", selectedChat);
+  }, [codeRewritingStatus, selectedChat]);
 
   const handleRunWorkflow = async () => {
     if (!chatId) return;
