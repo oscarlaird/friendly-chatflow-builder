@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { DataState, Message } from '@/types';
+import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 
@@ -45,8 +45,8 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
 
 const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: { 
   message: Message; 
-  coderunEvents: Record<string, any>;
-  browserEvents: Record<string, any>;
+  coderunEvents: Record<string, CoderunEvent>;
+  browserEvents: Record<string, BrowserEvent>;
 }) => {
   // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLParagraphElement>(null);
@@ -80,7 +80,17 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
                   
                   {event?.browserEvents && event.browserEvents.length > 0 && (
                     <div className="mt-1 ml-2">
-                      <p className="text-xs text-muted-foreground">Browser Events: {event.browserEvents.length}</p>
+                      <p className="text-xs font-medium text-muted-foreground">Browser Events:</p>
+                      {event.browserEvents.map(beId => {
+                        const browserEvent = browserEvents[beId];
+                        return (
+                          <div key={beId} className="pl-2 border-l border-muted-foreground/20 mt-1">
+                            <pre className="text-xs overflow-auto max-h-24 bg-muted/50 p-1 rounded whitespace-pre-wrap">
+                              {JSON.stringify(browserEvent?.data, null, 2)}
+                            </pre>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
