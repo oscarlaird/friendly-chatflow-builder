@@ -173,6 +173,12 @@ export const useSelectedChat = (chatId: string | null) => {
           return;
         }
 
+        console.log('Initial chat data loaded:', {
+          id: data.id,
+          requires_code_rewrite: data.requires_code_rewrite,
+          code_approved: data.code_approved
+        });
+        
         setSelectedChat(data);
       } catch (error) {
         console.error('Error fetching chat:', error);
@@ -198,6 +204,31 @@ export const useSelectedChat = (chatId: string | null) => {
         },
         (payload) => {
           console.log('Real-time chat update received:', payload);
+          
+          // Debug logging specifically for code rewrite fields
+          if (payload.eventType === 'UPDATE') {
+            const oldData = payload.old as Chat;
+            const newData = payload.new as Chat;
+            
+            console.log('Chat update details:', {
+              id: newData.id,
+              requires_code_rewrite: {
+                old: oldData.requires_code_rewrite,
+                new: newData.requires_code_rewrite,
+                changed: oldData.requires_code_rewrite !== newData.requires_code_rewrite
+              },
+              code_approved: {
+                old: oldData.code_approved,
+                new: newData.code_approved,
+                changed: oldData.code_approved !== newData.code_approved
+              },
+              status: {
+                old: getCodeRewritingStatus(oldData),
+                new: getCodeRewritingStatus(newData)
+              }
+            });
+          }
+          
           if (payload.eventType === 'DELETE') {
             // Handle chat deletion if needed
             setSelectedChat(null);
