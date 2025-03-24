@@ -161,15 +161,6 @@ export const useMessages = (chatId: string | null) => {
   useEffect(() => {
     if (!user || !chatId) return;
 
-    // Enable realtime for all relevant tables
-    const enableRealtimeQuery = async () => {
-      await supabase.rpc('enable_realtime', { table_name: 'messages' });
-      await supabase.rpc('enable_realtime', { table_name: 'coderun_events' });
-      await supabase.rpc('enable_realtime', { table_name: 'browser_events' });
-    };
-    
-    enableRealtimeQuery();
-
     // Subscribe to message changes
     const messageChannel = supabase
       .channel('schema-db-changes-messages')
