@@ -154,13 +154,6 @@ export const useSelectedChat = (chatId: string | null) => {
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const { user } = useAuth();
 
-  // Function to update status based on chat data
-  const updateStatus = (chatData: Chat | null) => {
-    const newStatus = getCodeRewritingStatus(chatData || undefined);
-    console.log('Updating status to:', newStatus, 'based on chat data:', chatData);
-    setCodeRewritingStatus(newStatus);
-  };
-
   useEffect(() => {
     if (!user || !chatId) {
       setSelectedChat(null);
@@ -184,7 +177,16 @@ export const useSelectedChat = (chatId: string | null) => {
 
         console.log('Initial chat data loaded:', data);
         setSelectedChat(data);
-        updateStatus(data);
+        
+        // Directly set the code rewriting status based on the data
+        if (data.requires_code_rewrite === null) {
+          setCodeRewritingStatus('thinking');
+        } else if (data.requires_code_rewrite === false) {
+          setCodeRewritingStatus('done');
+        } else {
+          // requires_code_rewrite is true
+          setCodeRewritingStatus(data.code_approved ? 'done' : 'rewriting_code');
+        }
       } catch (error) {
         console.error('Error fetching chat:', error);
       } finally {
@@ -222,12 +224,17 @@ export const useSelectedChat = (chatId: string | null) => {
             // Force update the local state
             setSelectedChat(updatedChat);
             
-            // Force update the code rewriting status
-            console.log('Forcefully updating code rewriting status for:', updatedChat);
-            console.log('requires_code_rewrite:', updatedChat.requires_code_rewrite);
-            console.log('code_approved:', updatedChat.code_approved);
+            // Directly set the code rewriting status based on the updated chat
+            console.log('Directly updating status based on:', updatedChat.requires_code_rewrite, updatedChat.code_approved);
             
-            updateStatus(updatedChat);
+            if (updatedChat.requires_code_rewrite === null) {
+              setCodeRewritingStatus('thinking');
+            } else if (updatedChat.requires_code_rewrite === false) {
+              setCodeRewritingStatus('done');
+            } else {
+              // requires_code_rewrite is true
+              setCodeRewritingStatus(updatedChat.code_approved ? 'done' : 'rewriting_code');
+            }
           }
         }
       )
