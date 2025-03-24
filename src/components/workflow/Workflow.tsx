@@ -1,4 +1,3 @@
-
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -6,6 +5,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { Badge } from "@/components/ui/badge";
 import { CodeRewritingStatus } from "@/types";
 import { useSelectedChat } from "@/hooks/useChats";
+import { useEffect, useState } from "react";
 
 interface WorkflowStep {
   function_name: string;
@@ -33,9 +33,21 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   }
 };
 
-export const Workflow = ({ steps, chatId }: WorkflowProps) => {
+export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
-  const { codeRewritingStatus } = useSelectedChat(chatId);
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId);
+  // Keep local steps in sync with the selected chat
+  const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
+  
+  // Update steps when selectedChat changes
+  useEffect(() => {
+    if (selectedChat?.steps) {
+      console.log("Steps updated from real-time update:", selectedChat.steps);
+      setSteps(selectedChat.steps as WorkflowStep[]);
+    } else {
+      setSteps(propSteps);
+    }
+  }, [selectedChat, propSteps]);
 
   const handleRunWorkflow = async () => {
     if (!chatId) return;
@@ -75,7 +87,7 @@ export const Workflow = ({ steps, chatId }: WorkflowProps) => {
         <div className="space-y-1">
           {steps.map((step, index) => (
             <WorkflowStep
-              key={index}
+              key={`${step.function_name}-${index}`}
               stepNumber={index + 1}
               functionName={step.function_name}
               description={step.description}

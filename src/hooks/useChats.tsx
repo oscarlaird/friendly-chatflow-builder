@@ -183,25 +183,36 @@ export const useSelectedChat = (chatId: string | null) => {
 
     fetchChat();
 
-    // Subscribe to changes for this specific chat
+    // Subscribe to changes for this specific chat using the proper channel format
+    console.log(`Setting up real-time subscription for chat ${chatId}`);
+    
     const channel = supabase
-      .channel(`chat-updates-${chatId}`)
+      .channel(`public:chats:id=eq.${chatId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'chats',
           filter: `id=eq.${chatId}`
         },
         (payload) => {
-          console.log('Chat updated:', payload);
-          setSelectedChat(payload.new as Chat);
+          console.log('Real-time chat update received:', payload);
+          if (payload.eventType === 'DELETE') {
+            // Handle chat deletion if needed
+            setSelectedChat(null);
+          } else {
+            // Handle chat insertion or update
+            setSelectedChat(payload.new as Chat);
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Supabase channel status for chat ${chatId}:`, status);
+      });
 
     return () => {
+      console.log(`Cleaning up real-time subscription for chat ${chatId}`);
       supabase.removeChannel(channel);
     };
   }, [chatId, user]);
