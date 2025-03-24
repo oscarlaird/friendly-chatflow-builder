@@ -157,6 +157,7 @@ export const useSelectedChat = (chatId: string | null) => {
   // Function to update status based on chat data
   const updateStatus = (chatData: Chat | null) => {
     const newStatus = getCodeRewritingStatus(chatData || undefined);
+    console.log('Updating status to:', newStatus, 'based on chat data:', chatData);
     setCodeRewritingStatus(newStatus);
   };
 
@@ -181,6 +182,7 @@ export const useSelectedChat = (chatId: string | null) => {
           return;
         }
 
+        console.log('Initial chat data loaded:', data);
         setSelectedChat(data);
         updateStatus(data);
       } catch (error) {
@@ -192,11 +194,11 @@ export const useSelectedChat = (chatId: string | null) => {
 
     fetchChat();
 
-    // Subscribe to changes for this specific chat using the proper channel format
+    // Subscribe to changes for this specific chat
     console.log(`Setting up real-time subscription for chat ${chatId}`);
     
     const channel = supabase
-      .channel(`public:chats:id=eq.${chatId}`)
+      .channel(`chat-updates-${chatId}`)
       .on(
         'postgres_changes',
         {
@@ -207,6 +209,7 @@ export const useSelectedChat = (chatId: string | null) => {
         },
         (payload) => {
           console.log('Real-time chat update received:', payload);
+          
           if (payload.eventType === 'DELETE') {
             // Handle chat deletion if needed
             setSelectedChat(null);
@@ -214,9 +217,12 @@ export const useSelectedChat = (chatId: string | null) => {
           } else {
             // Handle chat insertion or update
             const updatedChat = payload.new as Chat;
+            console.log('Updated chat data:', updatedChat);
+            
+            // Force update the local state
             setSelectedChat(updatedChat);
             
-            // Force update the status on every chat update
+            // Force update the code rewriting status
             console.log('Forcefully updating code rewriting status for:', updatedChat);
             console.log('requires_code_rewrite:', updatedChat.requires_code_rewrite);
             console.log('code_approved:', updatedChat.code_approved);

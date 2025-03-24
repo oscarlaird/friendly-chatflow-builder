@@ -1,4 +1,3 @@
-
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -6,7 +5,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { Badge } from "@/components/ui/badge";
 import { CodeRewritingStatus } from "@/types";
 import { useSelectedChat } from "@/hooks/useChats";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface WorkflowStep {
   function_name: string;
@@ -38,6 +37,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId);
   const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
+  const renderCount = useRef(0);
   
   // Update steps when selectedChat changes
   useEffect(() => {
@@ -51,8 +51,10 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
 
   // Force render when these values change
   useEffect(() => {
-    console.log("Workflow rendering with status:", codeRewritingStatus);
+    renderCount.current += 1;
+    console.log(`Workflow rendering #${renderCount.current} with status:`, codeRewritingStatus);
     console.log("Selected chat:", selectedChat);
+    // This useEffect dependency array ensures we re-render whenever the status changes
   }, [codeRewritingStatus, selectedChat]);
 
   const handleRunWorkflow = async () => {
