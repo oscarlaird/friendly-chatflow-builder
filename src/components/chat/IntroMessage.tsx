@@ -15,7 +15,7 @@ export const IntroMessage = () => {
           <p className="text-lg font-semibold text-primary">I am Marco, your ai underling</p>
         </div>
         
-        <p className="text-sm text-muted-foreground mb-3 italic">You can teach me to do your job</p>
+        <p className="text-sm text-muted-foreground mb-3">You can teach me to do your job</p>
         
         <div className="space-y-4 mb-4">
           <p className="text-sm font-medium">I excel at:</p>
@@ -54,9 +54,9 @@ export const IntroMessage = () => {
           </ul>
         </div>
         
-        <div className="mt-4 bg-slate-50 p-3 rounded-md border border-slate-100">
+        <div className="mt-4">
           <p className="text-sm font-medium mb-1">What do you want me to do?</p>
-          <p className="text-sm text-muted-foreground italic">Try to be detailed</p>
+          <p className="text-sm text-muted-foreground">Try to be detailed</p>
         </div>
         
         <p className="text-xs text-muted-foreground mt-4">
