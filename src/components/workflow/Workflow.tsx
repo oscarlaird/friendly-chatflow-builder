@@ -1,7 +1,8 @@
 
-import { Info, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
+import { useMessages } from "@/hooks/useMessages";
 
 interface WorkflowStep {
   function_name: string;
@@ -13,19 +14,28 @@ interface WorkflowStep {
 
 interface WorkflowProps {
   steps: WorkflowStep[];
+  chatId: string | null;
 }
 
-export const Workflow = ({ steps }: WorkflowProps) => {
-  const handleRunWorkflow = () => {
+export const Workflow = ({ steps, chatId }: WorkflowProps) => {
+  const { sendMessage } = useMessages(chatId);
+
+  const handleRunWorkflow = async () => {
+    if (!chatId) return;
+    
     console.log("Running workflow...");
-    // Implementation for running the workflow would go here
+    try {
+      // Send a message with type code_run
+      await sendMessage("Run workflow", "user", "code_run");
+    } catch (error) {
+      console.error("Error running workflow:", error);
+    }
   };
 
   if (!steps || steps.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center text-center gap-2">
-          <Info className="h-10 w-10 text-muted-foreground opacity-50" />
           <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
         </div>
       </div>
@@ -35,7 +45,7 @@ export const Workflow = ({ steps }: WorkflowProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
-        <h2 className="text-lg font-semibold">Workflow Steps</h2>
+        <h2 className="text-lg font-semibold">Workflow</h2>
         <Button size="sm" className="gap-1" onClick={handleRunWorkflow}>
           <Play className="h-4 w-4" />
           Run Workflow

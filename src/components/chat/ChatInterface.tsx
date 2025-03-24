@@ -69,7 +69,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           </div>
         ) : (
           <div className="h-[calc(100vh-180px)] overflow-auto">
-            <Workflow steps={workflowSteps} />
+            <Workflow steps={workflowSteps} chatId={chatId} />
           </div>
         )}
       </div>
@@ -77,7 +77,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       {/* Desktop view (resizable panels) */}
       <div className="hidden md:block flex-1">
         <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ResizablePanel defaultSize={50} minSize={30}>
+          <ResizablePanel defaultSize={60} minSize={30}>
             <div className="flex-1 flex flex-col h-full">
               <MessageList dataState={dataState} loading={loading} />
               <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
@@ -86,8 +86,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <Workflow steps={workflowSteps} />
+          <ResizablePanel defaultSize={40} minSize={30}>
+            <Workflow steps={workflowSteps} chatId={chatId} />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

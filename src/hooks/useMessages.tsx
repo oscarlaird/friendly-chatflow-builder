@@ -118,7 +118,11 @@ export const useMessages = (chatId: string | null) => {
   };
 
   // Create a new message
-  const sendMessage = async (content: string, role: 'user' | 'assistant' = 'user') => {
+  const sendMessage = async (
+    content: string, 
+    role: 'user' | 'assistant' = 'user',
+    type: 'text_message' | 'code_run' | 'screen_recording' = 'text_message'
+  ) => {
     if (!user || !chatId) return null;
     
     try {
@@ -126,7 +130,7 @@ export const useMessages = (chatId: string | null) => {
         chat_id: chatId,
         role,
         content,
-        type: 'text_message' as const,
+        type,
         uid: user.id,
       };
       
