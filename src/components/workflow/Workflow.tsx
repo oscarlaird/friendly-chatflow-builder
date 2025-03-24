@@ -5,7 +5,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { Badge } from "@/components/ui/badge";
 import { CodeRewritingStatus } from "@/types";
 import { useSelectedChat } from "@/hooks/useChats";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 interface WorkflowStep {
   function_name: string;
@@ -36,28 +36,8 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
 export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId);
-  
-  // Keep track of previous status to detect changes
-  const prevStatusRef = useRef<CodeRewritingStatus>(codeRewritingStatus);
-  
   // Keep local steps in sync with the selected chat
   const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
-  
-  // Log status changes for debugging
-  useEffect(() => {
-    if (prevStatusRef.current !== codeRewritingStatus) {
-      console.log('Status changed:', {
-        from: prevStatusRef.current,
-        to: codeRewritingStatus,
-        selectedChat: selectedChat ? {
-          id: selectedChat.id,
-          requires_code_rewrite: selectedChat.requires_code_rewrite,
-          code_approved: selectedChat.code_approved
-        } : null
-      });
-      prevStatusRef.current = codeRewritingStatus;
-    }
-  }, [codeRewritingStatus, selectedChat]);
   
   // Update steps when selectedChat changes
   useEffect(() => {
