@@ -19,12 +19,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     try {
       // Send user message
       await sendMessage(content);
-      
-      // Simulate assistant response for demo purposes
-      // In a real app, you'd wait for a real response from your backend
-      setTimeout(async () => {
-        await sendMessage(`This is a simulated response to: "${content}"`, 'assistant');
-      }, 1000);
     } finally {
       setSending(false);
     }
