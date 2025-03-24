@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import { LogOut } from 'lucide-react';
+import { LogOut, PanelLeftClose } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -30,8 +30,8 @@ const Index = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full">
         <Sidebar collapsible="icon">
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between">
@@ -49,7 +49,9 @@ const Index = () => {
 
         <SidebarInset className="flex flex-col">
           <div className="flex items-center p-4 border-b">
-            <SidebarTrigger className="mr-2" />
+            <SidebarTrigger className="mr-2">
+              <PanelLeftClose className="h-4 w-4" />
+            </SidebarTrigger>
             <h2 className="text-lg font-medium flex-1">
               {selectedChatId ? 'Chat' : 'Select or create a chat'}
             </h2>
