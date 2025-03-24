@@ -5,13 +5,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import { LogOut, PanelLeftClose } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeft } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
+
+// Simple component to use the correct icon based on sidebar state
+const SidebarIcon = () => {
+  const { open } = useSidebar();
+  return open ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />;
+};
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -32,7 +39,7 @@ const Index = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full">
-        <Sidebar collapsible="icon">
+        <Sidebar collapsible="offcanvas">
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between">
               <h1 className="text-lg font-bold">Chat App</h1>
@@ -50,7 +57,7 @@ const Index = () => {
         <SidebarInset className="flex flex-col">
           <div className="flex items-center p-4 border-b">
             <SidebarTrigger className="mr-2">
-              <PanelLeftClose className="h-4 w-4" />
+              <SidebarIcon />
             </SidebarTrigger>
             <h2 className="text-lg font-medium flex-1">
               {selectedChatId ? 'Chat' : 'Select or create a chat'}
