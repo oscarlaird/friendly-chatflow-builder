@@ -45,7 +45,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
   // For smaller screens, use tabs to switch between views
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="md:hidden border-b">
         <Tabs defaultValue="chat" value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">
@@ -62,21 +62,21 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       </div>
 
       {/* Mobile view (tabs) */}
-      <div className="md:hidden flex-1">
+      <div className="md:hidden flex-1 overflow-hidden">
         {activeView === 'chat' ? (
           <div className="flex-1 flex flex-col h-full">
             <MessageList dataState={dataState} loading={loading} />
             <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
           </div>
         ) : (
-          <div className="h-[calc(100vh-180px)] overflow-auto">
+          <div className="h-full overflow-hidden">
             <Workflow steps={initialWorkflowSteps} chatId={chatId} />
           </div>
         )}
       </div>
 
       {/* Desktop view (resizable panels) */}
-      <div className="hidden md:block flex-1">
+      <div className="hidden md:block flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={60} minSize={30}>
             <div className="flex-1 flex flex-col h-full">

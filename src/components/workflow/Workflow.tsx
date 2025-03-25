@@ -1,3 +1,4 @@
+
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -241,7 +242,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
           </Button>
         </div>
       </div>
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4">
             {(!steps || steps.length === 0) ? (
