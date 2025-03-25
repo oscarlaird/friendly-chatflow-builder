@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Chat } from "@/types";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WorkflowStep {
   function_name: string;
@@ -204,16 +205,6 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
     }
   };
 
-  if (!steps || steps.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center text-center gap-2">
-          <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
@@ -244,30 +235,39 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             size="sm" 
             className="gap-1 ml-2" 
             onClick={handleRunWorkflow} 
-            disabled={codeRewritingStatus !== 'done'}
+            disabled={codeRewritingStatus !== 'done' || !steps || steps.length === 0}
           >
             <Play className="h-4 w-4" />
             Run Workflow
           </Button>
         </div>
       </div>
-      <div className="p-4 overflow-y-auto flex-1">
-        <div className="space-y-1">
-          {steps.map((step, index) => (
-            <WorkflowStep
-              key={`${step.function_name}-${index}`}
-              stepNumber={index + 1}
-              functionName={step.function_name}
-              description={step.description}
-              input={step.input}
-              output={step.output}
-              requiresBrowser={step.requires_browser}
-              isLast={index === steps.length - 1}
-            />
-          ))}
+      <ScrollArea className="flex-1">
+        <div className="p-4">
+          {(!steps || steps.length === 0) ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center text-center gap-2">
+                <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {steps.map((step, index) => (
+                <WorkflowStep
+                  key={`${step.function_name}-${index}`}
+                  stepNumber={index + 1}
+                  functionName={step.function_name}
+                  description={step.description}
+                  input={step.input}
+                  output={step.output}
+                  requiresBrowser={step.requires_browser}
+                  isLast={index === steps.length - 1}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
-
