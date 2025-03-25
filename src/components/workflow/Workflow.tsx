@@ -203,7 +203,8 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       window.postMessage({
         type: 'CREATE_RECORDING_WINDOW',
         payload: {
-          chatId: "12345SAMPLEID"
+          chatId,
+          roomId: chatId
         }
       }, '*');
     } catch (error) {
