@@ -1,11 +1,13 @@
+
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
 import { useMessages } from "@/hooks/useMessages";
 import { Badge } from "@/components/ui/badge";
 import { CodeRewritingStatus } from "@/types";
-import { useSelectedChat } from "@/hooks/useChats";
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Chat } from "@/types";
 
 interface WorkflowStep {
   function_name: string;
@@ -35,27 +37,126 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
 
 export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
-  const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId);
   const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
+  const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
+  const [chatData, setChatData] = useState<Chat | null>(null);
   const renderCount = useRef(0);
   
-  // Update steps when selectedChat changes
+  // Initial data fetch and real-time subscription
   useEffect(() => {
-    if (selectedChat?.steps) {
-      console.log("Steps updated from real-time update:", selectedChat.steps);
-      setSteps(selectedChat.steps as WorkflowStep[]);
-    } else {
+    if (!chatId) {
       setSteps(propSteps);
+      setChatData(null);
+      setCodeRewritingStatus('thinking');
+      return;
     }
-  }, [selectedChat, propSteps]);
 
-  // Force render when these values change
+    const fetchChatData = async () => {
+      try {
+        console.log('Fetching initial chat data for:', chatId);
+        const { data, error } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('id', chatId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching chat data:', error);
+          return;
+        }
+
+        console.log('Initial chat data loaded:', data);
+        setChatData(data);
+        
+        // Set steps from chat data if available
+        if (data.steps) {
+          console.log('Setting steps from chat data:', data.steps);
+          setSteps(data.steps as WorkflowStep[]);
+        } else {
+          setSteps(propSteps);
+        }
+        
+        // Set code rewriting status based on chat data
+        updateCodeRewritingStatus(data);
+      } catch (error) {
+        console.error('Error in initial data fetch:', error);
+      }
+    };
+
+    fetchChatData();
+
+    // Set up real-time subscription
+    console.log(`Setting up direct Supabase subscription for chat ${chatId}`);
+    
+    const channel = supabase
+      .channel(`direct-chat-subscription-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for all events
+          schema: 'public',
+          table: 'chats',
+          filter: `id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log('Real-time chat update received in Workflow component:', payload);
+          
+          if (payload.eventType === 'DELETE') {
+            setChatData(null);
+            setCodeRewritingStatus('thinking');
+            setSteps(propSteps);
+          } else {
+            // Handle chat insertion or update
+            const updatedChat = payload.new as Chat;
+            console.log('Updated chat data in Workflow:', updatedChat);
+            
+            setChatData(updatedChat);
+            
+            // Update steps if available
+            if (updatedChat.steps) {
+              console.log('Setting steps from updated chat:', updatedChat.steps);
+              setSteps(updatedChat.steps as WorkflowStep[]);
+            }
+            
+            // Update status
+            updateCodeRewritingStatus(updatedChat);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Direct Supabase subscription status for chat ${chatId}:`, status);
+      });
+
+    return () => {
+      console.log(`Cleaning up direct Supabase subscription for chat ${chatId}`);
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, propSteps]);
+
+  // Helper function to update code rewriting status
+  const updateCodeRewritingStatus = (chat: Chat | null) => {
+    if (!chat) {
+      setCodeRewritingStatus('thinking');
+      return;
+    }
+    
+    console.log('Updating code rewriting status based on:', chat.requires_code_rewrite, chat.code_approved);
+    
+    if (chat.requires_code_rewrite === null) {
+      setCodeRewritingStatus('thinking');
+    } else if (chat.requires_code_rewrite === false) {
+      setCodeRewritingStatus('done');
+    } else {
+      // requires_code_rewrite is true
+      setCodeRewritingStatus(chat.code_approved ? 'done' : 'rewriting_code');
+    }
+  };
+
+  // Force render counter for debugging
   useEffect(() => {
     renderCount.current += 1;
     console.log(`Workflow rendering #${renderCount.current} with status:`, codeRewritingStatus);
-    console.log("Selected chat:", selectedChat);
-    // This useEffect dependency array ensures we re-render whenever the status changes
-  }, [codeRewritingStatus, selectedChat]);
+  });
 
   const handleRunWorkflow = async () => {
     if (!chatId) return;
@@ -87,13 +188,13 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
           <StatusBadge status={codeRewritingStatus} />
           
           {/* Debug badges for raw values */}
-          {selectedChat && (
+          {chatData && (
             <>
-              <Badge variant="outline" className={selectedChat.code_approved ? "bg-green-100" : "bg-red-100"}>
-                code_approved: {selectedChat.code_approved ? "true" : "false"}
+              <Badge variant="outline" className={chatData.code_approved ? "bg-green-100" : "bg-red-100"}>
+                code_approved: {chatData.code_approved ? "true" : "false"}
               </Badge>
-              <Badge variant="outline" className={selectedChat.requires_code_rewrite === true ? "bg-blue-100" : selectedChat.requires_code_rewrite === false ? "bg-green-100" : "bg-gray-100"}>
-                requires_rewrite: {selectedChat.requires_code_rewrite === null ? "null" : selectedChat.requires_code_rewrite.toString()}
+              <Badge variant="outline" className={chatData.requires_code_rewrite === true ? "bg-blue-100" : chatData.requires_code_rewrite === false ? "bg-green-100" : "bg-gray-100"}>
+                requires_rewrite: {chatData.requires_code_rewrite === null ? "null" : chatData.requires_code_rewrite.toString()}
               </Badge>
             </>
           )}

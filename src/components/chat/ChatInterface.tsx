@@ -4,7 +4,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { Workflow } from '../workflow/Workflow';
-import { useChats, useSelectedChat } from '@/hooks/useChats';
+import { useChats } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, GitBranch } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -16,11 +16,12 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
   const { chats } = useChats();
-  const { selectedChat } = useSelectedChat(chatId);
   const [sending, setSending] = useState(false);
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>('chat');
 
-  const workflowSteps = selectedChat?.steps as any[] || [];
+  // Find the current chat in the chats array to get initial steps
+  const currentChat = chats.find(chat => chat.id === chatId);
+  const initialWorkflowSteps = currentChat?.steps as any[] || [];
 
   const handleSendMessage = async (content: string) => {
     if (!chatId) return;
@@ -69,7 +70,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           </div>
         ) : (
           <div className="h-[calc(100vh-180px)] overflow-auto">
-            <Workflow steps={workflowSteps} chatId={chatId} />
+            <Workflow steps={initialWorkflowSteps} chatId={chatId} />
           </div>
         )}
       </div>
@@ -87,7 +88,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           <ResizableHandle withHandle />
           
           <ResizablePanel defaultSize={40} minSize={30}>
-            <Workflow steps={workflowSteps} chatId={chatId} />
+            <Workflow steps={initialWorkflowSteps} chatId={chatId} />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
