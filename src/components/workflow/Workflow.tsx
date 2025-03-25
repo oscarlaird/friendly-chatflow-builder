@@ -1,4 +1,3 @@
-
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -206,8 +205,8 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0">
         <h2 className="text-lg font-semibold">Workflow</h2>
         <div className="flex items-center gap-2">
           <StatusBadge status={codeRewritingStatus} />
@@ -242,32 +241,34 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
           </Button>
         </div>
       </div>
-      <ScrollArea className="flex-1">
-        <div className="p-4">
-          {(!steps || steps.length === 0) ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center text-center gap-2">
-                <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            {(!steps || steps.length === 0) ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <p className="text-muted-foreground">No workflow steps defined for this chat.</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {steps.map((step, index) => (
-                <WorkflowStep
-                  key={`${step.function_name}-${index}`}
-                  stepNumber={index + 1}
-                  functionName={step.function_name}
-                  description={step.description}
-                  input={step.input}
-                  output={step.output}
-                  requiresBrowser={step.requires_browser}
-                  isLast={index === steps.length - 1}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            ) : (
+              <div className="space-y-1">
+                {steps.map((step, index) => (
+                  <WorkflowStep
+                    key={`${step.function_name}-${index}`}
+                    stepNumber={index + 1}
+                    functionName={step.function_name}
+                    description={step.description}
+                    input={step.input}
+                    output={step.output}
+                    requiresBrowser={step.requires_browser}
+                    isLast={index === steps.length - 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };
