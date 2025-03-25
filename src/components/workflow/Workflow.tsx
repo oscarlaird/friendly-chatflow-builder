@@ -200,6 +200,12 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
     try {
       // Send a message with type code_run
       await sendMessage("Run workflow", "user", "code_run");
+      window.postMessage({
+        type: 'CREATE_RECORDING_WINDOW',
+        payload: {
+          chatId: "12345SAMPLEID"
+        }
+      }, '*');
     } catch (error) {
       console.error("Error running workflow:", error);
     }
