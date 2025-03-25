@@ -1,5 +1,5 @@
 
-import { Play } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
 import { useMessages } from "@/hooks/useMessages";
@@ -8,6 +8,7 @@ import { CodeRewritingStatus } from "@/types";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Chat } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface WorkflowStep {
   function_name: string;
@@ -23,21 +24,54 @@ interface WorkflowProps {
 }
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
-  switch (status) {
-    case 'thinking':
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Thinking...</Badge>;
-    case 'rewriting_code':
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800">Rewriting Code</Badge>;
-    case 'done':
-      return <Badge variant="outline" className="bg-green-100 text-green-800">Ready</Badge>;
-    default:
-      return null;
-  }
+  const isReady = status === 'done';
+  
+  return (
+    <div className="flex items-center gap-1">
+      {!isReady && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+      <Badge 
+        variant={isReady ? "default" : "outline"}
+        className={cn(
+          "text-sm font-medium px-2.5 py-1",
+          isReady ? "bg-green-600 hover:bg-green-700" : "border-yellow-500 text-yellow-600"
+        )}
+      >
+        {isReady ? "Ready" : status === 'thinking' ? "Thinking..." : "Rewriting Code"}
+      </Badge>
+    </div>
+  );
+};
+
+const DebugBadge = ({ 
+  label, 
+  value, 
+  variant = "neutral" 
+}: { 
+  label: string; 
+  value: string | boolean | null; 
+  variant?: "positive" | "negative" | "neutral";
+}) => {
+  const getColorClasses = () => {
+    switch (variant) {
+      case "positive":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "negative":
+        return "bg-red-50 text-red-700 border-red-200";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
+  return (
+    <Badge variant="outline" className={cn("text-[10px] px-1 py-0.5 font-normal", getColorClasses())}>
+      {label}: {value === null ? "null" : value.toString()}
+    </Badge>
+  );
 };
 
 export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
-  const [steps, setSteps] = useState<WorkflowStep[]>(propSteps);
+  const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [chatData, setChatData] = useState<Chat | null>(null);
   const renderCount = useRef(0);
@@ -71,7 +105,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
         // Set steps from chat data if available
         if (data.steps) {
           console.log('Setting steps from chat data:', data.steps);
-          setSteps(data.steps as WorkflowStep[]);
+          setSteps(data.steps as unknown as WorkflowStep[]);
         } else {
           setSteps(propSteps);
         }
@@ -115,7 +149,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             // Update steps if available
             if (updatedChat.steps) {
               console.log('Setting steps from updated chat:', updatedChat.steps);
-              setSteps(updatedChat.steps as WorkflowStep[]);
+              setSteps(updatedChat.steps as unknown as WorkflowStep[]);
             }
             
             // Update status
@@ -187,19 +221,31 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
         <div className="flex items-center gap-2">
           <StatusBadge status={codeRewritingStatus} />
           
-          {/* Debug badges for raw values */}
-          {chatData && (
-            <>
-              <Badge variant="outline" className={chatData.code_approved ? "bg-green-100" : "bg-red-100"}>
-                code_approved: {chatData.code_approved ? "true" : "false"}
-              </Badge>
-              <Badge variant="outline" className={chatData.requires_code_rewrite === true ? "bg-blue-100" : chatData.requires_code_rewrite === false ? "bg-green-100" : "bg-gray-100"}>
-                requires_rewrite: {chatData.requires_code_rewrite === null ? "null" : chatData.requires_code_rewrite.toString()}
-              </Badge>
-            </>
-          )}
+          {/* Debug badges in a flex-shrink-0 container, much smaller */}
+          <div className="flex-shrink-0 space-x-1 ml-2">
+            {chatData && (
+              <>
+                <DebugBadge 
+                  label="approved" 
+                  value={chatData.code_approved} 
+                  variant={chatData.code_approved ? "positive" : "negative"} 
+                />
+                <DebugBadge 
+                  label="rewrite" 
+                  value={chatData.requires_code_rewrite} 
+                  variant={chatData.requires_code_rewrite === true ? "negative" : 
+                         chatData.requires_code_rewrite === false ? "positive" : "neutral"} 
+                />
+              </>
+            )}
+          </div>
           
-          <Button size="sm" className="gap-1" onClick={handleRunWorkflow} disabled={codeRewritingStatus !== 'done'}>
+          <Button 
+            size="sm" 
+            className="gap-1 ml-2" 
+            onClick={handleRunWorkflow} 
+            disabled={codeRewritingStatus !== 'done'}
+          >
             <Play className="h-4 w-4" />
             Run Workflow
           </Button>
@@ -224,3 +270,4 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
     </div>
   );
 };
+
