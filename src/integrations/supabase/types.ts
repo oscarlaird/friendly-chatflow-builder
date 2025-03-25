@@ -67,6 +67,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_example: boolean | null
+          requires_browser: boolean
           requires_code_rewrite: boolean | null
           script: string | null
           steps: Json | null
@@ -78,6 +79,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          requires_browser?: boolean
           requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
@@ -89,6 +91,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          requires_browser?: boolean
           requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
@@ -175,6 +178,7 @@ export type Database = {
           text_is_currently_streaming: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          window_has_spawned: boolean | null
         }
         Insert: {
           chat_id: string
@@ -190,6 +194,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          window_has_spawned?: boolean | null
         }
         Update: {
           chat_id?: string
@@ -205,6 +210,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type?: Database["public"]["Enums"]["message_type"]
           uid?: string
+          window_has_spawned?: boolean | null
         }
         Relationships: [
           {

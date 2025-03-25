@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageListProps {
   dataState: DataState;
@@ -12,7 +13,7 @@ interface MessageListProps {
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
   // Add a ref to track content changes for highlighting
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   
   // Highlight content when it changes
@@ -37,7 +38,9 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <p ref={contentRef} className="whitespace-pre-wrap">{message.content}</p>
+        <div ref={contentRef} className="whitespace-pre-wrap">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
       </div>
     </div>
   );
@@ -49,7 +52,7 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
   browserEvents: Record<string, BrowserEvent>;
 }) => {
   // Add a ref to track content changes for highlighting
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   
   // Highlight content when it changes
@@ -64,7 +67,9 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
   return (
     <div className="flex justify-start mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <p ref={contentRef} className="whitespace-pre-wrap mb-2">{message.content}</p>
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
         
         {message.coderunEvents && message.coderunEvents.length > 0 && (
           <div className="mt-2 border-t pt-2">
@@ -105,7 +110,7 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
 
 const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   // Add a ref to track content changes for highlighting
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   
   // Highlight content when it changes
@@ -120,7 +125,9 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   return (
     <div className="flex justify-start mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <p ref={contentRef} className="whitespace-pre-wrap mb-2">{message.content}</p>
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
         {message.screenrecording_url && (
           <div className="mt-2 border-t pt-2">
             <p className="text-sm font-medium mb-1">Screen Recording:</p>

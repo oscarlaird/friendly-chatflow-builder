@@ -36,7 +36,7 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
           isReady ? "bg-green-600 hover:bg-green-700" : "border-yellow-500 text-yellow-600"
         )}
       >
-        {isReady ? "Ready" : status === 'thinking' ? "Thinking..." : "Rewriting Code"}
+        {isReady ? "Ready" : status === 'thinking' ? "Thinking..." : "Rebuilding Workflow"}
       </Badge>
     </div>
   );
