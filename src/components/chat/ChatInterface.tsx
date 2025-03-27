@@ -23,13 +23,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const currentChat = chats.find(chat => chat.id === chatId);
   const initialWorkflowSteps = currentChat?.steps as any[] || [];
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, type: 'text_message' | 'code_run' = 'text_message') => {
     if (!chatId) return;
     
     setSending(true);
     try {
-      // Send user message
-      await sendMessage(content);
+      // Send user message with the specified type
+      await sendMessage(content, 'user', type);
     } finally {
       setSending(false);
     }

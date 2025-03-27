@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { useChats } from '@/hooks/useChats';
 
 export const useMessages = (chatId: string | null) => {
   const [dataState, setDataState] = useState<DataState>({
@@ -12,6 +13,7 @@ export const useMessages = (chatId: string | null) => {
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { chats } = useChats();
 
   // Helper function to normalize data into our state structure
   const normalizeData = (messagesData: any[], codeRunEventsData: any[] = [], browserEventsData: any[] = []) => {
@@ -129,12 +131,27 @@ export const useMessages = (chatId: string | null) => {
     if (!user || !chatId) return null;
     
     try {
+      // Get the current chat to access its script and steps if creating a code_run message
+      let script = undefined;
+      let steps = undefined;
+      
+      if (type === 'code_run') {
+        // Find the current chat to get its script and steps
+        const currentChat = chats.find(chat => chat.id === chatId);
+        if (currentChat) {
+          script = currentChat.script;
+          steps = currentChat.steps;
+        }
+      }
+      
       const newMessage = {
         chat_id: chatId,
         role,
         content,
         type,
         uid: user.id,
+        script,  // Add script from chat if type is code_run
+        steps    // Add steps from chat if type is code_run
       };
       
       const { data, error } = await supabase
@@ -335,7 +352,7 @@ export const useMessages = (chatId: string | null) => {
       supabase.removeChannel(coderunChannel);
       supabase.removeChannel(browserChannel);
     };
-  }, [user, chatId]);
+  }, [user, chatId, chats]);
 
   return {
     dataState,
