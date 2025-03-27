@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useChats } from '@/hooks/useChats';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import Cookies from 'js-cookie';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -23,7 +21,7 @@ const SidebarIcon = () => {
   return open ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />;
 };
 
-const SELECTED_CHAT_COOKIE = 'selected_chat_id';
+const SELECTED_CHAT_STORAGE_KEY = 'selected_chat_id';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -36,11 +34,11 @@ const Index = () => {
   // Function to update both state and URL
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
-    Cookies.set(SELECTED_CHAT_COOKIE, chatId, { expires: 30 }); // Store in cookie for 30 days
+    localStorage.setItem(SELECTED_CHAT_STORAGE_KEY, chatId); // Store in localStorage instead of cookies
     navigate(`/?chatId=${chatId}`, { replace: true });
   };
   
-  // Handle initial load - prioritize URL param, then cookie
+  // Handle initial load - prioritize URL param, then localStorage
   useEffect(() => {
     if (!chatsLoading && chats.length > 0) {
       // Check URL parameter first
@@ -53,8 +51,8 @@ const Index = () => {
         }
       }
       
-      // If no URL param or invalid, try cookie
-      const savedChatId = Cookies.get(SELECTED_CHAT_COOKIE);
+      // If no URL param or invalid, try localStorage
+      const savedChatId = localStorage.getItem(SELECTED_CHAT_STORAGE_KEY);
       if (savedChatId) {
         const chatExists = chats.some(chat => chat.id === savedChatId);
         if (chatExists) {
@@ -64,7 +62,7 @@ const Index = () => {
         }
       }
       
-      // If no valid cookie, select most recent chat
+      // If no valid localStorage, select most recent chat
       const sortedChats = [...chats].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
