@@ -1,6 +1,6 @@
+
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WorkflowStep } from "./WorkflowStep";
 import { useMessages } from "@/hooks/useMessages";
 import { Badge } from "@/components/ui/badge";
 import { CodeRewritingStatus } from "@/types";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Chat } from "@/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { KeyValueDisplay } from "./KeyValueDisplay";
+import { WorkflowDisplay } from "./WorkflowDisplay";
 
 interface WorkflowStep {
   function_name: string;
@@ -23,9 +23,6 @@ interface WorkflowProps {
   steps: WorkflowStep[];
   chatId: string | null;
 }
-
-// Functions to ignore when displaying workflow steps
-const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
@@ -78,8 +75,6 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [chatData, setChatData] = useState<Chat | null>(null);
-  const [userInputs, setUserInputs] = useState<Record<string, any>>({});
-  const [finalOutput, setFinalOutput] = useState<Record<string, any> | null>(null);
   const renderCount = useRef(0);
   
   // Initial data fetch and real-time subscription
@@ -87,18 +82,11 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
     if (!chatId) {
       // Filter out ignored functions from propSteps
       const filteredSteps = propSteps.filter(step => 
-        !IGNORED_FUNCTIONS.includes(step.function_name)
+        !["mock_get_user_inputs", "main"].includes(step.function_name)
       );
       setSteps(filteredSteps);
       setChatData(null);
       setCodeRewritingStatus('thinking');
-      // Check if there's a mock_get_user_inputs step for input schema
-      const mockInputStep = propSteps.find(step => step.function_name === "mock_get_user_inputs");
-      if (mockInputStep?.output) {
-        setUserInputs(mockInputStep.output);
-      } else {
-        setUserInputs({});
-      }
       return;
     }
 
@@ -119,39 +107,12 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
         console.log('Initial chat data loaded:', data);
         setChatData(data);
         
-        // Set steps from chat data if available, filtering out ignored functions
+        // Set steps from chat data if available
         if (data.steps) {
           console.log('Setting steps from chat data:', data.steps);
-          const filteredSteps = (data.steps as unknown as WorkflowStep[]).filter(step => 
-            !IGNORED_FUNCTIONS.includes(step.function_name)
-          );
-          setSteps(filteredSteps);
-          
-          // Get the user input schema from the mock step
-          const stepsArray = data.steps as unknown as WorkflowStep[];
-          const mockInputStep = stepsArray.find(step => step.function_name === "mock_get_user_inputs");
-          if (mockInputStep?.output) {
-            setUserInputs(mockInputStep.output);
-          }
-          
-          // Get the final output from the last step
-          if (filteredSteps.length > 0) {
-            const lastStep = filteredSteps[filteredSteps.length - 1];
-            if (lastStep.output) {
-              setFinalOutput(lastStep.output);
-            }
-          }
+          setSteps(data.steps as unknown as WorkflowStep[]);
         } else {
-          const filteredSteps = propSteps.filter(step => 
-            !IGNORED_FUNCTIONS.includes(step.function_name)
-          );
-          setSteps(filteredSteps);
-          
-          // Check if there's a mock_get_user_inputs step for input schema
-          const mockInputStep = propSteps.find(step => step.function_name === "mock_get_user_inputs");
-          if (mockInputStep?.output) {
-            setUserInputs(mockInputStep.output);
-          }
+          setSteps(propSteps);
         }
         
         // Set code rewriting status based on chat data
@@ -182,10 +143,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
           if (payload.eventType === 'DELETE') {
             setChatData(null);
             setCodeRewritingStatus('thinking');
-            const filteredSteps = propSteps.filter(step => 
-              !IGNORED_FUNCTIONS.includes(step.function_name)
-            );
-            setSteps(filteredSteps);
+            setSteps(propSteps);
           } else {
             // Handle chat insertion or update
             const updatedChat = payload.new as Chat;
@@ -193,28 +151,10 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             
             setChatData(updatedChat);
             
-            // Update steps if available, filtering out ignored functions
+            // Update steps if available
             if (updatedChat.steps) {
               console.log('Setting steps from updated chat:', updatedChat.steps);
-              const filteredSteps = (updatedChat.steps as unknown as WorkflowStep[]).filter(step => 
-                !IGNORED_FUNCTIONS.includes(step.function_name)
-              );
-              setSteps(filteredSteps);
-              
-              // Get the user input schema from the mock step
-              const stepsArray = updatedChat.steps as unknown as WorkflowStep[];
-              const mockInputStep = stepsArray.find(step => step.function_name === "mock_get_user_inputs");
-              if (mockInputStep?.output) {
-                setUserInputs(mockInputStep.output);
-              }
-              
-              // Get the final output from the last step
-              if (filteredSteps.length > 0) {
-                const lastStep = filteredSteps[filteredSteps.length - 1];
-                if (lastStep.output) {
-                  setFinalOutput(lastStep.output);
-                }
-              }
+              setSteps(updatedChat.steps as unknown as WorkflowStep[]);
             }
             
             // Update status
@@ -275,11 +215,6 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       console.error("Error running workflow:", error);
     }
   };
-  
-  const handleUserInputChange = (data: Record<string, any>) => {
-    console.log("User input changed:", data);
-    setUserInputs(data);
-  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -321,18 +256,6 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
-            {/* User input form based on mock_get_user_inputs output */}
-            {Object.keys(userInputs).length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-base font-semibold mb-3">Example Input</h3>
-                <KeyValueDisplay 
-                  data={userInputs} 
-                  isInput={true} 
-                  onChange={handleUserInputChange}
-                />
-              </div>
-            )}
-            
             {(!steps || steps.length === 0) ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center text-center gap-2">
@@ -340,28 +263,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-1">
-                {steps.map((step, index) => (
-                  <WorkflowStep
-                    key={`${step.function_name}-${index}`}
-                    stepNumber={index + 1}
-                    functionName={step.function_name}
-                    description={step.description}
-                    input={step.input}
-                    output={step.output}
-                    requiresBrowser={step.requires_browser}
-                    isLast={index === steps.length - 1}
-                  />
-                ))}
-              </div>
-            )}
-            
-            {/* Final output display */}
-            {finalOutput && steps.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-base font-semibold mb-3">Example Output</h3>
-                <KeyValueDisplay data={finalOutput} />
-              </div>
+              <WorkflowDisplay steps={steps} />
             )}
           </div>
         </ScrollArea>

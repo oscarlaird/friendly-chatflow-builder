@@ -5,8 +5,7 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { Globe } from 'lucide-react';
-import { WorkflowStep } from '../workflow/WorkflowStep';
-import { KeyValueDisplay } from '../workflow/KeyValueDisplay';
+import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 
 interface MessageListProps {
   dataState: DataState;
@@ -92,19 +91,6 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
       return () => clearTimeout(timer);
     }
   }, [message.content]);
-
-  // Format steps for WorkflowStep component
-  const workflowSteps = message.steps && Array.isArray(message.steps) 
-    ? message.steps.map((step: any, index: number) => ({
-        stepNumber: index + 1,
-        functionName: step.function_name || step.title || `Step ${index + 1}`,
-        description: step.description || '',
-        input: step.input || step.data,
-        output: step.output,
-        requiresBrowser: step.requires_browser,
-        isLast: index === (message.steps as any[]).length - 1
-      }))
-    : [];
   
   return (
     <div className="flex justify-center mb-4">
@@ -113,21 +99,10 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display workflow steps from message.steps if available */}
-        {workflowSteps.length > 0 && (
+        {/* Display workflow steps, input and output using the new WorkflowDisplay component */}
+        {message.steps && message.steps.length > 0 && (
           <div className="mb-4">
-            {workflowSteps.map((step, index) => (
-              <WorkflowStep 
-                key={index}
-                stepNumber={step.stepNumber}
-                functionName={step.functionName}
-                description={step.description}
-                input={step.input}
-                output={step.output}
-                requiresBrowser={step.requiresBrowser}
-                isLast={step.isLast}
-              />
-            ))}
+            <WorkflowDisplay steps={message.steps} compact={true} />
           </div>
         )}
         
