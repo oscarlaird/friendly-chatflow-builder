@@ -151,6 +151,15 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
           </div>
         ))}
       </CardContent>
+      {/* Add a reset button at the bottom if we're in editable mode and have multiple keys */}
+      {isEditableMode && keys.length > 0 && (
+        <div className="px-4 pb-4 flex justify-end">
+          <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            <span className="text-xs">Reset</span>
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };
