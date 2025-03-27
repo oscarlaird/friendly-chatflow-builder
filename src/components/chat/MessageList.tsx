@@ -6,7 +6,11 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square } from 'lucide-react';
+import { Play, Pause, Square, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 interface MessageListProps {
   dataState: DataState;
@@ -85,11 +89,99 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
   );
 };
 
+const CodeRunControls = ({ message }: { message: Message }) => {
+  const { user } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const state = message.code_run_state;
+
+  if (!state || state === 'stopped') return null;
+
+  const updateCodeRunState = async (newState: 'running' | 'paused' | 'stopped') => {
+    if (!user || isUpdating) return;
+
+    try {
+      setIsUpdating(true);
+      
+      const { error } = await supabase
+        .from('messages')
+        .update({ code_run_state: newState })
+        .eq('id', message.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: `Workflow ${newState}`,
+        description: newState === 'stopped' ? 'The workflow has been stopped.' : 
+                    newState === 'paused' ? 'The workflow has been paused.' : 
+                    'The workflow has resumed.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error updating workflow state',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      {state === 'running' ? (
+        <>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => updateCodeRunState('paused')}
+            disabled={isUpdating}
+          >
+            <Pause className="h-3.5 w-3.5 mr-1" />
+            Pause
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => updateCodeRunState('stopped')}
+            disabled={isUpdating}
+          >
+            <Square className="h-3.5 w-3.5 mr-1" />
+            Stop
+          </Button>
+        </>
+      ) : state === 'paused' ? (
+        <>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => updateCodeRunState('running')}
+            disabled={isUpdating}
+          >
+            <Play className="h-3.5 w-3.5 mr-1" />
+            Resume
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => updateCodeRunState('stopped')}
+            disabled={isUpdating}
+          >
+            <Square className="h-3.5 w-3.5 mr-1" />
+            Stop
+          </Button>
+        </>
+      ) : null}
+    </div>
+  );
+};
+
 const CodeRunMessageBubble = ({ message, browserEvents }: { 
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
 }) => {
-  // Add a ref to track content changes for highlighting
+  // Content ref and highlight states
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   
@@ -143,6 +235,11 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               autoActivateSteps={true}
             />
           </div>
+        )}
+        
+        {/* Add code run controls if the message is a running or paused code run */}
+        {message.code_run_state && message.code_run_state !== 'stopped' && (
+          <CodeRunControls message={message} />
         )}
       </Card>
     </div>
