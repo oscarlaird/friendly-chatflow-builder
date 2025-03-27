@@ -24,6 +24,9 @@ interface WorkflowProps {
   chatId: string | null;
 }
 
+// Functions to ignore when displaying workflow steps
+const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
+
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
   
@@ -80,7 +83,11 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   // Initial data fetch and real-time subscription
   useEffect(() => {
     if (!chatId) {
-      setSteps(propSteps);
+      // Filter out ignored functions from propSteps
+      const filteredSteps = propSteps.filter(step => 
+        !IGNORED_FUNCTIONS.includes(step.function_name)
+      );
+      setSteps(filteredSteps);
       setChatData(null);
       setCodeRewritingStatus('thinking');
       return;
@@ -103,12 +110,18 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
         console.log('Initial chat data loaded:', data);
         setChatData(data);
         
-        // Set steps from chat data if available
+        // Set steps from chat data if available, filtering out ignored functions
         if (data.steps) {
           console.log('Setting steps from chat data:', data.steps);
-          setSteps(data.steps as unknown as WorkflowStep[]);
+          const filteredSteps = (data.steps as unknown as WorkflowStep[]).filter(step => 
+            !IGNORED_FUNCTIONS.includes(step.function_name)
+          );
+          setSteps(filteredSteps);
         } else {
-          setSteps(propSteps);
+          const filteredSteps = propSteps.filter(step => 
+            !IGNORED_FUNCTIONS.includes(step.function_name)
+          );
+          setSteps(filteredSteps);
         }
         
         // Set code rewriting status based on chat data
@@ -139,7 +152,10 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
           if (payload.eventType === 'DELETE') {
             setChatData(null);
             setCodeRewritingStatus('thinking');
-            setSteps(propSteps);
+            const filteredSteps = propSteps.filter(step => 
+              !IGNORED_FUNCTIONS.includes(step.function_name)
+            );
+            setSteps(filteredSteps);
           } else {
             // Handle chat insertion or update
             const updatedChat = payload.new as Chat;
@@ -147,10 +163,13 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             
             setChatData(updatedChat);
             
-            // Update steps if available
+            // Update steps if available, filtering out ignored functions
             if (updatedChat.steps) {
               console.log('Setting steps from updated chat:', updatedChat.steps);
-              setSteps(updatedChat.steps as unknown as WorkflowStep[]);
+              const filteredSteps = (updatedChat.steps as unknown as WorkflowStep[]).filter(step => 
+                !IGNORED_FUNCTIONS.includes(step.function_name)
+              );
+              setSteps(filteredSteps);
             }
             
             // Update status
