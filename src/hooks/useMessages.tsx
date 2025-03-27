@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -123,7 +124,7 @@ export const useMessages = (chatId: string | null) => {
   };
 
   // Update an existing message
-  const updateMessage = async (messageId: string, updates: Partial<Message>) => {
+  const updateMessage = async (messageId: string, updates: Partial<Message>): Promise<void> => {
     if (!user || !chatId) return;
     
     try {

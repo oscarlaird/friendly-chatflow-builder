@@ -15,7 +15,7 @@ interface ChatInterfaceProps {
 }
 
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
-  const { dataState, loading, sendMessage } = useMessages(chatId);
+  const { dataState, loading, sendMessage, updateMessage } = useMessages(chatId);
   const { chats } = useChats();
   const [sending, setSending] = useState(false);
   const isMobile = useIsMobile();
@@ -67,7 +67,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       <div className="md:hidden flex-1 overflow-hidden">
         {activeView === 'chat' ? (
           <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <MessageList dataState={dataState} loading={loading} />
+            <MessageList dataState={dataState} loading={loading} updateMessage={updateMessage} />
             <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
           </div>
         ) : (
@@ -85,7 +85,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={60} minSize={30}>
             <div className="flex-1 flex flex-col h-full overflow-hidden">
-              <MessageList dataState={dataState} loading={loading} />
+              <MessageList dataState={dataState} loading={loading} updateMessage={updateMessage} />
               <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
             </div>
           </ResizablePanel>
