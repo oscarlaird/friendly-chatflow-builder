@@ -51,7 +51,7 @@ const Index = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full">
+      <div className="flex h-screen w-full overflow-hidden">
         <Sidebar collapsible="offcanvas">
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between">
@@ -67,8 +67,8 @@ const Index = () => {
           </div>
         </Sidebar>
 
-        <SidebarInset className="flex flex-col">
-          <div className="flex items-center p-4 border-b">
+        <SidebarInset className="flex flex-col overflow-hidden">
+          <div className="flex items-center p-4 border-b flex-shrink-0">
             <SidebarTrigger className="mr-2">
               <SidebarIcon />
             </SidebarTrigger>
@@ -76,7 +76,7 @@ const Index = () => {
               {selectedChatId ? 'Chat' : 'Select or create a chat'}
             </h2>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 overflow-hidden">
             <ChatInterface chatId={selectedChatId} />
           </div>
         </SidebarInset>

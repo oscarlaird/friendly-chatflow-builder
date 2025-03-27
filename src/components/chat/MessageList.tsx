@@ -175,7 +175,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-180px)] px-4 py-6">
+    <ScrollArea className="h-full w-full px-4 py-6">
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>

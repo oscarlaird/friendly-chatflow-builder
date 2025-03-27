@@ -64,7 +64,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       {/* Mobile view (tabs) */}
       <div className="md:hidden flex-1 overflow-hidden">
         {activeView === 'chat' ? (
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
             <MessageList dataState={dataState} loading={loading} />
             <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
           </div>
@@ -79,7 +79,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       <div className="hidden md:block flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={60} minSize={30}>
-            <div className="flex-1 flex flex-col h-full">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
               <MessageList dataState={dataState} loading={loading} />
               <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
             </div>
