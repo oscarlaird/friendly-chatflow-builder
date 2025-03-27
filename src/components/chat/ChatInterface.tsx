@@ -106,9 +106,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               chatId={chatId} 
               onInputChange={handleWorkflowInputChange}
             />
-          </div>
+          </ResizablePanel>
         </ResizablePanelGroup>
       </div>
     </div>
   );
 };
+
