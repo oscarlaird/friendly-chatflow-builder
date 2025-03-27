@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -120,39 +119,6 @@ export const useMessages = (chatId: string | null) => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Update an existing message
-  const updateMessage = async (messageId: string, updates: Partial<Message>): Promise<void> => {
-    if (!user || !chatId) return;
-    
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .update(updates)
-        .eq('id', messageId);
-
-      if (error) throw error;
-      
-      // Update local state immediately for better UX
-      setDataState(prevState => {
-        const newState = { ...prevState };
-        if (newState.messages[messageId]) {
-          newState.messages[messageId] = {
-            ...newState.messages[messageId],
-            ...updates
-          };
-        }
-        return newState;
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error updating message',
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
     }
   };
 
@@ -397,7 +363,6 @@ export const useMessages = (chatId: string | null) => {
     dataState,
     loading,
     sendMessage,
-    updateMessage,
     refreshMessages: fetchMessages,
   };
 };
