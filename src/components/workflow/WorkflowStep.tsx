@@ -17,6 +17,14 @@ interface WorkflowStepProps {
   isLast?: boolean;
 }
 
+// Helper function to format function name
+const formatFunctionName = (name: string): string => {
+  return name
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const WorkflowStep = ({
   stepNumber,
   functionName,
@@ -47,15 +55,15 @@ export const WorkflowStep = ({
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap gap-2 items-center">
                 <h3 className="font-medium text-lg">
-                  {functionName}
+                  {formatFunctionName(functionName)}
                 </h3>
                 
                 {requiresBrowser && (
                   <Badge 
                     variant="outline" 
-                    className="flex items-center gap-1 text-xs font-normal bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-200"
+                    className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600 hover:bg-violet-600"
                   >
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                     Browser Required
                   </Badge>
                 )}

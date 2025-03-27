@@ -30,6 +30,32 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
     return null;
   }
 
+  // Special case: if there's only one key called "ret" or similar, just display the value
+  const keys = Object.keys(data);
+  if (keys.length === 1) {
+    const singleKey = keys[0];
+    const singleValue = data[singleKey];
+    
+    return (
+      <Card>
+        {title && (
+          <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm">
+            {title}
+          </div>
+        )}
+        <CardContent className="p-4">
+          <DisplayValue 
+            value={singleValue} 
+            isInput={isInput}
+            onChange={(newValue) => handleValueChange(singleKey, newValue)}
+            path={singleKey}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Regular key-value display for multiple keys
   return (
     <Card>
       {title && (

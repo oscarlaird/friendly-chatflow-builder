@@ -1,4 +1,3 @@
-
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkflowStep } from "./WorkflowStep";
@@ -325,7 +324,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             {/* User input form based on mock_get_user_inputs output */}
             {Object.keys(userInputs).length > 0 && (
               <div className="mb-6">
-                <h3 className="text-sm font-medium mb-2">Workflow Inputs:</h3>
+                <h3 className="text-base font-semibold mb-3">Example Input</h3>
                 <KeyValueDisplay 
                   data={userInputs} 
                   isInput={true} 
@@ -360,7 +359,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             {/* Final output display */}
             {finalOutput && steps.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium mb-2">Final Output:</h3>
+                <h3 className="text-base font-semibold mb-3">Example Output</h3>
                 <KeyValueDisplay data={finalOutput} />
               </div>
             )}

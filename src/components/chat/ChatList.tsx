@@ -136,9 +136,7 @@ export const ChatList = ({ selectedChatId, onSelectChat }: ChatListProps) => {
         )}
       </SidebarContent>
       <SidebarFooter>
-        <div className="text-xs text-muted-foreground p-2 text-center">
-          Real-time chat using Supabase
-        </div>
+        {/* Empty footer - removed "Real-time chat using Supabase" text */}
       </SidebarFooter>
     </>
   );
