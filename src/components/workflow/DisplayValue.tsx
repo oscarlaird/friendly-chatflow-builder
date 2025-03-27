@@ -7,6 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
+// Helper function to format key names (remove underscores and capitalize)
+const formatKeyName = (key: string): string => {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 interface DisplayValueProps {
   value: any;
   className?: string;
@@ -99,7 +107,7 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
       <div className={cn("flex flex-col gap-1", className)}>
         {Object.entries(value).map(([key, val]) => (
           <div key={key} className="grid grid-cols-[30%_70%] items-start gap-2">
-            <span className="font-medium text-sm text-muted-foreground">{key}:</span>
+            <span className="font-medium text-sm text-muted-foreground">{formatKeyName(key)}:</span>
             <DisplayValue 
               value={val} 
               isInput={isInput}

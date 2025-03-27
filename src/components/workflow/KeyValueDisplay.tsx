@@ -10,6 +10,14 @@ interface KeyValueDisplayProps {
   onChange?: (data: Record<string, any>) => void;
 }
 
+// Helper function to format key names (remove underscores and capitalize)
+const formatKeyName = (key: string): string => {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyValueDisplayProps) => {
   const [localData, setLocalData] = useState<Record<string, any>>(data || {});
 
@@ -66,7 +74,7 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
       <CardContent className="p-4 space-y-3">
         {Object.entries(data).map(([key, value]) => (
           <div key={key} className="grid grid-cols-[30%_70%] gap-2 items-start">
-            <span className="font-medium text-sm text-muted-foreground">{key}:</span>
+            <span className="font-medium text-sm text-muted-foreground">{formatKeyName(key)}:</span>
             <DisplayValue 
               value={value} 
               isInput={isInput}

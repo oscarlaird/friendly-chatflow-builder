@@ -4,6 +4,14 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 
+// Helper function to format column names (remove underscores and capitalize)
+const formatColumnName = (column: string): string => {
+  return column
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 interface DisplayTableProps {
   data: Record<string, any>[];
   className?: string;
@@ -47,7 +55,7 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
           <TableRow>
             {columns.map((column) => (
               <TableHead key={column} className="whitespace-nowrap font-medium">
-                {column}
+                {formatColumnName(column)}
               </TableHead>
             ))}
           </TableRow>
