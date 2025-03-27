@@ -75,6 +75,61 @@ const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
   );
 };
 
+// Enhanced WorkflowDisplay component that shows browser events under each step
+const EnhancedWorkflowDisplay = ({ 
+  steps, 
+  coderunEvents,
+  browserEvents,
+  compact = true 
+}: { 
+  steps: any[]; 
+  coderunEvents: Record<string, CoderunEvent>;
+  browserEvents: Record<string, BrowserEvent>;
+  compact?: boolean;
+}) => {
+  // Process steps to include browser events
+  const enhancedSteps = steps?.map(step => {
+    const functionName = step.function_name;
+    if (!functionName) return step;
+    
+    // Create a new step with the same properties
+    const enhancedStep = { ...step, active: step.active || false };
+    
+    // Find browser events that match this function name
+    // First collect all browser events from all coderun events
+    const allBrowserEvents: BrowserEvent[] = [];
+    
+    Object.values(coderunEvents).forEach(coderunEvent => {
+      if (coderunEvent.browserEvents) {
+        coderunEvent.browserEvents.forEach(eventId => {
+          const browserEvent = browserEvents[eventId];
+          if (browserEvent && browserEvent.function_name === functionName) {
+            allBrowserEvents.push(browserEvent);
+          }
+        });
+      }
+    });
+    
+    // If we found matching browser events, add them to the step
+    if (allBrowserEvents.length > 0) {
+      enhancedStep.browserEvents = allBrowserEvents;
+      // Mark step as active if it has browser events
+      enhancedStep.active = true;
+    }
+    
+    return enhancedStep;
+  });
+  
+  return (
+    <WorkflowDisplay 
+      steps={enhancedSteps || []} 
+      compact={compact} 
+      input_editable={false}
+      autoActivateSteps={true}
+    />
+  );
+};
+
 const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: { 
   message: Message; 
   coderunEvents: Record<string, CoderunEvent>;
@@ -100,34 +155,50 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display workflow steps, input and output using the WorkflowDisplay component */}
+        {/* Display workflow steps, input and output using the EnhancedWorkflowDisplay component */}
         {message.steps && message.steps.length > 0 && (
           <div className="mb-4">
-            <WorkflowDisplay steps={message.steps} compact={true} input_editable={false} />
+            <EnhancedWorkflowDisplay 
+              steps={message.steps} 
+              coderunEvents={coderunEvents}
+              browserEvents={browserEvents}
+            />
           </div>
         )}
         
+        {/* Display any browser events that don't have a function_name under the coderun events section */}
         {message.coderunEvents && message.coderunEvents.length > 0 && (
           <div className="mt-2 border-t pt-2">
-            <p className="text-sm font-medium mb-1">Code Run Events:</p>
+            <p className="text-sm font-medium mb-1">Additional Events:</p>
             {message.coderunEvents.map(eventId => {
               const event = coderunEvents[eventId];
+              if (!event) return null;
+              
+              // Filter for browser events without function_name or where function_name doesn't match any step
+              const unassociatedBrowserEvents = event.browserEvents
+                .map(beId => browserEvents[beId])
+                .filter(be => be && (!be.function_name || !message.steps?.some(step => step.function_name === be.function_name)));
+              
+              // Only render if there are unassociated browser events or the event itself has information to show
+              if (unassociatedBrowserEvents.length === 0 && !event.description && !event.progress_title) {
+                return null;
+              }
+              
               return (
                 <div key={eventId} className="pl-2 border-l-2 border-muted-foreground/30 mb-2">
-                  <p className="text-xs text-muted-foreground">
-                    {event?.description || 'Code execution'} 
-                    {event?.progress_title && ` - ${event.progress_title}`}
-                  </p>
+                  {(event.description || event.progress_title) && (
+                    <p className="text-xs text-muted-foreground">
+                      {event.description || 'Code execution'} 
+                      {event.progress_title && ` - ${event.progress_title}`}
+                    </p>
+                  )}
                   
-                  {event?.browserEvents && event.browserEvents.length > 0 && (
+                  {unassociatedBrowserEvents.length > 0 && (
                     <div className="mt-1">
                       <div className="border rounded-sm text-xs overflow-hidden max-h-36">
-                        {event.browserEvents.map(beId => {
-                          const browserEvent = browserEvents[beId];
-                          return browserEvent ? (
-                            <BrowserEventItem key={beId} event={browserEvent} />
-                          ) : null;
-                        })}
+                        {unassociatedBrowserEvents.map(browserEvent => (
+                          browserEvent ? <BrowserEventItem key={browserEvent.id} event={browserEvent} /> : null
+                        ))}
                       </div>
                     </div>
                   )}

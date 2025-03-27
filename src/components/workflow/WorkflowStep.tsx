@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, Globe } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { BrowserEvent } from "@/types";
 
 interface WorkflowStepProps {
   stepNumber: number;
@@ -16,6 +17,8 @@ interface WorkflowStepProps {
   requiresBrowser?: boolean;
   isLast?: boolean;
   active?: boolean;
+  autoOpen?: boolean;
+  browserEvents?: BrowserEvent[];
 }
 
 // Helper function to format function name
@@ -24,6 +27,34 @@ const formatFunctionName = (name: string): string => {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+};
+
+// Browser event item component
+const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
+  // Extract domain from URL for favicon
+  const getFaviconUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const browserState = event?.data?.browser_state;
+  const currentGoal = event?.data?.current_goal;
+  const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
+
+  return (
+    <div className="flex items-center gap-2 text-xs py-1 px-2 border-b border-muted/40 last:border-0">
+      {faviconUrl ? (
+        <img src={faviconUrl} alt="site favicon" className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+      )}
+      <span className="truncate">{currentGoal || 'Browser action'}</span>
+    </div>
+  );
 };
 
 export const WorkflowStep = ({
@@ -35,20 +66,28 @@ export const WorkflowStep = ({
   requiresBrowser = false,
   isLast = false,
   active = false,
+  autoOpen = false,
+  browserEvents = [],
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
+  const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(false);
   
   const hasInput = input && Object.keys(input).length > 0;
   const hasOutput = output && Object.keys(output).length > 0;
+  const hasBrowserEvents = browserEvents && browserEvents.length > 0;
   
-  // Auto-open input and output sections if the step is active
+  // Auto-open sections based on active status and autoOpen prop
   useEffect(() => {
-    if (active) {
+    if (active && autoOpen) {
       setIsInputOpen(true);
       setIsOutputOpen(true);
+      setIsBrowserEventsOpen(true);
+    } else if (active) {
+      // If just active but not autoOpen, only open browser events
+      setIsBrowserEventsOpen(true);
     }
-  }, [active]);
+  }, [active, autoOpen]);
   
   return (
     <div className="relative">
@@ -122,6 +161,22 @@ export const WorkflowStep = ({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-2">
                       <KeyValueDisplay data={output} />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+                
+                {hasBrowserEvents && (
+                  <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
+                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {isBrowserEventsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      Browser Events
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <div className="border rounded-sm text-xs overflow-hidden max-h-36">
+                        {browserEvents.map((event, index) => (
+                          <BrowserEventItem key={index} event={event} />
+                        ))}
+                      </div>
                     </CollapsibleContent>
                   </Collapsible>
                 )}

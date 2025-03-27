@@ -8,6 +8,7 @@ interface WorkflowDisplayProps {
   className?: string;
   compact?: boolean;
   input_editable?: boolean;
+  autoActivateSteps?: boolean;
 }
 
 export const WorkflowDisplay = forwardRef<
@@ -18,6 +19,7 @@ export const WorkflowDisplay = forwardRef<
   className, 
   compact = false, 
   input_editable = false,
+  autoActivateSteps = false,
 }, ref) => {
   // Filter out ignored functions from steps
   const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
@@ -87,6 +89,8 @@ export const WorkflowDisplay = forwardRef<
               requiresBrowser={step.requires_browser}
               isLast={index === filteredSteps.length - 1}
               active={step.active === true} // Pass the active state to highlight the step
+              autoOpen={autoActivateSteps && step.active === true} // Auto open sections if step is active and autoActivateSteps is true
+              browserEvents={step.browserEvents} // Pass browser events to the step
             />
           ))}
         </div>

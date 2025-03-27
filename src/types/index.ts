@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -61,6 +62,7 @@ export interface BrowserEvent {
   message_id: string;
   chat_id: string;
   uid: string;
+  function_name?: string; // Added field for matching with workflow steps
 }
 
 export interface DataState {
