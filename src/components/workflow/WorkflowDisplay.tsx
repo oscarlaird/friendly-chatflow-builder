@@ -73,7 +73,7 @@ export const WorkflowDisplay = forwardRef<
           <div className="w-full overflow-hidden">
             <KeyValueDisplay 
               data={userInputs} 
-              isInput={true}
+              isEditable={input_editable}
               onChange={input_editable ? handleInputChange : null} // Only allow changes if editable
             />
           </div>

@@ -3,11 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
 import { DisplayTable } from "./DisplayTable";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 interface KeyValueDisplayProps {
   data: Record<string, any>;
   title?: string;
-  isInput?: boolean;
+  isEditable?: boolean;
   onChange?: ((data: Record<string, any>) => void) | null;
 }
 
@@ -19,11 +21,11 @@ const formatKeyName = (key: string): string => {
     .join(' ');
 };
 
-export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyValueDisplayProps) => {
+export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: KeyValueDisplayProps) => {
   const [localData, setLocalData] = useState<Record<string, any>>(data || {});
   
   // Determine if the component is editable
-  const isEditable = isInput && onChange !== null;
+  const isEditableMode = isEditable && onChange !== null;
 
   useEffect(() => {
     setLocalData(data || {});
@@ -35,6 +37,13 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
     
     if (onChange) {
       onChange(updatedData);
+    }
+  };
+
+  const handleReset = () => {
+    setLocalData(data || {});
+    if (onChange) {
+      onChange(data || {});
     }
   };
 
@@ -53,20 +62,27 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
       return (
         <Card>
           {title && (
-            <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm">
-              {title}
+            <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+              <span>{title}</span>
+              {isEditableMode && (
+                <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  <span className="text-xs">Reset</span>
+                </Button>
+              )}
             </div>
           )}
           <CardContent className="p-4">
             <div className="w-full overflow-hidden">
               <DisplayTable 
                 data={singleValue} 
-                isInput={isEditable} 
+                isEditable={isEditableMode} 
                 onChange={(newValue) => {
                   if (onChange) {
                     onChange({ [singleKey]: newValue });
                   }
                 }}
+                originalData={data[singleKey]}
               />
             </div>
           </CardContent>
@@ -77,16 +93,23 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
     return (
       <Card>
         {title && (
-          <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm">
-            {title}
+          <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+            <span>{title}</span>
+            {isEditableMode && (
+              <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                <span className="text-xs">Reset</span>
+              </Button>
+            )}
           </div>
         )}
         <CardContent className="p-4">
           <DisplayValue 
             value={singleValue} 
-            isInput={isEditable}
-            onChange={isEditable ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
+            isEditable={isEditableMode}
+            onChange={isEditableMode ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
+            originalValue={data[singleKey]}
           />
         </CardContent>
       </Card>
@@ -97,8 +120,14 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
   return (
     <Card>
       {title && (
-        <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm">
-          {title}
+        <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+          <span>{title}</span>
+          {isEditableMode && (
+            <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              <span className="text-xs">Reset</span>
+            </Button>
+          )}
         </div>
       )}
       <CardContent className="p-4 space-y-4">
@@ -110,9 +139,10 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
             <div className="ml-0">
               <DisplayValue 
                 value={value} 
-                isInput={isEditable}
-                onChange={isEditable ? (newValue) => handleValueChange(key, newValue) : undefined}
+                isEditable={isEditableMode}
+                onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
                 path={key}
+                originalValue={data[key]}
               />
             </div>
           </div>

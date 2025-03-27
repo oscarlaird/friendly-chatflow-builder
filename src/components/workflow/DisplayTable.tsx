@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Minus } from 'lucide-react';
+import { Minus, RotateCcw } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
@@ -13,8 +13,9 @@ interface DisplayTableProps {
   onRemove?: () => void;
   className?: string;
   maxRows?: number;
-  isInput?: boolean;
+  isEditable?: boolean;
   onChange?: (value: any) => void;
+  originalData?: Record<string, any>[];
 }
 
 /**
@@ -46,8 +47,9 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   onRemove,
   className,
   maxRows = 10,
-  isInput = false,
+  isEditable = false,
   onChange,
+  originalData,
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
@@ -97,6 +99,20 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
     }
   };
   
+  const handleReset = () => {
+    if (originalData) {
+      setEditableData(JSON.parse(JSON.stringify(originalData)));
+      if (onChange) {
+        onChange(originalData);
+      }
+    } else {
+      setEditableData(JSON.parse(JSON.stringify(data)));
+      if (onChange) {
+        onChange(data);
+      }
+    }
+  };
+  
   if (!data || !data.length) {
     return null;
   }
@@ -109,8 +125,8 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   const hasMoreRows = data.length > maxRows;
   const columns = Object.keys(data[0]);
   
-  // Use the editable data when in input mode, otherwise use the display data
-  const tableData = isInput ? editableData : displayData;
+  // Use the editable data when in editable mode, otherwise use the display data
+  const tableData = isEditable ? editableData : displayData;
 
   return (
     <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
@@ -130,17 +146,32 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
           {title && <h3 className="text-sm font-medium">{title}</h3>}
         </div>
         
-        {/* Show more/less toggle button */}
-        {hasMoreRows && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFullTable(!showFullTable)}
-            className="h-6 text-xs"
-          >
-            {showFullTable ? 'Show Less' : `Show All (${data.length})`}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Reset button for editable mode */}
+          {isEditable && originalData && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleReset}
+              className="h-6 text-xs"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Reset
+            </Button>
+          )}
+          
+          {/* Show more/less toggle button */}
+          {hasMoreRows && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFullTable(!showFullTable)}
+              className="h-6 text-xs"
+            >
+              {showFullTable ? 'Show Less' : `Show All (${data.length})`}
+            </Button>
+          )}
+        </div>
       </div>
       
       {/* Table with horizontal scrolling */}
@@ -161,7 +192,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
                 <TableRow key={rowIndex}>
                   {columns.map((column) => (
                     <TableCell key={`${rowIndex}-${column}`} className="align-top">
-                      {isInput ? (
+                      {isEditable ? (
                         <Input
                           value={formatValue(row[column])}
                           onChange={(e) => handleCellValueChange(rowIndex, column, e.target.value)}
