@@ -1,12 +1,11 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { DisplayTable } from './DisplayTable';
-import { Check, X, RotateCcw } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 
 // Helper function to format key names (remove underscores and capitalize)
 const formatKeyName = (key: string): string => {
@@ -33,7 +32,7 @@ export const DisplayValue = ({
   onChange, 
   path = '', 
   originalValue,
-  showResetButton = true
+  showResetButton = false // Default to false since we handle resets at the top level now
 }: DisplayValueProps): ReactNode => {
   const [localValue, setLocalValue] = useState<any>(value);
   
@@ -47,15 +46,6 @@ export const DisplayValue = ({
     setLocalValue(newValue);
     if (onChange) {
       onChange(newValue);
-    }
-  };
-
-  const handleReset = () => {
-    // Reset to original value if provided, otherwise use value prop
-    const resetValue = originalValue !== undefined ? originalValue : value;
-    setLocalValue(resetValue);
-    if (onChange) {
-      onChange(resetValue);
     }
   };
 
@@ -83,35 +73,27 @@ export const DisplayValue = ({
   // Handle different data types appropriately
   if (localValue === null || localValue === undefined) {
     return isEditable ? 
-      <div className="flex items-center gap-2">
-        <Input 
-          className={className} 
-          value="" 
-          onChange={(e) => handleValueChange(e.target.value)} 
-          placeholder="Enter value" 
-        />
-        {originalValue !== undefined && showResetButton && (
-          <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-        )}
-      </div> : 
+      <Input 
+        className={className} 
+        value="" 
+        onChange={(e) => handleValueChange(e.target.value)} 
+        placeholder="Enter value" 
+        size={20}
+      /> : 
       <span className={cn("text-muted-foreground italic", className)}>None</span>;
   }
   
   // Array of objects - likely a table
   if (Array.isArray(localValue) && localValue.length > 0 && typeof localValue[0] === 'object') {
     return (
-      <div className="flex flex-col gap-2">
-        <DisplayTable 
-          data={localValue} 
-          className={className} 
-          isEditable={isEditable}
-          onChange={isEditable ? handleValueChange : undefined}
-          originalData={originalValue}
-          showResetButton={showResetButton}
-        />
-      </div>
+      <DisplayTable 
+        data={localValue} 
+        className={className} 
+        isEditable={isEditable}
+        onChange={isEditable ? handleValueChange : undefined}
+        originalData={originalValue}
+        showResetButton={false} // Never show reset in nested tables
+      />
     );
   }
   
@@ -120,23 +102,17 @@ export const DisplayValue = ({
     return (
       <div className={cn("flex flex-col gap-1", className)}>
         {localValue.map((item, index) => (
-          <div key={index} className="pl-2 border-l-2 border-muted">
+          <div key={index} className="pl-2 border-l border-muted">
             <DisplayValue 
               value={item} 
               isEditable={isEditable}
               onChange={isEditable ? (newValue) => handleArrayItemChange(index, newValue) : undefined}
               path={`${path}[${index}]`}
               originalValue={originalValue?.[index]}
-              showResetButton={false} // Don't show reset buttons on nested items
+              showResetButton={false}
             />
           </div>
         ))}
-        {isEditable && originalValue !== undefined && showResetButton && (
-          <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs">Reset</span>
-          </Button>
-        )}
       </div>
     );
   }
@@ -144,18 +120,11 @@ export const DisplayValue = ({
   // Boolean values
   if (typeof localValue === 'boolean') {
     return isEditable ? (
-      <div className="flex items-center gap-2">
-        <Checkbox 
-          checked={localValue} 
-          onCheckedChange={handleValueChange}
-          className={className}
-        />
-        {originalValue !== undefined && showResetButton && (
-          <Button variant="ghost" size="icon" onClick={handleReset} className="h-7 w-7">
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-        )}
-      </div>
+      <Checkbox 
+        checked={localValue} 
+        onCheckedChange={handleValueChange}
+        className={className}
+      />
     ) : (
       localValue ? 
         <Check className={cn("h-4 w-4 text-green-500", className)} /> : 
@@ -168,24 +137,18 @@ export const DisplayValue = ({
     return (
       <div className={cn("flex flex-col gap-1", className)}>
         {Object.entries(localValue).map(([key, val]) => (
-          <div key={key} className="grid grid-cols-[30%_70%] items-start gap-2">
-            <span className="font-medium text-sm text-muted-foreground">{formatKeyName(key)}:</span>
+          <div key={key} className="grid grid-cols-[30%_70%] items-start gap-1">
+            <span className="font-medium text-xs text-muted-foreground">{formatKeyName(key)}:</span>
             <DisplayValue 
               value={val} 
               isEditable={isEditable}
               onChange={isEditable ? (newValue) => handleObjectValueChange(key, newValue) : undefined}
               path={`${path}.${key}`}
               originalValue={originalValue?.[key]}
-              showResetButton={false} // Don't show reset buttons on nested items
+              showResetButton={false}
             />
           </div>
         ))}
-        {isEditable && originalValue !== undefined && showResetButton && (
-          <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs">Reset</span>
-          </Button>
-        )}
       </div>
     );
   }
@@ -193,42 +156,29 @@ export const DisplayValue = ({
   // Strings (multiline)
   if (typeof localValue === 'string' && localValue.includes('\n') && isEditable) {
     return (
-      <div className="flex flex-col gap-2">
-        <Textarea 
-          className={className} 
-          value={localValue}
-          onChange={(e) => handleValueChange(e.target.value)}
-        />
-        {originalValue !== undefined && showResetButton && (
-          <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs">Reset</span>
-          </Button>
-        )}
-      </div>
+      <Textarea 
+        className={className} 
+        value={localValue}
+        onChange={(e) => handleValueChange(e.target.value)}
+        rows={3}
+      />
     );
   }
   
   // Default case: strings, numbers, etc.
   return isEditable ? (
-    <div className="flex items-center gap-2">
-      <Input 
-        className={className} 
-        value={String(localValue)}
-        type={typeof localValue === 'number' ? 'number' : 'text'}
-        onChange={(e) => {
-          const newValue = typeof localValue === 'number' 
-            ? parseFloat(e.target.value) 
-            : e.target.value;
-          handleValueChange(newValue);
-        }}
-      />
-      {originalValue !== undefined && showResetButton && (
-        <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
-          <RotateCcw className="h-3.5 w-3.5" />
-        </Button>
-      )}
-    </div>
+    <Input 
+      className={className} 
+      value={String(localValue)}
+      type={typeof localValue === 'number' ? 'number' : 'text'}
+      onChange={(e) => {
+        const newValue = typeof localValue === 'number' 
+          ? parseFloat(e.target.value) 
+          : e.target.value;
+        handleValueChange(newValue);
+      }}
+      size={20}
+    />
   ) : (
     <span className={className}>{String(localValue)}</span>
   );

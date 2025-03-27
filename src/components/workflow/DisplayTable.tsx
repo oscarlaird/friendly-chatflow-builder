@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Minus, RotateCcw } from 'lucide-react';
+import { Minus } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
@@ -51,7 +51,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   isEditable = false,
   onChange,
   originalData,
-  showResetButton = true,
+  showResetButton = false,
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
@@ -101,20 +101,6 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
     }
   };
   
-  const handleReset = () => {
-    if (originalData) {
-      setEditableData(JSON.parse(JSON.stringify(originalData)));
-      if (onChange) {
-        onChange(originalData);
-      }
-    } else {
-      setEditableData(JSON.parse(JSON.stringify(data)));
-      if (onChange) {
-        onChange(data);
-      }
-    }
-  };
-  
   if (!data || !data.length) {
     return null;
   }
@@ -133,42 +119,29 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   return (
     <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
       {/* Title bar with optional title and remove button */}
-      <div className="flex items-center justify-between p-2 bg-muted border-b">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between p-1.5 bg-muted border-b">
+        <div className="flex items-center space-x-1">
           {onRemove && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={onRemove}
-              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              className="h-5 w-5 text-muted-foreground hover:text-destructive"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-3 w-3" />
             </Button>
           )}
-          {title && <h3 className="text-sm font-medium">{title}</h3>}
+          {title && <h3 className="text-xs font-medium">{title}</h3>}
         </div>
         
-        <div className="flex items-center gap-2">
-          {/* Reset button for editable mode */}
-          {isEditable && originalData && showResetButton && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleReset}
-              className="h-6 text-xs"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1" />
-              Reset
-            </Button>
-          )}
-          
+        <div className="flex items-center gap-1">
           {/* Show more/less toggle button */}
           {hasMoreRows && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowFullTable(!showFullTable)}
-              className="h-6 text-xs"
+              className="h-5 text-xs"
             >
               {showFullTable ? 'Show Less' : `Show All (${data.length})`}
             </Button>
@@ -183,7 +156,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
                 {columns.map((column) => (
-                  <TableHead key={column} className="whitespace-nowrap">
+                  <TableHead key={column} className="whitespace-nowrap text-xs p-2">
                     {column}
                   </TableHead>
                 ))}
@@ -193,12 +166,13 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
               {tableData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {columns.map((column) => (
-                    <TableCell key={`${rowIndex}-${column}`} className="align-top">
+                    <TableCell key={`${rowIndex}-${column}`} className="align-top p-1.5">
                       {isEditable ? (
                         <Input
                           value={formatValue(row[column])}
                           onChange={(e) => handleCellValueChange(rowIndex, column, e.target.value)}
                           className="w-full font-mono text-xs"
+                          size={15}
                         />
                       ) : (
                         <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">

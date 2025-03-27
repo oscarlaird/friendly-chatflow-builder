@@ -62,17 +62,17 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
       return (
         <Card>
           {title && (
-            <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+            <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
               <span>{title}</span>
               {isEditableMode && (
-                <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
-                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+                  <RotateCcw className="h-3 w-3 mr-1" />
                   <span className="text-xs">Reset</span>
                 </Button>
               )}
             </div>
           )}
-          <CardContent className="p-4">
+          <CardContent className="p-2">
             <div className="w-full overflow-hidden">
               <DisplayTable 
                 data={singleValue} 
@@ -83,7 +83,7 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                   }
                 }}
                 originalData={data[singleKey]}
-                showResetButton={false} // Don't show reset button in the table itself
+                showResetButton={false} // Never show reset in nested components
               />
             </div>
           </CardContent>
@@ -94,24 +94,24 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
     return (
       <Card>
         {title && (
-          <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+          <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
             <span>{title}</span>
             {isEditableMode && (
-              <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+                <RotateCcw className="h-3 w-3 mr-1" />
                 <span className="text-xs">Reset</span>
               </Button>
             )}
           </div>
         )}
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <DisplayValue 
             value={singleValue} 
             isEditable={isEditableMode}
             onChange={isEditableMode ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
             originalValue={data[singleKey]}
-            showResetButton={false} // Don't show reset button in the value itself
+            showResetButton={false} // Never show reset in nested components
           />
         </CardContent>
       </Card>
@@ -122,17 +122,17 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
   return (
     <Card>
       {title && (
-        <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+        <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
           <span>{title}</span>
           {isEditableMode && (
-            <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
-              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+              <RotateCcw className="h-3 w-3 mr-1" />
               <span className="text-xs">Reset</span>
             </Button>
           )}
         </div>
       )}
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-3 space-y-3">
         {Object.entries(data).map(([key, value]) => (
           <div key={key} className="space-y-1">
             <label className="font-medium text-sm text-muted-foreground block">
@@ -145,17 +145,17 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                 onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
                 path={key}
                 originalValue={data[key]}
-                showResetButton={false} // Don't show reset button in nested values
+                showResetButton={false} // Never show reset in nested components
               />
             </div>
           </div>
         ))}
       </CardContent>
-      {/* Add a reset button at the bottom if we're in editable mode and have multiple keys */}
-      {isEditableMode && keys.length > 0 && (
-        <div className="px-4 pb-4 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 px-2">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+      {/* Only show the main reset button if we're in editable mode */}
+      {isEditableMode && keys.length > 1 && (
+        <div className="px-3 pb-3 flex justify-end">
+          <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+            <RotateCcw className="h-3 w-3 mr-1" />
             <span className="text-xs">Reset</span>
           </Button>
         </div>
