@@ -8,6 +8,7 @@ import { useChats } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, GitBranch } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -17,7 +18,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
   const { chats } = useChats();
   const [sending, setSending] = useState(false);
-  const [activeView, setActiveView] = useState<'chat' | 'workflow'>('chat');
+  const isMobile = useIsMobile();
+  const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'workflow' : 'chat');
 
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);
@@ -47,7 +49,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="md:hidden border-b">
-        <Tabs defaultValue="chat" value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
+        <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">
             <TabsTrigger value="chat" className="flex-1 flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
