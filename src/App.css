@@ -42,3 +42,15 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Prevent horizontal scrolling */
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
+
+/* Make sure markdown content doesn't overflow */
+pre, code {
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -26,7 +26,7 @@ const BrowserEventsList = ({ events }: { events: BrowserEvent[] }) => {
     <div className="mb-4">
       <h3 className="text-base font-semibold mb-2">Browser Events</h3>
       <div className="border rounded-md overflow-hidden">
-        <ScrollArea className="h-36 w-full">
+        <ScrollArea className="h-36">
           <div className="divide-y">
             {sortedEvents.map((event, index) => {
               const browserState = event?.data?.browser_state;
@@ -110,7 +110,7 @@ export const WorkflowDisplay = forwardRef<
   }));
   
   return (
-    <div className={`${className || ''} w-full overflow-hidden`}>
+    <div className={`${className || ''} w-full max-w-full overflow-hidden`}>
       {/* User input form based on mock_get_user_inputs output */}
       {Object.keys(userInputs).length > 0 && (
         <div className={compact ? "mb-4" : "mb-6"}>

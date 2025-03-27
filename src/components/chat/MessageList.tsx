@@ -37,7 +37,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
     <div
       className={`flex ${
         message.role === 'user' ? 'justify-end' : 'justify-start'
-      } mb-4`}
+      } mb-4 w-full`}
     >
       <div
         className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
@@ -46,7 +46,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden max-w-full">
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
@@ -215,7 +215,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`max-w-[90%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+      <Card className={`w-full max-w-[90%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
             </div>
           </div>
           
-          <div ref={contentRef} className="whitespace-pre-wrap mb-4 break-words overflow-hidden max-w-full">
+          <div ref={contentRef} className="whitespace-pre-wrap mb-4 break-words overflow-hidden">
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
           
@@ -298,9 +298,9 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   }, [message.content]);
   
   return (
-    <div className="flex justify-start mb-4">
+    <div className="flex justify-start mb-4 w-full">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-auto max-w-full">
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-hidden">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         {message.screenrecording_url && (
@@ -355,25 +355,25 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   };
 
   return (
-    <ScrollArea className="h-full w-full px-4 py-6">
+    <ScrollArea className="h-full px-4 py-6">
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col items-stretch max-w-full">
           <IntroMessage />
           {messageList.length === 0 ? (
             <div className="flex justify-center mt-6">
               <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
             </div>
           ) : (
-            <div className="w-full max-w-full overflow-hidden">
+            <div className="flex flex-col items-stretch max-w-full">
               {messageList.map(renderMessage)}
             </div>
           )}
           <div ref={scrollRef} />
-        </>
+        </div>
       )}
     </ScrollArea>
   );
