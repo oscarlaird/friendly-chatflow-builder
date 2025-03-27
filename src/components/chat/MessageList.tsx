@@ -203,7 +203,10 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
     <div className="flex justify-center mb-4 w-full">
       <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium">Code Run</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium">Code Run</h3>
+            <span className="text-xs text-muted-foreground">ID: {message.id}</span>
+          </div>
           <CodeRunStateIndicator state={message.code_run_state} />
         </div>
         
