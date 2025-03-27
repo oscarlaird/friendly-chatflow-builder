@@ -28,6 +28,47 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
     setLocalData(data || []);
   }, [data]);
 
+  // Define the handleAddRow function before it's used
+  const handleAddRow = () => {
+    // Create a new empty row with the same structure as existing rows
+    const columns = localData.length > 0 ? Object.keys(localData[0]) : [];
+    const newRow = columns.reduce((obj, col) => {
+      obj[col] = '';
+      return obj;
+    }, {} as Record<string, any>);
+    
+    const updatedData = [...localData, newRow];
+    setLocalData(updatedData);
+    
+    if (onChange) {
+      onChange(updatedData);
+    }
+  };
+
+  const handleCellChange = (rowIndex: number, column: string, value: string) => {
+    const updatedData = [...localData];
+    
+    // Try to convert to number if the original value was a number
+    const originalValue = data[rowIndex]?.[column];
+    const newValue = typeof originalValue === 'number' ? parseFloat(value) : value;
+    
+    updatedData[rowIndex] = { ...updatedData[rowIndex], [column]: newValue };
+    setLocalData(updatedData);
+    
+    if (onChange) {
+      onChange(updatedData);
+    }
+  };
+
+  const handleRemoveRow = (rowIndex: number) => {
+    const updatedData = localData.filter((_, idx) => idx !== rowIndex);
+    setLocalData(updatedData);
+    
+    if (onChange) {
+      onChange(updatedData);
+    }
+  };
+
   if (!data || data.length === 0) {
     return (
       <div className={cn("text-muted-foreground italic", className)}>
@@ -52,45 +93,6 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
 
   // Extract columns from the first row
   const columns = Object.keys(data[0]);
-
-  const handleCellChange = (rowIndex: number, column: string, value: string) => {
-    const updatedData = [...localData];
-    
-    // Try to convert to number if the original value was a number
-    const originalValue = data[rowIndex]?.[column];
-    const newValue = typeof originalValue === 'number' ? parseFloat(value) : value;
-    
-    updatedData[rowIndex] = { ...updatedData[rowIndex], [column]: newValue };
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
-
-  const handleAddRow = () => {
-    // Create a new empty row with the same structure as existing rows
-    const newRow = columns.reduce((obj, col) => {
-      obj[col] = '';
-      return obj;
-    }, {} as Record<string, any>);
-    
-    const updatedData = [...localData, newRow];
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
-
-  const handleRemoveRow = (rowIndex: number) => {
-    const updatedData = localData.filter((_, idx) => idx !== rowIndex);
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
 
   return (
     <div className={cn("overflow-auto max-h-80 border rounded-md", className)}>
