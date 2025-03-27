@@ -1,3 +1,4 @@
+
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMessages } from "@/hooks/useMessages";
@@ -21,7 +22,6 @@ interface WorkflowStep {
 interface WorkflowProps {
   steps: WorkflowStep[];
   chatId: string | null;
-  onInputChange?: (inputs: any) => void;
 }
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
@@ -70,12 +70,12 @@ const DebugBadge = ({
   );
 };
 
-export const Workflow = ({ steps: propSteps, chatId, onInputChange }: WorkflowProps) => {
+export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [chatData, setChatData] = useState<Chat | null>(null);
-  const [userInputs, setUserInputs] = useState<any>({});
+  const workflowDisplayRef = useRef<{ getUserInputs: () => any } | null>(null);
   const renderCount = useRef(0);
   
   // Initial data fetch and real-time subscription
@@ -201,6 +201,9 @@ export const Workflow = ({ steps: propSteps, chatId, onInputChange }: WorkflowPr
   const handleRunWorkflow = async () => {
     if (!chatId) return;
     
+    // Get current user inputs directly from the WorkflowDisplay component
+    const userInputs = workflowDisplayRef.current?.getUserInputs() || {};
+    
     console.log("Running workflow with user inputs:", userInputs);
     try {
       // Send a message with type code_run and include the user inputs
@@ -214,17 +217,6 @@ export const Workflow = ({ steps: propSteps, chatId, onInputChange }: WorkflowPr
       }, '*');
     } catch (error) {
       console.error("Error running workflow:", error);
-    }
-  };
-
-  // Track user input changes
-  const handleInputChange = (newInputs: any) => {
-    console.log("User inputs changed:", newInputs);
-    setUserInputs(newInputs);
-    
-    // Call the parent's onInputChange handler if provided
-    if (onInputChange) {
-      onInputChange(newInputs);
     }
   };
 
@@ -276,9 +268,9 @@ export const Workflow = ({ steps: propSteps, chatId, onInputChange }: WorkflowPr
               </div>
             ) : (
               <WorkflowDisplay 
+                ref={workflowDisplayRef}
                 steps={steps} 
-                input_editable={true} 
-                onInputChange={handleInputChange} 
+                input_editable={true}
               />
             )}
           </div>

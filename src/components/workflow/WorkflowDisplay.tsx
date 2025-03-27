@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
 
@@ -8,16 +8,17 @@ interface WorkflowDisplayProps {
   className?: string;
   compact?: boolean;
   input_editable?: boolean;
-  onInputChange?: (inputs: any) => void;
 }
 
-export const WorkflowDisplay = ({ 
+export const WorkflowDisplay = forwardRef<
+  { getUserInputs: () => any },
+  WorkflowDisplayProps
+>(({ 
   steps, 
   className, 
   compact = false, 
   input_editable = false,
-  onInputChange
-}: WorkflowDisplayProps) => {
+}, ref) => {
   // Filter out ignored functions from steps
   const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
   
@@ -39,12 +40,23 @@ export const WorkflowDisplay = ({
   const userInputs = mockInputStep?.output || {};
   const finalOutput = mainStep?.output || null;
   
-  // Track user inputs and notify parent when they change
+  // Local state for the input value
+  const [inputValues, setInputValues] = useState<any>(userInputs);
+  
+  // Update local inputs when userInputs change
+  useEffect(() => {
+    setInputValues(userInputs);
+  }, [JSON.stringify(userInputs)]);
+  
+  // Handle input changes
   const handleInputChange = (newInputs: any) => {
-    if (onInputChange) {
-      onInputChange(newInputs);
-    }
+    setInputValues(newInputs);
   };
+  
+  // Expose the getUserInputs method to parent components
+  useImperativeHandle(ref, () => ({
+    getUserInputs: () => inputValues
+  }));
   
   return (
     <div className={className}>
@@ -88,4 +100,6 @@ export const WorkflowDisplay = ({
       )}
     </div>
   );
-};
+});
+
+WorkflowDisplay.displayName = "WorkflowDisplay";

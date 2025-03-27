@@ -18,7 +18,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { chats } = useChats();
   const [sending, setSending] = useState(false);
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>('chat');
-  const [workflowUserInputs, setWorkflowUserInputs] = useState<any>(null);
 
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);
@@ -29,19 +28,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     
     setSending(true);
     try {
-      // If it's a code run, include the workflow user inputs
-      const userInputs = type === 'code_run' ? workflowUserInputs : undefined;
-      
-      // Send user message with the specified type and user inputs if applicable
-      await sendMessage(content, 'user', type, userInputs);
+      // Send user message with the specified type
+      await sendMessage(content, 'user', type);
     } finally {
       setSending(false);
     }
-  };
-
-  // Track workflow user inputs from the Workflow component
-  const handleWorkflowInputChange = (inputs: any) => {
-    setWorkflowUserInputs(inputs);
   };
 
   if (!chatId) {
@@ -82,7 +73,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             <Workflow 
               steps={initialWorkflowSteps} 
               chatId={chatId} 
-              onInputChange={handleWorkflowInputChange}
             />
           </div>
         )}
@@ -104,7 +94,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             <Workflow 
               steps={initialWorkflowSteps} 
               chatId={chatId} 
-              onInputChange={handleWorkflowInputChange}
             />
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -112,4 +101,3 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     </div>
   );
 };
-
