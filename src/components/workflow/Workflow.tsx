@@ -1,4 +1,3 @@
-
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMessages } from "@/hooks/useMessages";
@@ -22,6 +21,7 @@ interface WorkflowStep {
 interface WorkflowProps {
   steps: WorkflowStep[];
   chatId: string | null;
+  onInputChange?: (inputs: any) => void;
 }
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
@@ -70,7 +70,7 @@ const DebugBadge = ({
   );
 };
 
-export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
+export const Workflow = ({ steps: propSteps, chatId, onInputChange }: WorkflowProps) => {
   const { sendMessage } = useMessages(chatId);
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
@@ -221,6 +221,11 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const handleInputChange = (newInputs: any) => {
     console.log("User inputs changed:", newInputs);
     setUserInputs(newInputs);
+    
+    // Call the parent's onInputChange handler if provided
+    if (onInputChange) {
+      onInputChange(newInputs);
+    }
   };
 
   return (
