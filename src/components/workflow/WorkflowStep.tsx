@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
@@ -15,6 +15,7 @@ interface WorkflowStepProps {
   output?: Record<string, any>;
   requiresBrowser?: boolean;
   isLast?: boolean;
+  active?: boolean;
 }
 
 // Helper function to format function name
@@ -33,6 +34,7 @@ export const WorkflowStep = ({
   output,
   requiresBrowser = false,
   isLast = false,
+  active = false,
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
@@ -40,21 +42,43 @@ export const WorkflowStep = ({
   const hasInput = input && Object.keys(input).length > 0;
   const hasOutput = output && Object.keys(output).length > 0;
   
+  // Auto-open input and output sections if the step is active
+  useEffect(() => {
+    if (active) {
+      setIsInputOpen(true);
+      setIsOutputOpen(true);
+    }
+  }, [active]);
+  
   return (
     <div className="relative">
       {!isLast && (
         <div className="absolute left-4 top-14 bottom-0 w-0.5 bg-border z-0"></div>
       )}
-      <Card className="relative z-10 mb-3">
-        <CardContent className="p-4">
+      <Card className={cn(
+        "relative z-10 mb-3",
+        active && "border-primary shadow-md"
+      )}>
+        <CardContent className={cn(
+          "p-4",
+          active && "bg-primary/5"
+        )}>
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary font-medium border border-primary/20">
+            <div className={cn(
+              "flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full font-medium border",
+              active 
+                ? "bg-primary text-primary-foreground border-primary" 
+                : "bg-primary/10 text-primary border-primary/20"
+            )}>
               {stepNumber}
             </div>
             
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap gap-2 items-center">
-                <h3 className="font-medium text-lg">
+                <h3 className={cn(
+                  "font-medium text-lg",
+                  active && "text-primary"
+                )}>
                   {formatFunctionName(functionName)}
                 </h3>
                 
@@ -65,6 +89,12 @@ export const WorkflowStep = ({
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     Browser Required
+                  </Badge>
+                )}
+                
+                {active && (
+                  <Badge className="bg-primary text-primary-foreground">
+                    Active
                   </Badge>
                 )}
               </div>

@@ -86,6 +86,7 @@ export const WorkflowDisplay = forwardRef<
               output={step.output}
               requiresBrowser={step.requires_browser}
               isLast={index === filteredSteps.length - 1}
+              active={step.active === true} // Pass the active state to highlight the step
             />
           ))}
         </div>
