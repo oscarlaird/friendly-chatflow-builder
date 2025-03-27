@@ -63,7 +63,7 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
     );
   }
 
-  // Regular key-value display for multiple keys
+  // Regular key-value display for multiple keys with vertical layout
   return (
     <Card>
       {title && (
@@ -71,16 +71,20 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
           {title}
         </div>
       )}
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-4">
         {Object.entries(data).map(([key, value]) => (
-          <div key={key} className="grid grid-cols-[30%_70%] gap-2 items-start">
-            <span className="font-medium text-sm text-muted-foreground">{formatKeyName(key)}:</span>
-            <DisplayValue 
-              value={value} 
-              isInput={isInput}
-              onChange={(newValue) => handleValueChange(key, newValue)}
-              path={key}
-            />
+          <div key={key} className="space-y-1">
+            <label className="font-medium text-sm text-muted-foreground block">
+              {formatKeyName(key)}:
+            </label>
+            <div className="ml-0">
+              <DisplayValue 
+                value={value} 
+                isInput={isInput}
+                onChange={(newValue) => handleValueChange(key, newValue)}
+                path={key}
+              />
+            </div>
           </div>
         ))}
       </CardContent>
