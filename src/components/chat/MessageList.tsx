@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -6,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { Globe } from 'lucide-react';
+import { WorkflowStep } from '../workflow/WorkflowStep';
 import { KeyValueDisplay } from '../workflow/KeyValueDisplay';
 
 interface MessageListProps {
@@ -92,49 +92,42 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
       return () => clearTimeout(timer);
     }
   }, [message.content]);
+
+  // Format steps for WorkflowStep component
+  const workflowSteps = message.steps && Array.isArray(message.steps) 
+    ? message.steps.map((step: any, index: number) => ({
+        stepNumber: index + 1,
+        functionName: step.function_name || step.title || `Step ${index + 1}`,
+        description: step.description || '',
+        input: step.input || step.data,
+        output: step.output,
+        requiresBrowser: step.requires_browser,
+        isLast: index === (message.steps as any[]).length - 1
+      }))
+    : [];
   
   return (
     <div className="flex justify-center mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-2">
+        <div ref={contentRef} className="whitespace-pre-wrap mb-4">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display steps from message.steps if available */}
-        {message.steps && (
-          <div className="mt-3 border-t pt-2">
-            <p className="text-sm font-medium mb-2">Steps:</p>
-            {Array.isArray(message.steps) ? (
-              <div className="space-y-2">
-                {message.steps.map((step: any, index: number) => (
-                  <div key={index} className="pl-2 border-l-2 border-muted-foreground/30">
-                    <p className="text-xs font-medium">{index + 1}. {step.title || 'Step'}</p>
-                    {step.description && (
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
-                    )}
-                    {step.data && Object.keys(step.data).length > 0 && (
-                      <div className="mt-1 pl-2">
-                        <KeyValueDisplay data={step.data} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <pre className="text-xs overflow-auto p-2 bg-muted rounded-md max-h-60">
-                {JSON.stringify(message.steps, null, 2)}
-              </pre>
-            )}
-          </div>
-        )}
-        
-        {/* Display script if available */}
-        {message.script && (
-          <div className="mt-3 border-t pt-2">
-            <p className="text-sm font-medium mb-2">Script:</p>
-            <pre className="text-xs overflow-auto p-2 bg-muted rounded-md max-h-60">
-              {message.script}
-            </pre>
+        {/* Display workflow steps from message.steps if available */}
+        {workflowSteps.length > 0 && (
+          <div className="mb-4">
+            {workflowSteps.map((step, index) => (
+              <WorkflowStep 
+                key={index}
+                stepNumber={step.stepNumber}
+                functionName={step.functionName}
+                description={step.description}
+                input={step.input}
+                output={step.output}
+                requiresBrowser={step.requiresBrowser}
+                isLast={step.isLast}
+              />
+            ))}
           </div>
         )}
         
