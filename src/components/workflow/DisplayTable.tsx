@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Minus } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '@/components/ui/input';
 
 interface DisplayTableProps {
   data: Record<string, any>[];
@@ -50,6 +51,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
+  const [editableData, setEditableData] = useState<Record<string, any>[]>([]);
   
   useEffect(() => {
     // If data has more rows than maxRows and we're not showing the full table,
@@ -59,7 +61,41 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
     } else {
       setDisplayData(data);
     }
+    
+    // Initialize editable data
+    setEditableData(JSON.parse(JSON.stringify(data)));
   }, [data, maxRows, showFullTable]);
+  
+  // Handle cell value change in editable mode
+  const handleCellValueChange = (rowIndex: number, column: string, value: string) => {
+    const newData = [...editableData];
+    
+    try {
+      // Try to parse as JSON if it looks like an object or array
+      if ((value.startsWith('{') && value.endsWith('}')) || 
+          (value.startsWith('[') && value.endsWith(']'))) {
+        newData[rowIndex][column] = JSON.parse(value);
+      } else if (value === 'true') {
+        newData[rowIndex][column] = true;
+      } else if (value === 'false') {
+        newData[rowIndex][column] = false;
+      } else if (!isNaN(Number(value)) && value.trim() !== '') {
+        newData[rowIndex][column] = Number(value);
+      } else {
+        newData[rowIndex][column] = value;
+      }
+    } catch (e) {
+      // If parsing fails, just use the string value
+      newData[rowIndex][column] = value;
+    }
+    
+    setEditableData(newData);
+    
+    // Notify parent of the change
+    if (onChange) {
+      onChange(newData);
+    }
+  };
   
   if (!data || !data.length) {
     return null;
@@ -72,6 +108,9 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   
   const hasMoreRows = data.length > maxRows;
   const columns = Object.keys(data[0]);
+  
+  // Use the editable data when in input mode, otherwise use the display data
+  const tableData = isInput ? editableData : displayData;
 
   return (
     <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
@@ -118,13 +157,21 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayData.map((row, rowIndex) => (
+              {tableData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {columns.map((column) => (
                     <TableCell key={`${rowIndex}-${column}`} className="align-top">
-                      <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
-                        {formatValue(row[column])}
-                      </pre>
+                      {isInput ? (
+                        <Input
+                          value={formatValue(row[column])}
+                          onChange={(e) => handleCellValueChange(rowIndex, column, e.target.value)}
+                          className="w-full font-mono text-xs"
+                        />
+                      ) : (
+                        <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
+                          {formatValue(row[column])}
+                        </pre>
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

@@ -47,6 +47,32 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
     const singleKey = keys[0];
     const singleValue = data[singleKey];
     
+    // If the value is an array of objects, use DisplayTable
+    if (Array.isArray(singleValue) && singleValue.length > 0 && typeof singleValue[0] === 'object') {
+      return (
+        <Card>
+          {title && (
+            <div className="px-4 py-2 border-b bg-muted/50 font-medium text-sm">
+              {title}
+            </div>
+          )}
+          <CardContent className="p-4">
+            <div className="w-full overflow-hidden">
+              <DisplayTable 
+                data={singleValue} 
+                isInput={isEditable} 
+                onChange={(newValue) => {
+                  if (onChange) {
+                    onChange({ [singleKey]: newValue });
+                  }
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
     return (
       <Card>
         {title && (
