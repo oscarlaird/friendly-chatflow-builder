@@ -9,14 +9,13 @@ import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, Square, AlertCircle, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MessageListProps {
   dataState: DataState;
   loading: boolean;
+  updateMessage?: (messageId: string, updates: Partial<Message>) => Promise<void>;
 }
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
@@ -91,27 +90,25 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
   );
 };
 
-const CodeRunControls = ({ message }: { message: Message }) => {
-  const { user } = useAuth();
+const CodeRunControls = ({ 
+  message, 
+  updateMessage 
+}: { 
+  message: Message; 
+  updateMessage?: (messageId: string, updates: Partial<Message>) => Promise<void>;
+}) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const state = message.code_run_state;
 
-  if (!state || state === 'stopped') return null;
+  if (!state || state === 'stopped' || !updateMessage) return null;
 
   const updateCodeRunState = async (newState: 'running' | 'paused' | 'stopped') => {
-    if (!user || isUpdating) return;
+    if (isUpdating) return;
 
     try {
       setIsUpdating(true);
       
-      const { error } = await supabase
-        .from('messages')
-        .update({ code_run_state: newState })
-        .eq('id', message.id);
-        
-      if (error) {
-        throw error;
-      }
+      await updateMessage(message.id, { code_run_state: newState });
       
       toast({
         title: `Workflow ${newState}`,
@@ -179,9 +176,14 @@ const CodeRunControls = ({ message }: { message: Message }) => {
   );
 };
 
-const CodeRunMessageBubble = ({ message, browserEvents }: { 
+const CodeRunMessageBubble = ({ 
+  message, 
+  browserEvents, 
+  updateMessage 
+}: { 
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
+  updateMessage?: (messageId: string, updates: Partial<Message>) => Promise<void>;
 }) => {
   // Content ref and highlight states
   const contentRef = useRef<HTMLDivElement>(null);
@@ -213,12 +215,12 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                   <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                 </Button>
               </CollapsibleTrigger>
-              <h3 className="text-sm font-medium">Code Run ({message.id})</h3>
+              <h3 className="text-sm font-medium">Code Run ({message.id.substring(0, 8)})</h3>
             </div>
             <div className="flex items-center gap-2">
               <CodeRunStateIndicator state={message.code_run_state} />
               {message.code_run_state && message.code_run_state !== 'stopped' && (
-                <CodeRunControls message={message} />
+                <CodeRunControls message={message} updateMessage={updateMessage} />
               )}
             </div>
           </div>
@@ -291,7 +293,7 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   );
 };
 
-export const MessageList = ({ dataState, loading }: MessageListProps) => {
+export const MessageList = ({ dataState, loading, updateMessage }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, browserEvents } = dataState;
   
@@ -316,6 +318,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
             key={message.id}
             message={message}
             browserEvents={browserEvents}
+            updateMessage={updateMessage}
           />
         );
       case 'screen_recording':
