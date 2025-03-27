@@ -170,6 +170,7 @@ export type Database = {
         Row: {
           chat_id: string
           code_output: Json | null
+          code_run_state: Database["public"]["Enums"]["code_run_state"] | null
           content: string
           created_at: string | null
           from_template: boolean | null
@@ -187,6 +188,7 @@ export type Database = {
         Insert: {
           chat_id: string
           code_output?: Json | null
+          code_run_state?: Database["public"]["Enums"]["code_run_state"] | null
           content: string
           created_at?: string | null
           from_template?: boolean | null
@@ -204,6 +206,7 @@ export type Database = {
         Update: {
           chat_id?: string
           code_output?: Json | null
+          code_run_state?: Database["public"]["Enums"]["code_run_state"] | null
           content?: string
           created_at?: string | null
           from_template?: boolean | null
@@ -236,19 +239,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      code_run_state: "stopped" | "paused" | "running"
       message_type: "text_message" | "code_run" | "screen_recording"
       role_type: "user" | "assistant"
-      run_message_sender_type: "dashboard" | "backend" | "extension"
-      run_message_type:
-        | "inputs"
-        | "spawn_window"
-        | "launch_extension"
-        | "extension_loaded"
-        | "command"
-        | "result"
-        | "rationale"
-        | "close_extension"
-        | "abort"
     }
     CompositeTypes: {
       [_ in never]: never

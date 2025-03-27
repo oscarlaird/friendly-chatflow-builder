@@ -154,7 +154,8 @@ export const useMessages = (chatId: string | null) => {
         uid: user.id,
         script,             // Add script from chat if type is code_run
         steps,              // Add steps from chat if type is code_run
-        user_inputs: userInputs // Add user inputs if provided
+        user_inputs: userInputs, // Add user inputs if provided
+        code_run_state: type === 'code_run' ? 'running' : undefined // Set initial state for code_run messages
       };
       
       console.log("Creating new message with data:", newMessage);

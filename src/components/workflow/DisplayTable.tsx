@@ -1,160 +1,134 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
-import { useState, useEffect } from "react";
-
-// Helper function to format column names (remove underscores and capitalize)
-const formatColumnName = (column: string): string => {
-  return column
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Minus } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface DisplayTableProps {
   data: Record<string, any>[];
+  title?: string;
+  onRemove?: () => void;
   className?: string;
-  isInput?: boolean;
-  onChange?: (data: Record<string, any>[]) => void;
+  maxRows?: number;
 }
 
-export const DisplayTable = ({ data, className, isInput = false, onChange }: DisplayTableProps) => {
-  const [localData, setLocalData] = useState<Record<string, any>[]>(data || []);
-
-  useEffect(() => {
-    setLocalData(data || []);
-  }, [data]);
-
-  // Define the handleAddRow function before it's used
-  const handleAddRow = () => {
-    // Create a new empty row with the same structure as existing rows
-    const columns = localData.length > 0 ? Object.keys(localData[0]) : [];
-    const newRow = columns.reduce((obj, col) => {
-      obj[col] = '';
-      return obj;
-    }, {} as Record<string, any>);
-    
-    const updatedData = [...localData, newRow];
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
-
-  const handleCellChange = (rowIndex: number, column: string, value: string) => {
-    const updatedData = [...localData];
-    
-    // Try to convert to number if the original value was a number
-    const originalValue = data[rowIndex]?.[column];
-    const newValue = typeof originalValue === 'number' ? parseFloat(value) : value;
-    
-    updatedData[rowIndex] = { ...updatedData[rowIndex], [column]: newValue };
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
-
-  const handleRemoveRow = (rowIndex: number) => {
-    const updatedData = localData.filter((_, idx) => idx !== rowIndex);
-    setLocalData(updatedData);
-    
-    if (onChange) {
-      onChange(updatedData);
-    }
-  };
-
-  if (!data || data.length === 0) {
-    return (
-      <div className={cn("text-muted-foreground italic", className)}>
-        {isInput ? (
-          <div className="flex flex-col gap-2">
-            <div>No data. Add a row to get started.</div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full" 
-              onClick={handleAddRow}
-            >
-              <Plus className="h-4 w-4 mr-2" /> Add Row
-            </Button>
-          </div>
-        ) : (
-          "No data"
-        )}
-      </div>
-    );
+/**
+ * Format a value for display, handling objects, arrays, and other types
+ */
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined) {
+    return '';
   }
+  
+  if (typeof value === 'object') {
+    try {
+      // For arrays and objects, stringify with indentation
+      return JSON.stringify(value, null, 2);
+    } catch (error) {
+      return String(value);
+    }
+  }
+  
+  return String(value);
+};
 
-  // Extract columns from the first row
+/**
+ * Component to display tabular data with a header row and optional title
+ */
+export const DisplayTable: React.FC<DisplayTableProps> = ({
+  data,
+  title,
+  onRemove,
+  className,
+  maxRows = 10,
+}) => {
+  const [showFullTable, setShowFullTable] = useState(false);
+  const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
+  
+  useEffect(() => {
+    // If data has more rows than maxRows and we're not showing the full table,
+    // only display the first maxRows rows
+    if (data.length > maxRows && !showFullTable) {
+      setDisplayData(data.slice(0, maxRows));
+    } else {
+      setDisplayData(data);
+    }
+  }, [data, maxRows, showFullTable]);
+  
+  if (!data || !data.length) {
+    return null;
+  }
+  
+  // For empty data arrays or data with empty objects, don't render
+  if (data.length === 0 || Object.keys(data[0]).length === 0) {
+    return null;
+  }
+  
+  const hasMoreRows = data.length > maxRows;
   const columns = Object.keys(data[0]);
 
   return (
-    <div className={cn("overflow-hidden max-w-full border rounded-md", className)}>
-      <div className="overflow-x-auto max-w-full">
-        <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
-            <TableRow>
-              {isInput && <TableHead className="w-12 sticky left-0 bg-background z-10"></TableHead>}
-              {columns.map((column) => (
-                <TableHead key={column} className="whitespace-nowrap font-medium">
-                  {formatColumnName(column)}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {localData.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {isInput && (
-                  <TableCell className="w-12 p-2 sticky left-0 bg-background z-10">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveRow(rowIndex)}
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                )}
+    <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
+      {/* Title bar with optional title and remove button */}
+      <div className="flex items-center justify-between p-2 bg-muted border-b">
+        <div className="flex items-center space-x-2">
+          {onRemove && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onRemove}
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+          )}
+          {title && <h3 className="text-sm font-medium">{title}</h3>}
+        </div>
+        
+        {/* Show more/less toggle button */}
+        {hasMoreRows && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFullTable(!showFullTable)}
+            className="h-6 text-xs"
+          >
+            {showFullTable ? 'Show Less' : `Show All (${data.length})`}
+          </Button>
+        )}
+      </div>
+      
+      {/* Table with horizontal scrolling */}
+      <ScrollArea className="max-h-[calc(80vh-40px)]">
+        <div className="overflow-x-auto max-w-full">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
+              <TableRow>
                 {columns.map((column) => (
-                  <TableCell key={`${rowIndex}-${column}`} className="align-top">
-                    {isInput ? (
-                      <Input 
-                        value={typeof row[column] === 'object' ? JSON.stringify(row[column]) : String(row[column] ?? '')}
-                        onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
-                        className="w-full"
-                      />
-                    ) : (
-                      typeof row[column] === 'object' ? 
-                        JSON.stringify(row[column]) : 
-                        String(row[column] ?? '')
-                    )}
-                  </TableCell>
+                  <TableHead key={column} className="whitespace-nowrap">
+                    {column}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      {isInput && (
-        <div className="p-2 border-t">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full" 
-            onClick={handleAddRow}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add Row
-          </Button>
+            </TableHeader>
+            <TableBody>
+              {displayData.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {columns.map((column) => (
+                    <TableCell key={`${rowIndex}-${column}`} className="align-top">
+                      <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
+                        {formatValue(row[column])}
+                      </pre>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      )}
+      </ScrollArea>
     </div>
   );
 };

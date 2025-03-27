@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -6,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
+import { Badge } from '@/components/ui/badge';
+import { Play, Pause, Square } from 'lucide-react';
 
 interface MessageListProps {
   dataState: DataState;
@@ -47,6 +48,43 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   );
 };
 
+const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stopped' }) => {
+  if (!state) return null;
+  
+  const getStateIcon = () => {
+    switch (state) {
+      case 'running':
+        return <Play className="h-3 w-3" />;
+      case 'paused':
+        return <Pause className="h-3 w-3" />;
+      case 'stopped':
+        return <Square className="h-3 w-3" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStateColor = () => {
+    switch (state) {
+      case 'running':
+        return "bg-green-500 hover:bg-green-600";
+      case 'paused':
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case 'stopped':
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
+
+  return (
+    <Badge className={`${getStateColor()} flex items-center gap-1`}>
+      {getStateIcon()}
+      <span className="capitalize">{state}</span>
+    </Badge>
+  );
+};
+
 const CodeRunMessageBubble = ({ message, browserEvents }: { 
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
@@ -72,6 +110,11 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium">Code Run</h3>
+          <CodeRunStateIndicator state={message.code_run_state} />
+        </div>
+        
         <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-x-auto max-w-full">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
