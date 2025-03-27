@@ -227,15 +227,18 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               <h3 className="text-sm font-medium">Code Run ({message.id})</h3>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleJumpToWindow}
-                title="Jump to Window"
-              >
-                <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                Jump to Window
-              </Button>
+              {/* Only show Jump to Window button if code_run_state is not stopped */}
+              {message.code_run_state && message.code_run_state !== 'stopped' && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleJumpToWindow}
+                  title="Jump to Window"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                  Jump to Window
+                </Button>
+              )}
               <CodeRunStateIndicator state={message.code_run_state} />
               {message.code_run_state && message.code_run_state !== 'stopped' && (
                 <CodeRunControls message={message} />
