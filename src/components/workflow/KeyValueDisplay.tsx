@@ -83,6 +83,7 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                   }
                 }}
                 originalData={data[singleKey]}
+                showResetButton={false} // Don't show reset button in the table itself
               />
             </div>
           </CardContent>
@@ -110,6 +111,7 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
             onChange={isEditableMode ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
             originalValue={data[singleKey]}
+            showResetButton={false} // Don't show reset button in the value itself
           />
         </CardContent>
       </Card>
@@ -143,6 +145,7 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                 onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
                 path={key}
                 originalValue={data[key]}
+                showResetButton={false} // Don't show reset button in nested values
               />
             </div>
           </div>

@@ -16,6 +16,7 @@ interface DisplayTableProps {
   isEditable?: boolean;
   onChange?: (value: any) => void;
   originalData?: Record<string, any>[];
+  showResetButton?: boolean;
 }
 
 /**
@@ -50,6 +51,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   isEditable = false,
   onChange,
   originalData,
+  showResetButton = true,
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
@@ -148,7 +150,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
         
         <div className="flex items-center gap-2">
           {/* Reset button for editable mode */}
-          {isEditable && originalData && (
+          {isEditable && originalData && showResetButton && (
             <Button 
               variant="ghost" 
               size="sm" 

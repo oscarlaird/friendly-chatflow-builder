@@ -23,9 +23,18 @@ interface DisplayValueProps {
   onChange?: (value: any) => void;
   path?: string;
   originalValue?: any;
+  showResetButton?: boolean;
 }
 
-export const DisplayValue = ({ value, className, isEditable = false, onChange, path = '', originalValue }: DisplayValueProps): ReactNode => {
+export const DisplayValue = ({ 
+  value, 
+  className, 
+  isEditable = false, 
+  onChange, 
+  path = '', 
+  originalValue,
+  showResetButton = true
+}: DisplayValueProps): ReactNode => {
   const [localValue, setLocalValue] = useState<any>(value);
   
   // Update local value when the prop changes
@@ -81,7 +90,7 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
           onChange={(e) => handleValueChange(e.target.value)} 
           placeholder="Enter value" 
         />
-        {originalValue !== undefined && (
+        {originalValue !== undefined && showResetButton && (
           <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
@@ -100,13 +109,8 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
           isEditable={isEditable}
           onChange={isEditable ? handleValueChange : undefined}
           originalData={originalValue}
+          showResetButton={showResetButton}
         />
-        {isEditable && originalValue !== undefined && (
-          <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
-            <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs">Reset</span>
-          </Button>
-        )}
       </div>
     );
   }
@@ -123,10 +127,11 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
               onChange={isEditable ? (newValue) => handleArrayItemChange(index, newValue) : undefined}
               path={`${path}[${index}]`}
               originalValue={originalValue?.[index]}
+              showResetButton={false} // Don't show reset buttons on nested items
             />
           </div>
         ))}
-        {isEditable && originalValue !== undefined && (
+        {isEditable && originalValue !== undefined && showResetButton && (
           <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
             <RotateCcw className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">Reset</span>
@@ -145,7 +150,7 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
           onCheckedChange={handleValueChange}
           className={className}
         />
-        {originalValue !== undefined && (
+        {originalValue !== undefined && showResetButton && (
           <Button variant="ghost" size="icon" onClick={handleReset} className="h-7 w-7">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
@@ -171,10 +176,11 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
               onChange={isEditable ? (newValue) => handleObjectValueChange(key, newValue) : undefined}
               path={`${path}.${key}`}
               originalValue={originalValue?.[key]}
+              showResetButton={false} // Don't show reset buttons on nested items
             />
           </div>
         ))}
-        {isEditable && originalValue !== undefined && (
+        {isEditable && originalValue !== undefined && showResetButton && (
           <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
             <RotateCcw className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">Reset</span>
@@ -193,7 +199,7 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
           value={localValue}
           onChange={(e) => handleValueChange(e.target.value)}
         />
-        {originalValue !== undefined && (
+        {originalValue !== undefined && showResetButton && (
           <Button variant="ghost" size="sm" onClick={handleReset} className="self-end h-7 px-2">
             <RotateCcw className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">Reset</span>
@@ -217,7 +223,7 @@ export const DisplayValue = ({ value, className, isEditable = false, onChange, p
           handleValueChange(newValue);
         }}
       />
-      {originalValue !== undefined && (
+      {originalValue !== undefined && showResetButton && (
         <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
           <RotateCcw className="h-3.5 w-3.5" />
         </Button>
