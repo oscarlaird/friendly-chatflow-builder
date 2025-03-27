@@ -5,8 +5,7 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { Globe } from 'lucide-react';
-import { WorkflowStep } from '../workflow/WorkflowStep';
-import { KeyValueDisplay } from '../workflow/KeyValueDisplay';
+import { WorkflowIO } from '../workflow/WorkflowIO';
 
 interface MessageListProps {
   dataState: DataState;
@@ -93,18 +92,20 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
     }
   }, [message.content]);
 
-  // Format steps for WorkflowStep component
-  const workflowSteps = message.steps && Array.isArray(message.steps) 
-    ? message.steps.map((step: any, index: number) => ({
-        stepNumber: index + 1,
-        functionName: step.function_name || step.title || `Step ${index + 1}`,
-        description: step.description || '',
-        input: step.input || step.data,
-        output: step.output,
-        requiresBrowser: step.requires_browser,
-        isLast: index === (message.steps as any[]).length - 1
-      }))
-    : [];
+  // Extract input from mock_get_user_input step and output from main step
+  const workflowInput = message.steps && Array.isArray(message.steps) 
+    ? message.steps.find(step => 
+        step.function_name === 'mock_get_user_input' || 
+        step.title === 'mock_get_user_input'
+      )?.output
+    : undefined;
+  
+  const workflowOutput = message.steps && Array.isArray(message.steps)
+    ? message.steps.find(step => 
+        step.function_name === 'main' || 
+        step.title === 'main'
+      )?.output
+    : undefined;
   
   return (
     <div className="flex justify-center mb-4">
@@ -113,23 +114,8 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display workflow steps from message.steps if available */}
-        {workflowSteps.length > 0 && (
-          <div className="mb-4">
-            {workflowSteps.map((step, index) => (
-              <WorkflowStep 
-                key={index}
-                stepNumber={step.stepNumber}
-                functionName={step.functionName}
-                description={step.description}
-                input={step.input}
-                output={step.output}
-                requiresBrowser={step.requiresBrowser}
-                isLast={step.isLast}
-              />
-            ))}
-          </div>
-        )}
+        {/* Display input from mock_get_user_input and output from main */}
+        <WorkflowIO input={workflowInput} output={workflowOutput} />
         
         {message.coderunEvents && message.coderunEvents.length > 0 && (
           <div className="mt-2 border-t pt-2">
