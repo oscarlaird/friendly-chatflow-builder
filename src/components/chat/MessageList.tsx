@@ -6,12 +6,11 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, AlertCircle, ChevronDown } from 'lucide-react';
+import { Play, Pause, Square, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface MessageListProps {
   dataState: DataState;
@@ -130,7 +129,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mt-2">
       {state === 'running' ? (
         <>
           <Button 
@@ -185,7 +184,6 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   // Content ref and highlight states
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   
   // Highlight content when it changes
   useEffect(() => {
@@ -203,67 +201,46 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`w-full max-w-[80%] ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          className="w-full"
-        >
-          <div className="p-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium">Code Run</h3>
-                <span className="text-xs text-muted-foreground">ID: {message.id}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {message.code_run_state && message.code_run_state !== 'stopped' && (
-                  <CodeRunControls message={message} />
-                )}
-                <CodeRunStateIndicator state={message.code_run_state} />
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-0 h-7 w-7">
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
-                    <span className="sr-only">Toggle content</span>
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-            
-            <div ref={contentRef} className="whitespace-pre-wrap overflow-x-auto max-w-full mt-2">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-            </div>
+      <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium">Code Run</h3>
+          <CodeRunStateIndicator state={message.code_run_state} />
+        </div>
+        
+        <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-x-auto max-w-full">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </div>
+        
+        {/* Display workflow steps with browser events */}
+        {message.steps && message.steps.length > 0 && (
+          <div className="w-full overflow-hidden">
+            <WorkflowDisplay 
+              steps={message.steps.map(step => {
+                // Find browser events that match this function
+                if (step.function_name) {
+                  const functionEvents = messageBrowserEvents.filter(
+                    event => event.function_name === step.function_name
+                  );
+                  if (functionEvents.length > 0) {
+                    return {
+                      ...step,
+                      browserEvents: functionEvents,
+                      active: true
+                    };
+                  }
+                }
+                return step;
+              })}
+              compact={true}
+              autoActivateSteps={true}
+            />
           </div>
-          
-          <CollapsibleContent>
-            <div className="px-4 pb-4">
-              {/* Display workflow steps with browser events */}
-              {message.steps && message.steps.length > 0 && (
-                <div className="w-full overflow-hidden mt-2">
-                  <WorkflowDisplay 
-                    steps={message.steps.map(step => {
-                      // Find browser events that match this function
-                      if (step.function_name) {
-                        const functionEvents = messageBrowserEvents.filter(
-                          event => event.function_name === step.function_name
-                        );
-                        if (functionEvents.length > 0) {
-                          return {
-                            ...step,
-                            browserEvents: functionEvents,
-                            active: true
-                          };
-                        }
-                      }
-                      return step;
-                    })}
-                    compact={true}
-                    autoActivateSteps={true}
-                  />
-                </div>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        )}
+        
+        {/* Add code run controls if the message is a running or paused code run */}
+        {message.code_run_state && message.code_run_state !== 'stopped' && (
+          <CodeRunControls message={message} />
+        )}
       </Card>
     </div>
   );
