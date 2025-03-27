@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -92,7 +93,7 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
   }, [message.content]);
   
   return (
-    <div className="flex justify-start mb-4">
+    <div className="flex justify-center mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <div ref={contentRef} className="whitespace-pre-wrap mb-2">
           <ReactMarkdown>{message.content}</ReactMarkdown>
