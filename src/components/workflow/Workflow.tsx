@@ -1,4 +1,3 @@
-
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMessages } from "@/hooks/useMessages";
@@ -263,7 +262,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
                 </div>
               </div>
             ) : (
-              <WorkflowDisplay steps={steps} />
+              <WorkflowDisplay steps={steps} input_editable={true} />
             )}
           </div>
         </ScrollArea>

@@ -7,7 +7,7 @@ interface KeyValueDisplayProps {
   data: Record<string, any>;
   title?: string;
   isInput?: boolean;
-  onChange?: (data: Record<string, any>) => void;
+  onChange?: ((data: Record<string, any>) => void) | null;
 }
 
 // Helper function to format key names (remove underscores and capitalize)
@@ -20,6 +20,9 @@ const formatKeyName = (key: string): string => {
 
 export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyValueDisplayProps) => {
   const [localData, setLocalData] = useState<Record<string, any>>(data || {});
+  
+  // Determine if the component is editable
+  const isEditable = isInput && onChange !== null;
 
   useEffect(() => {
     setLocalData(data || {});
@@ -54,8 +57,8 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
         <CardContent className="p-4">
           <DisplayValue 
             value={singleValue} 
-            isInput={isInput}
-            onChange={(newValue) => handleValueChange(singleKey, newValue)}
+            isInput={isEditable}
+            onChange={isEditable ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
           />
         </CardContent>
@@ -80,8 +83,8 @@ export const KeyValueDisplay = ({ data, title, isInput = false, onChange }: KeyV
             <div className="ml-0">
               <DisplayValue 
                 value={value} 
-                isInput={isInput}
-                onChange={(newValue) => handleValueChange(key, newValue)}
+                isInput={isEditable}
+                onChange={isEditable ? (newValue) => handleValueChange(key, newValue) : undefined}
                 path={key}
               />
             </div>

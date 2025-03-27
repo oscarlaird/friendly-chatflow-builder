@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -99,10 +100,10 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display workflow steps, input and output using the new WorkflowDisplay component */}
+        {/* Display workflow steps, input and output using the WorkflowDisplay component */}
         {message.steps && message.steps.length > 0 && (
           <div className="mb-4">
-            <WorkflowDisplay steps={message.steps} compact={true} />
+            <WorkflowDisplay steps={message.steps} compact={true} input_editable={false} />
           </div>
         )}
         

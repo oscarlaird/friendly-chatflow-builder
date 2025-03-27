@@ -7,9 +7,15 @@ interface WorkflowDisplayProps {
   steps: any[];
   className?: string;
   compact?: boolean;
+  input_editable?: boolean;
 }
 
-export const WorkflowDisplay = ({ steps, className, compact = false }: WorkflowDisplayProps) => {
+export const WorkflowDisplay = ({ 
+  steps, 
+  className, 
+  compact = false, 
+  input_editable = false 
+}: WorkflowDisplayProps) => {
   // Filter out ignored functions from steps
   const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
   
@@ -40,6 +46,7 @@ export const WorkflowDisplay = ({ steps, className, compact = false }: WorkflowD
           <KeyValueDisplay 
             data={userInputs} 
             isInput={true}
+            onChange={input_editable ? undefined : null} // Only allow changes if editable
           />
         </div>
       )}
