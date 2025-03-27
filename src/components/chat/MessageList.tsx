@@ -1,10 +1,10 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
+import { Globe } from 'lucide-react';
 
 interface MessageListProps {
   dataState: DataState;
@@ -42,6 +42,33 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
+    </div>
+  );
+};
+
+const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
+  // Extract domain from URL for favicon
+  const getFaviconUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const browserState = event?.data?.browser_state;
+  const currentGoal = event?.data?.current_goal;
+  const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
+
+  return (
+    <div className="flex items-center gap-2 text-xs py-1 px-2 border-b border-muted/40 last:border-0">
+      {faviconUrl ? (
+        <img src={faviconUrl} alt="site favicon" className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+      )}
+      <span className="truncate">{currentGoal || 'Browser action'}</span>
     </div>
   );
 };
@@ -84,18 +111,15 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
                   </p>
                   
                   {event?.browserEvents && event.browserEvents.length > 0 && (
-                    <div className="mt-1 ml-2">
-                      <p className="text-xs font-medium text-muted-foreground">Browser Events:</p>
-                      {event.browserEvents.map(beId => {
-                        const browserEvent = browserEvents[beId];
-                        return (
-                          <div key={beId} className="pl-2 border-l border-muted-foreground/20 mt-1">
-                            <pre className="text-xs overflow-auto max-h-24 bg-muted/50 p-1 rounded whitespace-pre-wrap">
-                              {JSON.stringify(browserEvent?.data, null, 2)}
-                            </pre>
-                          </div>
-                        );
-                      })}
+                    <div className="mt-1">
+                      <div className="border rounded-sm text-xs overflow-hidden max-h-36">
+                        {event.browserEvents.map(beId => {
+                          const browserEvent = browserEvents[beId];
+                          return browserEvent ? (
+                            <BrowserEventItem key={beId} event={browserEvent} />
+                          ) : null;
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
