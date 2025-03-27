@@ -203,13 +203,13 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full max-w-[80%]"
-      >
-        <Card className={`w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-          <div className="flex flex-col space-y-2">
+      <Card className={`w-full max-w-[80%] ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <Collapsible
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          className="w-full"
+        >
+          <div className="p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-medium">Code Run</h3>
@@ -222,47 +222,49 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                 <CodeRunStateIndicator state={message.code_run_state} />
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-0 h-7 w-7">
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
                     <span className="sr-only">Toggle content</span>
                   </Button>
                 </CollapsibleTrigger>
               </div>
             </div>
             
-            <div ref={contentRef} className="whitespace-pre-wrap overflow-x-auto max-w-full">
+            <div ref={contentRef} className="whitespace-pre-wrap overflow-x-auto max-w-full mt-2">
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           </div>
           
           <CollapsibleContent>
-            {/* Display workflow steps with browser events */}
-            {message.steps && message.steps.length > 0 && (
-              <div className="w-full overflow-hidden mt-4">
-                <WorkflowDisplay 
-                  steps={message.steps.map(step => {
-                    // Find browser events that match this function
-                    if (step.function_name) {
-                      const functionEvents = messageBrowserEvents.filter(
-                        event => event.function_name === step.function_name
-                      );
-                      if (functionEvents.length > 0) {
-                        return {
-                          ...step,
-                          browserEvents: functionEvents,
-                          active: true
-                        };
+            <div className="px-4 pb-4">
+              {/* Display workflow steps with browser events */}
+              {message.steps && message.steps.length > 0 && (
+                <div className="w-full overflow-hidden mt-2">
+                  <WorkflowDisplay 
+                    steps={message.steps.map(step => {
+                      // Find browser events that match this function
+                      if (step.function_name) {
+                        const functionEvents = messageBrowserEvents.filter(
+                          event => event.function_name === step.function_name
+                        );
+                        if (functionEvents.length > 0) {
+                          return {
+                            ...step,
+                            browserEvents: functionEvents,
+                            active: true
+                          };
+                        }
                       }
-                    }
-                    return step;
-                  })}
-                  compact={true}
-                  autoActivateSteps={true}
-                />
-              </div>
-            )}
+                      return step;
+                    })}
+                    compact={true}
+                    autoActivateSteps={true}
+                  />
+                </div>
+              )}
+            </div>
           </CollapsibleContent>
-        </Card>
-      </Collapsible>
+        </Collapsible>
+      </Card>
     </div>
   );
 };
