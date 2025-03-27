@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Chat } from "@/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { KeyValueDisplay } from "./KeyValueDisplay";
 
 interface WorkflowStep {
   function_name: string;
@@ -78,6 +79,8 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [chatData, setChatData] = useState<Chat | null>(null);
+  const [userInputs, setUserInputs] = useState<Record<string, any>>({});
+  const [finalOutput, setFinalOutput] = useState<Record<string, any> | null>(null);
   const renderCount = useRef(0);
   
   // Initial data fetch and real-time subscription
@@ -90,6 +93,13 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       setSteps(filteredSteps);
       setChatData(null);
       setCodeRewritingStatus('thinking');
+      // Check if there's a mock_get_user_inputs step for input schema
+      const mockInputStep = propSteps.find(step => step.function_name === "mock_get_user_inputs");
+      if (mockInputStep?.output) {
+        setUserInputs(mockInputStep.output);
+      } else {
+        setUserInputs({});
+      }
       return;
     }
 
@@ -117,11 +127,32 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
             !IGNORED_FUNCTIONS.includes(step.function_name)
           );
           setSteps(filteredSteps);
+          
+          // Get the user input schema from the mock step
+          const stepsArray = data.steps as unknown as WorkflowStep[];
+          const mockInputStep = stepsArray.find(step => step.function_name === "mock_get_user_inputs");
+          if (mockInputStep?.output) {
+            setUserInputs(mockInputStep.output);
+          }
+          
+          // Get the final output from the last step
+          if (filteredSteps.length > 0) {
+            const lastStep = filteredSteps[filteredSteps.length - 1];
+            if (lastStep.output) {
+              setFinalOutput(lastStep.output);
+            }
+          }
         } else {
           const filteredSteps = propSteps.filter(step => 
             !IGNORED_FUNCTIONS.includes(step.function_name)
           );
           setSteps(filteredSteps);
+          
+          // Check if there's a mock_get_user_inputs step for input schema
+          const mockInputStep = propSteps.find(step => step.function_name === "mock_get_user_inputs");
+          if (mockInputStep?.output) {
+            setUserInputs(mockInputStep.output);
+          }
         }
         
         // Set code rewriting status based on chat data
@@ -170,6 +201,21 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
                 !IGNORED_FUNCTIONS.includes(step.function_name)
               );
               setSteps(filteredSteps);
+              
+              // Get the user input schema from the mock step
+              const stepsArray = updatedChat.steps as unknown as WorkflowStep[];
+              const mockInputStep = stepsArray.find(step => step.function_name === "mock_get_user_inputs");
+              if (mockInputStep?.output) {
+                setUserInputs(mockInputStep.output);
+              }
+              
+              // Get the final output from the last step
+              if (filteredSteps.length > 0) {
+                const lastStep = filteredSteps[filteredSteps.length - 1];
+                if (lastStep.output) {
+                  setFinalOutput(lastStep.output);
+                }
+              }
             }
             
             // Update status
@@ -230,6 +276,11 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       console.error("Error running workflow:", error);
     }
   };
+  
+  const handleUserInputChange = (data: Record<string, any>) => {
+    console.log("User input changed:", data);
+    setUserInputs(data);
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -270,7 +321,19 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
       </div>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-4">
+          <div className="p-4 space-y-4">
+            {/* User input form based on mock_get_user_inputs output */}
+            {Object.keys(userInputs).length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2">Workflow Inputs:</h3>
+                <KeyValueDisplay 
+                  data={userInputs} 
+                  isInput={true} 
+                  onChange={handleUserInputChange}
+                />
+              </div>
+            )}
+            
             {(!steps || steps.length === 0) ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center text-center gap-2">
@@ -291,6 +354,14 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
                     isLast={index === steps.length - 1}
                   />
                 ))}
+              </div>
+            )}
+            
+            {/* Final output display */}
+            {finalOutput && steps.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium mb-2">Final Output:</h3>
+                <KeyValueDisplay data={finalOutput} />
               </div>
             )}
           </div>

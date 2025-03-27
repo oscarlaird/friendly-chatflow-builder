@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, MonitorSmartphone } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -51,8 +51,11 @@ export const WorkflowStep = ({
                 </h3>
                 
                 {requiresBrowser && (
-                  <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
-                    <MonitorSmartphone className="h-3 w-3" />
+                  <Badge 
+                    variant="outline" 
+                    className="flex items-center gap-1 text-xs font-normal bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-200"
+                  >
+                    <ExternalLink className="h-3 w-3" />
                     Browser Required
                   </Badge>
                 )}
