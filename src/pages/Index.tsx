@@ -14,6 +14,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useChats } from '@/hooks/useChats';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -56,9 +57,12 @@ const Index = () => {
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between">
               <h1 className="text-lg font-bold">Chat App</h1>
-              <Button variant="ghost" size="icon" onClick={signOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center space-x-2">
+                <ThemeToggle />
+                <Button variant="ghost" size="icon" onClick={signOut}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <ChatList
               selectedChatId={selectedChatId}
@@ -75,6 +79,7 @@ const Index = () => {
             <h2 className="text-lg font-medium flex-1">
               {selectedChatId ? 'Chat' : 'Select or create a chat'}
             </h2>
+            <ThemeToggle />
           </div>
           <div className="flex-1 overflow-hidden">
             <ChatInterface chatId={selectedChatId} />
