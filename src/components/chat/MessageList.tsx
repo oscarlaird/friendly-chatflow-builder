@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -6,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { Globe } from 'lucide-react';
+import { WorkflowStep } from '../workflow/WorkflowStep';
 import { KeyValueDisplay } from '../workflow/KeyValueDisplay';
 
 interface MessageListProps {
@@ -93,29 +93,18 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
     }
   }, [message.content]);
 
-  // Extract input and output data from steps
-  const getInputOutputFromSteps = () => {
-    if (!message.steps || !Array.isArray(message.steps)) {
-      return { userInput: null, finalOutput: null };
-    }
-    
-    // Find the mock_get_user_inputs step for input
-    const mockInputStep = message.steps.find((step: any) => 
-      step.function_name === 'mock_get_user_inputs'
-    );
-    
-    // Find the main step for output
-    const mainStep = message.steps.find((step: any) => 
-      step.function_name === 'main'
-    );
-    
-    return {
-      userInput: mockInputStep?.output || null,
-      finalOutput: mainStep?.output || null
-    };
-  };
-
-  const { userInput, finalOutput } = getInputOutputFromSteps();
+  // Format steps for WorkflowStep component
+  const workflowSteps = message.steps && Array.isArray(message.steps) 
+    ? message.steps.map((step: any, index: number) => ({
+        stepNumber: index + 1,
+        functionName: step.function_name || step.title || `Step ${index + 1}`,
+        description: step.description || '',
+        input: step.input || step.data,
+        output: step.output,
+        requiresBrowser: step.requires_browser,
+        isLast: index === (message.steps as any[]).length - 1
+      }))
+    : [];
   
   return (
     <div className="flex justify-center mb-4">
@@ -124,19 +113,21 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display input from mock_get_user_inputs */}
-        {userInput && Object.keys(userInput).length > 0 && (
+        {/* Display workflow steps from message.steps if available */}
+        {workflowSteps.length > 0 && (
           <div className="mb-4">
-            <h3 className="text-base font-semibold mb-3">Input</h3>
-            <KeyValueDisplay data={userInput} />
-          </div>
-        )}
-        
-        {/* Display output from main */}
-        {finalOutput && Object.keys(finalOutput).length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-base font-semibold mb-3">Output</h3>
-            <KeyValueDisplay data={finalOutput} />
+            {workflowSteps.map((step, index) => (
+              <WorkflowStep 
+                key={index}
+                stepNumber={step.stepNumber}
+                functionName={step.functionName}
+                description={step.description}
+                input={step.input}
+                output={step.output}
+                requiresBrowser={step.requiresBrowser}
+                isLast={step.isLast}
+              />
+            ))}
           </div>
         )}
         
