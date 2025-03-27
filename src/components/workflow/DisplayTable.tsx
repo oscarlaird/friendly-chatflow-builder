@@ -95,22 +95,34 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
   const columns = Object.keys(data[0]);
 
   return (
-    <div className={cn("overflow-auto max-h-80 max-w-full border rounded-md", className)}>
-      <div className="min-w-max"> {/* Ensures the table expands to its full width but allows scrolling */}
+    <div className={cn("overflow-auto max-h-80 w-full border rounded-md", className)}>
+      <div className="overflow-x-auto w-full">
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
+              {isInput && <TableHead className="w-12 sticky left-0 bg-background z-10"></TableHead>}
               {columns.map((column) => (
                 <TableHead key={column} className="whitespace-nowrap font-medium">
                   {formatColumnName(column)}
                 </TableHead>
               ))}
-              {isInput && <TableHead className="w-12"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {localData.map((row, rowIndex) => (
               <TableRow key={rowIndex}>
+                {isInput && (
+                  <TableCell className="w-12 p-2 sticky left-0 bg-background z-10">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveRow(rowIndex)}
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
                 {columns.map((column) => (
                   <TableCell key={`${rowIndex}-${column}`} className="align-top">
                     {isInput ? (
@@ -126,18 +138,6 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
                     )}
                   </TableCell>
                 ))}
-                {isInput && (
-                  <TableCell className="w-12 p-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveRow(rowIndex)}
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                )}
               </TableRow>
             ))}
           </TableBody>

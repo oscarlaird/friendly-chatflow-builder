@@ -39,7 +39,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <div ref={contentRef} className="whitespace-pre-wrap overflow-auto">
+        <div ref={contentRef} className="whitespace-pre-wrap overflow-auto max-w-full">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
@@ -71,14 +71,14 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 overflow-hidden ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-auto">
+      <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-x-auto max-w-full">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
         {/* Display workflow steps with browser events */}
         {message.steps && message.steps.length > 0 && (
-          <div className="max-w-full overflow-hidden">
+          <div className="w-full overflow-hidden">
             <WorkflowDisplay 
               steps={message.steps.map(step => {
                 // Find browser events that match this function
@@ -123,7 +123,7 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   return (
     <div className="flex justify-start mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-auto">
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-auto max-w-full">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         {message.screenrecording_url && (
@@ -185,7 +185,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
               <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
             </div>
           ) : (
-            <div className="w-full max-w-full">
+            <div className="w-full">
               {messageList.map(renderMessage)}
             </div>
           )}
