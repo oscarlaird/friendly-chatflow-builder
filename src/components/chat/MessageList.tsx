@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -6,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { Globe } from 'lucide-react';
+import { KeyValueDisplay } from '../workflow/KeyValueDisplay';
 
 interface MessageListProps {
   dataState: DataState;
@@ -98,6 +98,28 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
         <div ref={contentRef} className="whitespace-pre-wrap mb-2">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
+        
+        {/* Display message steps if available */}
+        {message.steps && Array.isArray(message.steps) && message.steps.length > 0 && (
+          <div className="mt-3 border-t pt-2">
+            <p className="text-sm font-medium mb-2">Steps:</p>
+            <div className="space-y-2">
+              {message.steps.map((step: any, index: number) => (
+                <div key={index} className="pl-2 border-l-2 border-muted-foreground/30">
+                  <p className="text-xs font-medium">{index + 1}. {step.title || 'Step'}</p>
+                  {step.description && (
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                  )}
+                  {step.data && Object.keys(step.data).length > 0 && (
+                    <div className="mt-1 pl-2">
+                      <KeyValueDisplay data={step.data} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {message.coderunEvents && message.coderunEvents.length > 0 && (
           <div className="mt-2 border-t pt-2">
