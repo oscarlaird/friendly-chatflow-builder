@@ -91,6 +91,9 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
       return () => clearTimeout(timer);
     }
   }, [message.content]);
+
+  // Log the message object to see its structure
+  console.log("CodeRunMessageBubble message:", message);
   
   return (
     <div className="flex justify-center mb-4">
@@ -99,25 +102,13 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display message steps if available */}
-        {message.steps && Array.isArray(message.steps) && message.steps.length > 0 && (
+        {/* Debug: Display raw message.steps as JSON */}
+        {message.steps && (
           <div className="mt-3 border-t pt-2">
-            <p className="text-sm font-medium mb-2">Steps:</p>
-            <div className="space-y-2">
-              {message.steps.map((step: any, index: number) => (
-                <div key={index} className="pl-2 border-l-2 border-muted-foreground/30">
-                  <p className="text-xs font-medium">{index + 1}. {step.title || 'Step'}</p>
-                  {step.description && (
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
-                  )}
-                  {step.data && Object.keys(step.data).length > 0 && (
-                    <div className="mt-1 pl-2">
-                      <KeyValueDisplay data={step.data} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <p className="text-sm font-medium mb-2">Steps (Debug):</p>
+            <pre className="text-xs overflow-auto p-2 bg-muted rounded-md max-h-60">
+              {JSON.stringify(message.steps, null, 2)}
+            </pre>
           </div>
         )}
         
