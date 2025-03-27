@@ -47,64 +47,8 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   );
 };
 
-// Enhanced WorkflowDisplay component that shows browser events under each step
-const EnhancedWorkflowDisplay = ({ 
-  steps, 
-  coderunEvents,
-  browserEvents,
-  compact = true 
-}: { 
-  steps: any[]; 
-  coderunEvents: Record<string, CoderunEvent>;
-  browserEvents: Record<string, BrowserEvent>;
-  compact?: boolean;
-}) => {
-  // Process steps to include browser events
-  const enhancedSteps = steps?.map(step => {
-    const functionName = step.function_name;
-    if (!functionName) return step;
-    
-    // Create a new step with the same properties
-    const enhancedStep = { ...step, active: step.active || false };
-    
-    // Find browser events that match this function name
-    // First collect all browser events from all coderun events
-    const allBrowserEvents: BrowserEvent[] = [];
-    
-    Object.values(coderunEvents).forEach(coderunEvent => {
-      if (coderunEvent.browserEvents) {
-        coderunEvent.browserEvents.forEach(eventId => {
-          const browserEvent = browserEvents[eventId];
-          if (browserEvent && browserEvent.function_name === functionName) {
-            allBrowserEvents.push(browserEvent);
-          }
-        });
-      }
-    });
-    
-    // If we found matching browser events, add them to the step
-    if (allBrowserEvents.length > 0) {
-      enhancedStep.browserEvents = allBrowserEvents;
-      // Mark step as active if it has browser events
-      enhancedStep.active = true;
-    }
-    
-    return enhancedStep;
-  });
-  
-  return (
-    <WorkflowDisplay 
-      steps={enhancedSteps || []} 
-      compact={compact} 
-      input_editable={false}
-      autoActivateSteps={true}
-    />
-  );
-};
-
-const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: { 
+const CodeRunMessageBubble = ({ message, browserEvents }: { 
   message: Message; 
-  coderunEvents: Record<string, CoderunEvent>;
   browserEvents: Record<string, BrowserEvent>;
 }) => {
   // Add a ref to track content changes for highlighting
@@ -120,6 +64,11 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
     }
   }, [message.content]);
   
+  // Get browser events associated with this message
+  const messageBrowserEvents = Object.values(browserEvents).filter(
+    event => event.message_id === message.id
+  );
+  
   return (
     <div className="flex justify-center mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
@@ -129,10 +78,25 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
         
         {/* Display workflow steps with browser events */}
         {message.steps && message.steps.length > 0 && (
-          <EnhancedWorkflowDisplay 
-            steps={message.steps} 
-            coderunEvents={coderunEvents}
-            browserEvents={browserEvents}
+          <WorkflowDisplay 
+            steps={message.steps.map(step => {
+              // Find browser events that match this function
+              if (step.function_name) {
+                const functionEvents = messageBrowserEvents.filter(
+                  event => event.function_name === step.function_name
+                );
+                if (functionEvents.length > 0) {
+                  return {
+                    ...step,
+                    browserEvents: functionEvents,
+                    active: true
+                  };
+                }
+              }
+              return step;
+            })}
+            compact={true}
+            autoActivateSteps={true}
           />
         )}
       </Card>
@@ -173,7 +137,7 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
 
 export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, coderunEvents, browserEvents } = dataState;
+  const { messages, browserEvents } = dataState;
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -195,7 +159,6 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
           <CodeRunMessageBubble 
             key={message.id}
             message={message}
-            coderunEvents={coderunEvents}
             browserEvents={browserEvents}
           />
         );
