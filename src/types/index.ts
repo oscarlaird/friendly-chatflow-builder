@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email?: string;
@@ -20,6 +19,7 @@ export interface Message {
   script?: string;
   screenrecording_url?: string;
   uid: string;
+  user_inputs?: any; // New field added for user inputs
 }
 
 export interface Chat {

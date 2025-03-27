@@ -178,6 +178,7 @@ export type Database = {
           text_is_currently_streaming: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          user_inputs: Json | null
           window_has_spawned: boolean | null
         }
         Insert: {
@@ -194,6 +195,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          user_inputs?: Json | null
           window_has_spawned?: boolean | null
         }
         Update: {
@@ -210,6 +212,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type?: Database["public"]["Enums"]["message_type"]
           uid?: string
+          user_inputs?: Json | null
           window_has_spawned?: boolean | null
         }
         Relationships: [

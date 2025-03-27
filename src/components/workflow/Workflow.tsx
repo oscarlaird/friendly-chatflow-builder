@@ -1,3 +1,4 @@
+
 import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMessages } from "@/hooks/useMessages";
@@ -74,6 +75,7 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [chatData, setChatData] = useState<Chat | null>(null);
+  const [userInputs, setUserInputs] = useState<any>({});
   const renderCount = useRef(0);
   
   // Initial data fetch and real-time subscription
@@ -199,10 +201,10 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
   const handleRunWorkflow = async () => {
     if (!chatId) return;
     
-    console.log("Running workflow...");
+    console.log("Running workflow with user inputs:", userInputs);
     try {
-      // Send a message with type code_run
-      await sendMessage("Run workflow", "user", "code_run");
+      // Send a message with type code_run and include the user inputs
+      await sendMessage("Run workflow", "user", "code_run", userInputs);
       window.postMessage({
         type: 'CREATE_RECORDING_WINDOW',
         payload: {
@@ -213,6 +215,12 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
     } catch (error) {
       console.error("Error running workflow:", error);
     }
+  };
+
+  // Track user input changes
+  const handleInputChange = (newInputs: any) => {
+    console.log("User inputs changed:", newInputs);
+    setUserInputs(newInputs);
   };
 
   return (
@@ -262,7 +270,11 @@ export const Workflow = ({ steps: propSteps, chatId }: WorkflowProps) => {
                 </div>
               </div>
             ) : (
-              <WorkflowDisplay steps={steps} input_editable={true} />
+              <WorkflowDisplay 
+                steps={steps} 
+                input_editable={true} 
+                onInputChange={handleInputChange} 
+              />
             )}
           </div>
         </ScrollArea>

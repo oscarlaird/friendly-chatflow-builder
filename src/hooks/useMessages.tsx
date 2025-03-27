@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -126,7 +127,8 @@ export const useMessages = (chatId: string | null) => {
   const sendMessage = async (
     content: string, 
     role: 'user' | 'assistant' = 'user',
-    type: 'text_message' | 'code_run' | 'screen_recording' = 'text_message'
+    type: 'text_message' | 'code_run' | 'screen_recording' = 'text_message',
+    userInputs?: any
   ) => {
     if (!user || !chatId) return null;
     
@@ -150,9 +152,12 @@ export const useMessages = (chatId: string | null) => {
         content,
         type,
         uid: user.id,
-        script,  // Add script from chat if type is code_run
-        steps    // Add steps from chat if type is code_run
+        script,             // Add script from chat if type is code_run
+        steps,              // Add steps from chat if type is code_run
+        user_inputs: userInputs // Add user inputs if provided
       };
+      
+      console.log("Creating new message with data:", newMessage);
       
       const { data, error } = await supabase
         .from('messages')

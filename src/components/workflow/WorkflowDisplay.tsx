@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
 
@@ -8,13 +8,15 @@ interface WorkflowDisplayProps {
   className?: string;
   compact?: boolean;
   input_editable?: boolean;
+  onInputChange?: (inputs: any) => void;
 }
 
 export const WorkflowDisplay = ({ 
   steps, 
   className, 
   compact = false, 
-  input_editable = false 
+  input_editable = false,
+  onInputChange
 }: WorkflowDisplayProps) => {
   // Filter out ignored functions from steps
   const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
@@ -37,6 +39,13 @@ export const WorkflowDisplay = ({
   const userInputs = mockInputStep?.output || {};
   const finalOutput = mainStep?.output || null;
   
+  // Track user inputs and notify parent when they change
+  const handleInputChange = (newInputs: any) => {
+    if (onInputChange) {
+      onInputChange(newInputs);
+    }
+  };
+  
   return (
     <div className={className}>
       {/* User input form based on mock_get_user_inputs output */}
@@ -46,7 +55,7 @@ export const WorkflowDisplay = ({
           <KeyValueDisplay 
             data={userInputs} 
             isInput={true}
-            onChange={input_editable ? undefined : null} // Only allow changes if editable
+            onChange={input_editable ? handleInputChange : null} // Only allow changes if editable
           />
         </div>
       )}
