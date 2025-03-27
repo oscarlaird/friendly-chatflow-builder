@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,7 +104,7 @@ const Index = () => {
           </div>
         </Sidebar>
 
-        <SidebarInset className="flex flex-col overflow-hidden">
+        <SidebarInset className="flex flex-col overflow-hidden w-full">
           <div className="flex items-center p-4 border-b flex-shrink-0">
             <SidebarTrigger className="mr-2">
               <SidebarIcon />
@@ -113,7 +114,7 @@ const Index = () => {
             </h2>
             <ThemeToggle />
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden w-full">
             <ChatInterface chatId={selectedChatId} />
           </div>
         </SidebarInset>

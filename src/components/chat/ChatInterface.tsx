@@ -47,7 +47,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
   // For smaller screens, use tabs to switch between views
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden w-full">
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">
@@ -64,14 +64,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       </div>
 
       {/* Mobile view (tabs) */}
-      <div className="md:hidden flex-1 overflow-hidden">
+      <div className="md:hidden flex-1 overflow-hidden w-full">
         {activeView === 'chat' ? (
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
             <MessageList dataState={dataState} loading={loading} />
             <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
           </div>
         ) : (
-          <div className="h-full overflow-hidden">
+          <div className="h-full overflow-hidden w-full">
             <Workflow 
               steps={initialWorkflowSteps} 
               chatId={chatId} 
@@ -81,10 +81,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       </div>
 
       {/* Desktop view (resizable panels) */}
-      <div className="hidden md:block flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
+      <div className="hidden md:block flex-1 overflow-hidden w-full">
+        <ResizablePanelGroup direction="horizontal" className="h-full w-full">
           <ResizablePanel defaultSize={60} minSize={30}>
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
               <MessageList dataState={dataState} loading={loading} />
               <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
             </div>

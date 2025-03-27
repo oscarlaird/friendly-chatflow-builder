@@ -361,18 +361,20 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
-        <div className="flex flex-col items-stretch max-w-full">
-          <IntroMessage />
-          {messageList.length === 0 ? (
-            <div className="flex justify-center mt-6">
-              <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-stretch max-w-full">
-              {messageList.map(renderMessage)}
-            </div>
-          )}
-          <div ref={scrollRef} />
+        <div className="flex flex-col items-center w-full max-w-full">
+          <div className="w-full max-w-4xl">
+            <IntroMessage />
+            {messageList.length === 0 ? (
+              <div className="flex justify-center mt-6">
+                <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-stretch w-full">
+                {messageList.map(renderMessage)}
+              </div>
+            )}
+            <div ref={scrollRef} />
+          </div>
         </div>
       )}
     </ScrollArea>
