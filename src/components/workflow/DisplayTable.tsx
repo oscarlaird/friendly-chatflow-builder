@@ -95,52 +95,54 @@ export const DisplayTable = ({ data, className, isInput = false, onChange }: Dis
   const columns = Object.keys(data[0]);
 
   return (
-    <div className={cn("overflow-auto max-h-80 border rounded-md", className)}>
-      <Table>
-        <TableHeader className="sticky top-0 bg-background z-10">
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead key={column} className="whitespace-nowrap font-medium">
-                {formatColumnName(column)}
-              </TableHead>
-            ))}
-            {isInput && <TableHead className="w-12"></TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {localData.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
+    <div className={cn("overflow-auto max-h-80 max-w-full border rounded-md", className)}>
+      <div className="min-w-max"> {/* Ensures the table expands to its full width but allows scrolling */}
+        <Table>
+          <TableHeader className="sticky top-0 bg-background z-10">
+            <TableRow>
               {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column}`} className="align-top">
-                  {isInput ? (
-                    <Input 
-                      value={typeof row[column] === 'object' ? JSON.stringify(row[column]) : String(row[column] ?? '')}
-                      onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
-                      className="w-full"
-                    />
-                  ) : (
-                    typeof row[column] === 'object' ? 
-                      JSON.stringify(row[column]) : 
-                      String(row[column] ?? '')
-                  )}
-                </TableCell>
+                <TableHead key={column} className="whitespace-nowrap font-medium">
+                  {formatColumnName(column)}
+                </TableHead>
               ))}
-              {isInput && (
-                <TableCell className="w-12 p-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveRow(rowIndex)}
-                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              )}
+              {isInput && <TableHead className="w-12"></TableHead>}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {localData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column) => (
+                  <TableCell key={`${rowIndex}-${column}`} className="align-top">
+                    {isInput ? (
+                      <Input 
+                        value={typeof row[column] === 'object' ? JSON.stringify(row[column]) : String(row[column] ?? '')}
+                        onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
+                        className="w-full"
+                      />
+                    ) : (
+                      typeof row[column] === 'object' ? 
+                        JSON.stringify(row[column]) : 
+                        String(row[column] ?? '')
+                    )}
+                  </TableCell>
+                ))}
+                {isInput && (
+                  <TableCell className="w-12 p-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveRow(rowIndex)}
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       {isInput && (
         <div className="p-2 border-t">
           <Button 

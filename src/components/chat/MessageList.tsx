@@ -39,7 +39,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <div ref={contentRef} className="whitespace-pre-wrap">
+        <div ref={contentRef} className="whitespace-pre-wrap overflow-auto">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
@@ -70,34 +70,36 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   );
   
   return (
-    <div className="flex justify-center mb-4">
-      <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-4">
+    <div className="flex justify-center mb-4 w-full">
+      <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 overflow-hidden ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-auto">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
         {/* Display workflow steps with browser events */}
         {message.steps && message.steps.length > 0 && (
-          <WorkflowDisplay 
-            steps={message.steps.map(step => {
-              // Find browser events that match this function
-              if (step.function_name) {
-                const functionEvents = messageBrowserEvents.filter(
-                  event => event.function_name === step.function_name
-                );
-                if (functionEvents.length > 0) {
-                  return {
-                    ...step,
-                    browserEvents: functionEvents,
-                    active: true
-                  };
+          <div className="max-w-full overflow-hidden">
+            <WorkflowDisplay 
+              steps={message.steps.map(step => {
+                // Find browser events that match this function
+                if (step.function_name) {
+                  const functionEvents = messageBrowserEvents.filter(
+                    event => event.function_name === step.function_name
+                  );
+                  if (functionEvents.length > 0) {
+                    return {
+                      ...step,
+                      browserEvents: functionEvents,
+                      active: true
+                    };
+                  }
                 }
-              }
-              return step;
-            })}
-            compact={true}
-            autoActivateSteps={true}
-          />
+                return step;
+              })}
+              compact={true}
+              autoActivateSteps={true}
+            />
+          </div>
         )}
       </Card>
     </div>
@@ -121,13 +123,13 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   return (
     <div className="flex justify-start mb-4">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-2">
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-auto">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         {message.screenrecording_url && (
           <div className="mt-2 border-t pt-2">
             <p className="text-sm font-medium mb-1">Screen Recording:</p>
-            <p className="text-xs text-muted-foreground">{message.screenrecording_url}</p>
+            <p className="text-xs text-muted-foreground truncate">{message.screenrecording_url}</p>
           </div>
         )}
       </Card>
@@ -183,7 +185,9 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
               <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
             </div>
           ) : (
-            messageList.map(renderMessage)
+            <div className="w-full max-w-full">
+              {messageList.map(renderMessage)}
+            </div>
           )}
           <div ref={scrollRef} />
         </>

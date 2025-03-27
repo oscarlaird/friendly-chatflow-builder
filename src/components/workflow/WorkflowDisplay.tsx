@@ -25,8 +25,8 @@ const BrowserEventsList = ({ events }: { events: BrowserEvent[] }) => {
   return (
     <div className="mb-4">
       <h3 className="text-base font-semibold mb-2">Browser Events</h3>
-      <div className="border rounded overflow-hidden">
-        <ScrollArea className="h-36">
+      <div className="border rounded-md overflow-hidden">
+        <ScrollArea className="h-36 w-full">
           <div className="divide-y">
             {sortedEvents.map((event, index) => {
               const browserState = event?.data?.browser_state;
@@ -108,16 +108,18 @@ export const WorkflowDisplay = forwardRef<
   }));
   
   return (
-    <div className={className}>
+    <div className={`${className} max-w-full overflow-hidden`}>
       {/* User input form based on mock_get_user_inputs output */}
       {Object.keys(userInputs).length > 0 && (
         <div className={compact ? "mb-4" : "mb-6"}>
           <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Input</h3>
-          <KeyValueDisplay 
-            data={userInputs} 
-            isInput={true}
-            onChange={input_editable ? handleInputChange : null} // Only allow changes if editable
-          />
+          <div className="max-w-full overflow-hidden">
+            <KeyValueDisplay 
+              data={userInputs} 
+              isInput={true}
+              onChange={input_editable ? handleInputChange : null} // Only allow changes if editable
+            />
+          </div>
         </div>
       )}
       
@@ -152,7 +154,9 @@ export const WorkflowDisplay = forwardRef<
       {finalOutput && (
         <div className={compact ? "mt-4" : "mt-6"}>
           <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Output</h3>
-          <KeyValueDisplay data={finalOutput} />
+          <div className="max-w-full overflow-hidden">
+            <KeyValueDisplay data={finalOutput} />
+          </div>
         </div>
       )}
     </div>
