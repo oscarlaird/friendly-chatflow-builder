@@ -185,7 +185,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
               <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
             </div>
           ) : (
-            <div className="w-full">
+            <div className="w-full max-w-full overflow-hidden">
               {messageList.map(renderMessage)}
             </div>
           )}
