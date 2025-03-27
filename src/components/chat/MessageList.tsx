@@ -7,7 +7,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, AlertCircle, ChevronDown } from 'lucide-react';
+import { Play, Pause, Square, AlertCircle, ChevronDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -202,6 +202,17 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
     event => event.message_id === message.id
   );
   
+  // Handle jump to window button click
+  const handleJumpToWindow = () => {
+    window.postMessage(
+      {
+        type: 'jump',
+        payload: { messageId: message.id }
+      },
+      '*'
+    );
+  };
+  
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
@@ -216,6 +227,15 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               <h3 className="text-sm font-medium">Code Run ({message.id})</h3>
             </div>
             <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleJumpToWindow}
+                title="Jump to Window"
+              >
+                <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                Jump to Window
+              </Button>
               <CodeRunStateIndicator state={message.code_run_state} />
               {message.code_run_state && message.code_run_state !== 'stopped' && (
                 <CodeRunControls message={message} />
