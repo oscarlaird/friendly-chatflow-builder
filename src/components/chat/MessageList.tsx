@@ -42,8 +42,8 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
       <div
         className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
           message.role === 'user'
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted'
+            ? 'bg-primary text-primary-foreground mr-0'
+            : 'bg-muted ml-0'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
         <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden">
@@ -215,7 +215,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`w-full max-w-[90%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+      <Card className={`w-full max-w-[95%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -355,14 +355,14 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   };
 
   return (
-    <ScrollArea className="h-full px-4 py-6">
+    <ScrollArea className="h-full px-2 py-6">
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
         <div className="flex flex-col items-center w-full">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-full">
             <IntroMessage />
             {messageList.length === 0 ? (
               <div className="flex justify-center mt-6">
