@@ -16,7 +16,6 @@ interface DisplayTableProps {
   isEditable?: boolean;
   onChange?: (value: any) => void;
   originalData?: Record<string, any>[];
-  showResetButton?: boolean;
 }
 
 /**
@@ -51,7 +50,6 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   isEditable = false,
   onChange,
   originalData,
-  showResetButton = false,
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
@@ -96,6 +94,17 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
     setEditableData(newData);
     
     // Notify parent of the change
+    if (onChange) {
+      onChange(newData);
+    }
+  };
+
+  // Handle row removal
+  const handleRemoveRow = (rowIndex: number) => {
+    const newData = [...editableData];
+    newData.splice(rowIndex, 1);
+    setEditableData(newData);
+    
     if (onChange) {
       onChange(newData);
     }
@@ -155,6 +164,9 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
+                {isEditable && (
+                  <TableHead className="w-8 p-0"></TableHead>
+                )}
                 {columns.map((column) => (
                   <TableHead key={column} className="whitespace-nowrap text-xs p-2">
                     {column}
@@ -165,6 +177,18 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
             <TableBody>
               {tableData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
+                  {isEditable && (
+                    <TableCell className="p-0 w-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveRow(rowIndex)}
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  )}
                   {columns.map((column) => (
                     <TableCell key={`${rowIndex}-${column}`} className="align-top p-1.5">
                       {isEditable ? (

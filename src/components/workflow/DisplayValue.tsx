@@ -22,7 +22,6 @@ interface DisplayValueProps {
   onChange?: (value: any) => void;
   path?: string;
   originalValue?: any;
-  showResetButton?: boolean;
 }
 
 export const DisplayValue = ({ 
@@ -32,7 +31,6 @@ export const DisplayValue = ({
   onChange, 
   path = '', 
   originalValue,
-  showResetButton = false // Default to false since we handle resets at the top level now
 }: DisplayValueProps): ReactNode => {
   const [localValue, setLocalValue] = useState<any>(value);
   
@@ -92,7 +90,6 @@ export const DisplayValue = ({
         isEditable={isEditable}
         onChange={isEditable ? handleValueChange : undefined}
         originalData={originalValue}
-        showResetButton={false} // Never show reset in nested tables
       />
     );
   }
@@ -109,7 +106,6 @@ export const DisplayValue = ({
               onChange={isEditable ? (newValue) => handleArrayItemChange(index, newValue) : undefined}
               path={`${path}[${index}]`}
               originalValue={originalValue?.[index]}
-              showResetButton={false}
             />
           </div>
         ))}
@@ -145,7 +141,6 @@ export const DisplayValue = ({
               onChange={isEditable ? (newValue) => handleObjectValueChange(key, newValue) : undefined}
               path={`${path}.${key}`}
               originalValue={originalValue?.[key]}
-              showResetButton={false}
             />
           </div>
         ))}

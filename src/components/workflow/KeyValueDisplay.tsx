@@ -5,12 +5,14 @@ import { DisplayTable } from "./DisplayTable";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface KeyValueDisplayProps {
   data: Record<string, any>;
   title?: string;
   isEditable?: boolean;
   onChange?: ((data: Record<string, any>) => void) | null;
+  onRemove?: () => void;
 }
 
 // Helper function to format key names (remove underscores and capitalize)
@@ -21,8 +23,15 @@ const formatKeyName = (key: string): string => {
     .join(' ');
 };
 
-export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: KeyValueDisplayProps) => {
+export const KeyValueDisplay = ({ 
+  data, 
+  title, 
+  isEditable = false, 
+  onChange,
+  onRemove
+}: KeyValueDisplayProps) => {
   const [localData, setLocalData] = useState<Record<string, any>>(data || {});
+  const isMobile = useIsMobile();
   
   // Determine if the component is editable
   const isEditableMode = isEditable && onChange !== null;
@@ -70,6 +79,11 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                   <span className="text-xs">Reset</span>
                 </Button>
               )}
+              {onRemove && (
+                <Button variant="ghost" size="sm" onClick={onRemove} className="h-6 px-2 text-muted-foreground hover:text-destructive">
+                  <span className="text-xs">Remove</span>
+                </Button>
+              )}
             </div>
           )}
           <CardContent className="p-2">
@@ -83,7 +97,7 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                   }
                 }}
                 originalData={data[singleKey]}
-                showResetButton={false} // Never show reset in nested components
+                onRemove={onRemove}
               />
             </div>
           </CardContent>
@@ -102,6 +116,11 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
                 <span className="text-xs">Reset</span>
               </Button>
             )}
+            {onRemove && (
+              <Button variant="ghost" size="sm" onClick={onRemove} className="h-6 px-2 text-muted-foreground hover:text-destructive">
+                <span className="text-xs">Remove</span>
+              </Button>
+            )}
           </div>
         )}
         <CardContent className="p-3">
@@ -111,14 +130,16 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
             onChange={isEditableMode ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
             originalValue={data[singleKey]}
-            showResetButton={false} // Never show reset in nested components
           />
         </CardContent>
       </Card>
     );
   }
 
-  // Regular key-value display for multiple keys with vertical layout
+  // Regular key-value display for multiple keys
+  // Choose layout based on screen size and number of fields
+  const useHorizontalLayout = !isMobile && keys.length <= 4;
+
   return (
     <Card>
       {title && (
@@ -130,36 +151,40 @@ export const KeyValueDisplay = ({ data, title, isEditable = false, onChange }: K
               <span className="text-xs">Reset</span>
             </Button>
           )}
+          {onRemove && (
+            <Button variant="ghost" size="sm" onClick={onRemove} className="h-6 px-2 text-muted-foreground hover:text-destructive">
+              <span className="text-xs">Remove</span>
+            </Button>
+          )}
         </div>
       )}
-      <CardContent className="p-3 space-y-3">
-        {Object.entries(data).map(([key, value]) => (
-          <div key={key} className="space-y-1">
-            <label className="font-medium text-sm text-muted-foreground block">
-              {formatKeyName(key)}:
-            </label>
-            <div className="ml-0">
-              <DisplayValue 
-                value={value} 
-                isEditable={isEditableMode}
-                onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
-                path={key}
-                originalValue={data[key]}
-                showResetButton={false} // Never show reset in nested components
-              />
-            </div>
-          </div>
-        ))}
+      <CardContent className={`${useHorizontalLayout ? 'p-2' : 'p-3 space-y-3'}`}>
+        <div className={useHorizontalLayout ? 'grid grid-cols-2 md:grid-cols-4 gap-2' : ''}>
+          {Object.entries(data).map(([key, value]) => {
+            // If value is a complex object or array, it should always be full width
+            const isComplexValue = 
+              (typeof value === 'object' && value !== null && Object.keys(value).length > 3) || 
+              (Array.isArray(value) && value.length > 0);
+            
+            return (
+              <div key={key} className={isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}>
+                <label className="font-medium text-sm text-muted-foreground block">
+                  {formatKeyName(key)}:
+                </label>
+                <div className="ml-0">
+                  <DisplayValue 
+                    value={value} 
+                    isEditable={isEditableMode}
+                    onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
+                    path={key}
+                    originalValue={data[key]}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
-      {/* Only show the main reset button if we're in editable mode */}
-      {isEditableMode && keys.length > 1 && (
-        <div className="px-3 pb-3 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
-            <RotateCcw className="h-3 w-3 mr-1" />
-            <span className="text-xs">Reset</span>
-          </Button>
-        </div>
-      )}
     </Card>
   );
 };
