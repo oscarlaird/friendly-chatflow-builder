@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat/ChatList';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useChats } from '@/hooks/useChats';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import Cookies from 'js-cookie';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -22,21 +23,54 @@ const SidebarIcon = () => {
   return open ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />;
 };
 
+const SELECTED_CHAT_COOKIE = 'selected_chat_id';
+
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { chats, loading: chatsLoading } = useChats();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const chatIdFromUrl = searchParams.get('chatId');
   
-  // Automatically select the most recent chat
+  // Function to update both state and URL
+  const handleSelectChat = (chatId: string) => {
+    setSelectedChatId(chatId);
+    Cookies.set(SELECTED_CHAT_COOKIE, chatId, { expires: 30 }); // Store in cookie for 30 days
+    navigate(`/?chatId=${chatId}`, { replace: true });
+  };
+  
+  // Handle initial load - prioritize URL param, then cookie
   useEffect(() => {
-    if (!chatsLoading && chats.length > 0 && !selectedChatId) {
-      // Sort chats by created_at date (newest first) and select the first one
+    if (!chatsLoading && chats.length > 0) {
+      // Check URL parameter first
+      if (chatIdFromUrl) {
+        // Verify the chat exists before selecting it
+        const chatExists = chats.some(chat => chat.id === chatIdFromUrl);
+        if (chatExists) {
+          setSelectedChatId(chatIdFromUrl);
+          return;
+        }
+      }
+      
+      // If no URL param or invalid, try cookie
+      const savedChatId = Cookies.get(SELECTED_CHAT_COOKIE);
+      if (savedChatId) {
+        const chatExists = chats.some(chat => chat.id === savedChatId);
+        if (chatExists) {
+          setSelectedChatId(savedChatId);
+          navigate(`/?chatId=${savedChatId}`, { replace: true });
+          return;
+        }
+      }
+      
+      // If no valid cookie, select most recent chat
       const sortedChats = [...chats].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-      setSelectedChatId(sortedChats[0].id);
+      handleSelectChat(sortedChats[0].id);
     }
-  }, [chats, chatsLoading, selectedChatId]);
+  }, [chats, chatsLoading, chatIdFromUrl, navigate]);
 
   if (loading) {
     return (
@@ -66,7 +100,7 @@ const Index = () => {
             </div>
             <ChatList
               selectedChatId={selectedChatId}
-              onSelectChat={setSelectedChatId}
+              onSelectChat={handleSelectChat}
             />
           </div>
         </Sidebar>

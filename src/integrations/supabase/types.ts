@@ -15,6 +15,7 @@ export type Database = {
           coderun_event_id: string
           created_at: string
           data: Json
+          function_name: string | null
           id: string
           message_id: string
           uid: string
@@ -24,6 +25,7 @@ export type Database = {
           coderun_event_id: string
           created_at?: string
           data: Json
+          function_name?: string | null
           id?: string
           message_id: string
           uid: string
@@ -33,6 +35,7 @@ export type Database = {
           coderun_event_id?: string
           created_at?: string
           data?: Json
+          function_name?: string | null
           id?: string
           message_id?: string
           uid?: string

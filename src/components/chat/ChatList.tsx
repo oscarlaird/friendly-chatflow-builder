@@ -48,7 +48,11 @@ export const ChatList = ({ selectedChatId, onSelectChat }: ChatListProps) => {
     e.stopPropagation();
     await deleteChat(chatId);
     if (selectedChatId === chatId) {
-      onSelectChat(chats[0]?.id || null);
+      // If we have other chats, select the first one
+      const remainingChats = chats.filter(c => c.id !== chatId);
+      if (remainingChats.length > 0) {
+        onSelectChat(remainingChats[0].id);
+      }
     }
   };
 
