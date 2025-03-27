@@ -55,9 +55,8 @@ pre, code {
   word-break: break-word;
 }
 
-/* Container width constraints */
+/* Remove container width constraints to let chat pane be flexible */
 .chat-container {
-  max-width: 100%;
   width: 100%;
   margin: 0 auto;
 }

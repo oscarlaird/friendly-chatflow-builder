@@ -13,43 +13,6 @@ interface WorkflowDisplayProps {
   autoActivateSteps?: boolean;
 }
 
-// Simple component to show browser events in a scrollable container
-const BrowserEventsList = ({ events }: { events: BrowserEvent[] }) => {
-  if (!events || events.length === 0) return null;
-  
-  // Sort events in reverse chronological order (newest first)
-  const sortedEvents = [...events].sort((a, b) =>
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-  
-  return (
-    <div className="mb-4">
-      <h3 className="text-base font-semibold mb-2">Browser Events</h3>
-      <div className="border rounded-md overflow-hidden">
-        <ScrollArea className="h-36">
-          <div className="divide-y">
-            {sortedEvents.map((event, index) => {
-              const browserState = event?.data?.browser_state;
-              const currentGoal = event?.data?.current_goal;
-              
-              return (
-                <div key={index} className="p-2 text-xs">
-                  <div className="font-medium">{currentGoal || "Browser Action"}</div>
-                  {browserState?.url && (
-                    <div className="truncate text-muted-foreground mt-1">
-                      {browserState.url}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  );
-};
-
 export const WorkflowDisplay = forwardRef<
   { getUserInputs: () => any },
   WorkflowDisplayProps
@@ -80,14 +43,6 @@ export const WorkflowDisplay = forwardRef<
   
   const userInputs = mockInputStep?.output || {};
   const finalOutput = mainStep?.output || null;
-  
-  // Collect all browser events from all steps without triggering unnecessary re-renders
-  const allBrowserEvents: BrowserEvent[] = [];
-  filteredSteps.forEach(step => {
-    if (step.browserEvents && step.browserEvents.length > 0) {
-      allBrowserEvents.push(...step.browserEvents);
-    }
-  });
   
   // Local state for the input value
   const [inputValues, setInputValues] = useState<any>(userInputs);
@@ -123,11 +78,6 @@ export const WorkflowDisplay = forwardRef<
             />
           </div>
         </div>
-      )}
-      
-      {/* Display browser events between input and steps */}
-      {allBrowserEvents.length > 0 && (
-        <BrowserEventsList events={allBrowserEvents} />
       )}
       
       {/* Display workflow steps */}

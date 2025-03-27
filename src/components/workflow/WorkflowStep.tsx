@@ -71,19 +71,19 @@ export const WorkflowStep = ({
   browserEvents = [],
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
-  const [isOutputOpen, setIsOutputOpen] = useState(false);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(false);
+  const [isOutputOpen, setIsOutputOpen] = useState(false);
   
   const hasInput = input && Object.keys(input).length > 0;
-  const hasOutput = output && Object.keys(output).length > 0;
   const hasBrowserEvents = browserEvents && browserEvents.length > 0;
+  const hasOutput = output && Object.keys(output).length > 0;
   
   // Auto-open sections based on active status and autoOpen prop
   useEffect(() => {
     if (active && autoOpen) {
       setIsInputOpen(true);
-      setIsOutputOpen(true);
       setIsBrowserEventsOpen(true);
+      setIsOutputOpen(true);
     } else if (active) {
       // If just active but not autoOpen, only open browser events
       setIsBrowserEventsOpen(true);
@@ -154,18 +154,6 @@ export const WorkflowStep = ({
                   </Collapsible>
                 )}
                 
-                {hasOutput && (
-                  <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {isOutputOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      Example Output
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <KeyValueDisplay data={output} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-                
                 {hasBrowserEvents && (
                   <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
                     <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -183,6 +171,18 @@ export const WorkflowStep = ({
                             ))}
                         </ScrollArea>
                       </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+                
+                {hasOutput && (
+                  <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
+                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {isOutputOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      Example Output
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <KeyValueDisplay data={output} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}

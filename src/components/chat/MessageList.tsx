@@ -7,7 +7,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, AlertCircle, ChevronDown, ExternalLink } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -361,7 +361,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center w-full max-w-full">
+        <div className="flex flex-col items-center w-full">
           <div className="w-full max-w-4xl">
             <IntroMessage />
             {messageList.length === 0 ? (
