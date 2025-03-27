@@ -12,6 +12,8 @@ interface DisplayTableProps {
   onRemove?: () => void;
   className?: string;
   maxRows?: number;
+  isInput?: boolean;
+  onChange?: (value: any) => void;
 }
 
 /**
@@ -43,6 +45,8 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   onRemove,
   className,
   maxRows = 10,
+  isInput = false,
+  onChange,
 }) => {
   const [showFullTable, setShowFullTable] = useState(false);
   const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);

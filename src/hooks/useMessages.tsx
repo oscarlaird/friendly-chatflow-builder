@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -155,7 +154,7 @@ export const useMessages = (chatId: string | null) => {
         script,             // Add script from chat if type is code_run
         steps,              // Add steps from chat if type is code_run
         user_inputs: userInputs, // Add user inputs if provided
-        code_run_state: type === 'code_run' ? 'running' : undefined // Set initial state for code_run messages
+        code_run_state: type === 'code_run' ? 'running' as const : undefined // Fix: Use as const to specify exact type
       };
       
       console.log("Creating new message with data:", newMessage);
