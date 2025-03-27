@@ -5,7 +5,6 @@ import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
-import { Globe } from 'lucide-react';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 
 interface MessageListProps {
@@ -44,33 +43,6 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
-    </div>
-  );
-};
-
-const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
-  // Extract domain from URL for favicon
-  const getFaviconUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const browserState = event?.data?.browser_state;
-  const currentGoal = event?.data?.current_goal;
-  const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
-
-  return (
-    <div className="flex items-center gap-2 text-xs py-1 px-2 border-b border-muted/40 last:border-0">
-      {faviconUrl ? (
-        <img src={faviconUrl} alt="site favicon" className="w-4 h-4 flex-shrink-0" />
-      ) : (
-        <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-      )}
-      <span className="truncate">{currentGoal || 'Browser action'}</span>
     </div>
   );
 };
@@ -155,57 +127,13 @@ const CodeRunMessageBubble = ({ message, coderunEvents, browserEvents }: {
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         
-        {/* Display workflow steps, input and output using the EnhancedWorkflowDisplay component */}
+        {/* Display workflow steps with browser events */}
         {message.steps && message.steps.length > 0 && (
-          <div className="mb-4">
-            <EnhancedWorkflowDisplay 
-              steps={message.steps} 
-              coderunEvents={coderunEvents}
-              browserEvents={browserEvents}
-            />
-          </div>
-        )}
-        
-        {/* Display any browser events that don't have a function_name under the coderun events section */}
-        {message.coderunEvents && message.coderunEvents.length > 0 && (
-          <div className="mt-2 border-t pt-2">
-            <p className="text-sm font-medium mb-1">Additional Events:</p>
-            {message.coderunEvents.map(eventId => {
-              const event = coderunEvents[eventId];
-              if (!event) return null;
-              
-              // Filter for browser events without function_name or where function_name doesn't match any step
-              const unassociatedBrowserEvents = event.browserEvents
-                .map(beId => browserEvents[beId])
-                .filter(be => be && (!be.function_name || !message.steps?.some(step => step.function_name === be.function_name)));
-              
-              // Only render if there are unassociated browser events or the event itself has information to show
-              if (unassociatedBrowserEvents.length === 0 && !event.description && !event.progress_title) {
-                return null;
-              }
-              
-              return (
-                <div key={eventId} className="pl-2 border-l-2 border-muted-foreground/30 mb-2">
-                  {(event.description || event.progress_title) && (
-                    <p className="text-xs text-muted-foreground">
-                      {event.description || 'Code execution'} 
-                      {event.progress_title && ` - ${event.progress_title}`}
-                    </p>
-                  )}
-                  
-                  {unassociatedBrowserEvents.length > 0 && (
-                    <div className="mt-1">
-                      <div className="border rounded-sm text-xs overflow-hidden max-h-36">
-                        {unassociatedBrowserEvents.map(browserEvent => (
-                          browserEvent ? <BrowserEventItem key={browserEvent.id} event={browserEvent} /> : null
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <EnhancedWorkflowDisplay 
+            steps={message.steps} 
+            coderunEvents={coderunEvents}
+            browserEvents={browserEvents}
+          />
         )}
       </Card>
     </div>

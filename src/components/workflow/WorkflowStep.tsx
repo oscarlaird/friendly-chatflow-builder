@@ -7,6 +7,7 @@ import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BrowserEvent } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WorkflowStepProps {
   stepNumber: number;
@@ -172,10 +173,15 @@ export const WorkflowStep = ({
                       Browser Events
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-2">
-                      <div className="border rounded-sm text-xs overflow-hidden max-h-36">
-                        {browserEvents.map((event, index) => (
-                          <BrowserEventItem key={index} event={event} />
-                        ))}
+                      <div className="border rounded-sm text-xs overflow-hidden">
+                        <ScrollArea className="max-h-36">
+                          {/* Sort browser events in reverse chronological order */}
+                          {[...browserEvents]
+                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                            .map((event, index) => (
+                              <BrowserEventItem key={index} event={event} />
+                            ))}
+                        </ScrollArea>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
