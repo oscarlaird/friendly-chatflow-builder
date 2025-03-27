@@ -1,6 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
+import { DisplayTable } from "./DisplayTable";
 import { useState, useEffect } from "react";
 
 interface KeyValueDisplayProps {
