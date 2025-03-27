@@ -1,5 +1,5 @@
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { DisplayTable } from './DisplayTable';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,30 +24,44 @@ interface DisplayValueProps {
 }
 
 export const DisplayValue = ({ value, className, isInput = false, onChange, path = '' }: DisplayValueProps): ReactNode => {
+  const [localValue, setLocalValue] = useState<any>(value);
+  
+  // Update local value when the prop changes
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
   // Input mode handlers
   const handleInputChange = (newValue: any) => {
+    setLocalValue(newValue);
     if (onChange) {
       onChange(newValue);
     }
   };
 
   const handleObjectValueChange = (key: string, newValue: any) => {
-    if (onChange && typeof value === 'object' && value !== null) {
-      const updatedValue = { ...value, [key]: newValue };
-      onChange(updatedValue);
+    if (typeof localValue === 'object' && localValue !== null) {
+      const updatedValue = { ...localValue, [key]: newValue };
+      setLocalValue(updatedValue);
+      if (onChange) {
+        onChange(updatedValue);
+      }
     }
   };
 
   const handleArrayItemChange = (index: number, newValue: any) => {
-    if (onChange && Array.isArray(value)) {
-      const updatedArray = [...value];
+    if (Array.isArray(localValue)) {
+      const updatedArray = [...localValue];
       updatedArray[index] = newValue;
-      onChange(updatedArray);
+      setLocalValue(updatedArray);
+      if (onChange) {
+        onChange(updatedArray);
+      }
     }
   };
 
   // Handle different data types appropriately
-  if (value === null || value === undefined) {
+  if (localValue === null || localValue === undefined) {
     return isInput ? 
       <Input 
         className={className} 
@@ -59,9 +73,9 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
   }
   
   // Array of objects - likely a table
-  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+  if (Array.isArray(localValue) && localValue.length > 0 && typeof localValue[0] === 'object') {
     return <DisplayTable 
-      data={value} 
+      data={localValue} 
       className={className} 
       isInput={isInput}
       onChange={isInput ? handleInputChange : undefined}
@@ -69,10 +83,10 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
   }
   
   // Array of primitives
-  if (Array.isArray(value)) {
+  if (Array.isArray(localValue)) {
     return (
       <div className={cn("flex flex-col gap-1", className)}>
-        {value.map((item, index) => (
+        {localValue.map((item, index) => (
           <div key={index} className="pl-2 border-l-2 border-muted">
             <DisplayValue 
               value={item} 
@@ -87,25 +101,25 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
   }
   
   // Boolean values
-  if (typeof value === 'boolean') {
+  if (typeof localValue === 'boolean') {
     return isInput ? (
       <Checkbox 
-        checked={value} 
+        checked={localValue} 
         onCheckedChange={handleInputChange}
         className={className}
       />
     ) : (
-      value ? 
+      localValue ? 
         <Check className={cn("h-4 w-4 text-green-500", className)} /> : 
         <X className={cn("h-4 w-4 text-red-500", className)} />
     );
   }
   
   // Object values (not arrays)
-  if (typeof value === 'object') {
+  if (typeof localValue === 'object') {
     return (
       <div className={cn("flex flex-col gap-1", className)}>
-        {Object.entries(value).map(([key, val]) => (
+        {Object.entries(localValue).map(([key, val]) => (
           <div key={key} className="grid grid-cols-[30%_70%] items-start gap-2">
             <span className="font-medium text-sm text-muted-foreground">{formatKeyName(key)}:</span>
             <DisplayValue 
@@ -121,11 +135,11 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
   }
   
   // Strings (multiline)
-  if (typeof value === 'string' && value.includes('\n') && isInput) {
+  if (typeof localValue === 'string' && localValue.includes('\n') && isInput) {
     return (
       <Textarea 
         className={className} 
-        value={value}
+        value={localValue}
         onChange={(e) => handleInputChange(e.target.value)}
       />
     );
@@ -135,16 +149,16 @@ export const DisplayValue = ({ value, className, isInput = false, onChange, path
   return isInput ? (
     <Input 
       className={className} 
-      value={String(value)}
-      type={typeof value === 'number' ? 'number' : 'text'}
+      value={String(localValue)}
+      type={typeof localValue === 'number' ? 'number' : 'text'}
       onChange={(e) => {
-        const newValue = typeof value === 'number' 
+        const newValue = typeof localValue === 'number' 
           ? parseFloat(e.target.value) 
           : e.target.value;
         handleInputChange(newValue);
       }}
     />
   ) : (
-    <span className={className}>{String(value)}</span>
+    <span className={className}>{String(localValue)}</span>
   );
 };
