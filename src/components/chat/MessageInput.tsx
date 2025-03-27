@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Play } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -61,29 +61,17 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
           className="min-h-[60px] resize-none"
           disabled={disabled || isSubmitting}
         />
-        <div className="flex flex-col gap-2">
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={!message.trim() || disabled || isSubmitting}
-            className="h-7 w-7"
-          >
-            <SendHorizontal className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            disabled={!message.trim() || disabled || isSubmitting}
-            className="h-7 w-7"
-            onClick={(e) => handleSubmit(e, 'code_run')}
-          >
-            <Play className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={!message.trim() || disabled || isSubmitting}
+          className="h-10 w-10"
+        >
+          <SendHorizontal className="h-4 w-4" />
+        </Button>
       </div>
       <p className="text-xs text-muted-foreground mt-2">
-        Press Enter to send, Shift+Enter for new line, or click Play to run code
+        Press Enter to send, Shift+Enter for new line
       </p>
     </form>
   );
