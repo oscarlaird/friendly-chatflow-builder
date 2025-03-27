@@ -46,7 +46,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <div ref={contentRef} className="whitespace-pre-wrap overflow-auto max-w-full">
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden max-w-full">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
@@ -215,9 +215,9 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`max-w-[80%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
+      <Card className={`max-w-[90%] w-full p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
@@ -226,7 +226,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               </CollapsibleTrigger>
               <h3 className="text-sm font-medium">Code Run ({message.id})</h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Only show Jump to Window button if code_run_state is not stopped */}
               {message.code_run_state && message.code_run_state !== 'stopped' && (
                 <Button 
@@ -246,7 +246,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
             </div>
           </div>
           
-          <div ref={contentRef} className="whitespace-pre-wrap mb-4 overflow-x-auto max-w-full">
+          <div ref={contentRef} className="whitespace-pre-wrap mb-4 break-words overflow-hidden max-w-full">
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
           
@@ -317,12 +317,18 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
 export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, browserEvents } = dataState;
+  const prevMessageCountRef = useRef(Object.keys(messages).length);
   
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when new messages are added, but not when existing messages are updated
   useEffect(() => {
-    if (scrollRef.current) {
+    const currentMessageCount = Object.keys(messages).length;
+    
+    // Only auto-scroll if new messages were added, not when existing ones are updated
+    if (currentMessageCount > prevMessageCountRef.current && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+    
+    prevMessageCountRef.current = currentMessageCount;
   }, [Object.keys(messages).length, messages]);
 
   const messageList = Object.values(messages).sort((a, b) => 

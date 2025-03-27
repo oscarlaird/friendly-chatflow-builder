@@ -60,7 +60,7 @@ export const WorkflowDisplay = forwardRef<
   input_editable = false,
   autoActivateSteps = false,
 }, ref) => {
-  // Filter out ignored functions from steps
+  // Memoize the filtered steps to prevent unnecessary re-renders
   const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
   
   // Filter out the ignored functions
@@ -81,7 +81,7 @@ export const WorkflowDisplay = forwardRef<
   const userInputs = mockInputStep?.output || {};
   const finalOutput = mainStep?.output || null;
   
-  // Collect all browser events from all steps
+  // Collect all browser events from all steps without triggering unnecessary re-renders
   const allBrowserEvents: BrowserEvent[] = [];
   filteredSteps.forEach(step => {
     if (step.browserEvents && step.browserEvents.length > 0) {
@@ -92,10 +92,12 @@ export const WorkflowDisplay = forwardRef<
   // Local state for the input value
   const [inputValues, setInputValues] = useState<any>(userInputs);
   
-  // Update local inputs when userInputs change
+  // Update local inputs when userInputs change, using JSON stringify to avoid needless rerenders
+  const userInputsJson = JSON.stringify(userInputs);
   useEffect(() => {
-    setInputValues(userInputs);
-  }, [JSON.stringify(userInputs)]);
+    const parsedInputs = JSON.parse(userInputsJson);
+    setInputValues(parsedInputs);
+  }, [userInputsJson]);
   
   // Handle input changes
   const handleInputChange = (newInputs: any) => {
@@ -108,12 +110,12 @@ export const WorkflowDisplay = forwardRef<
   }));
   
   return (
-    <div className={`${className} max-w-full overflow-hidden`}>
+    <div className={`${className || ''} w-full overflow-hidden`}>
       {/* User input form based on mock_get_user_inputs output */}
       {Object.keys(userInputs).length > 0 && (
         <div className={compact ? "mb-4" : "mb-6"}>
           <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Input</h3>
-          <div className="max-w-full overflow-hidden">
+          <div className="w-full overflow-hidden">
             <KeyValueDisplay 
               data={userInputs} 
               isInput={true}
@@ -154,7 +156,7 @@ export const WorkflowDisplay = forwardRef<
       {finalOutput && (
         <div className={compact ? "mt-4" : "mt-6"}>
           <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Output</h3>
-          <div className="max-w-full overflow-hidden">
+          <div className="w-full overflow-hidden">
             <KeyValueDisplay data={finalOutput} />
           </div>
         </div>
