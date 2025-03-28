@@ -108,7 +108,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     );
   };
   
-  // Generate a left border color for nested items
+  // Generate a left border color for nested items without any indentation
   const getNestedBorderStyle = () => {
     if (nestingLevel === 0) return {};
     
@@ -223,4 +223,3 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     </Card>
   );
 };
-
