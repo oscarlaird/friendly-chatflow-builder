@@ -62,6 +62,8 @@ export const Workflow = ({
   
   const workflowRef = useRef<{ getUserInputs: () => any }>(null);
   const { sendMessage } = useMessages(chatId || null);
+  const fetchingRef = useRef(false);
+  const subscriptionRef = useRef<any>(null);
   
   // Initialize with steps coming from props
   useEffect(() => {
@@ -78,6 +80,12 @@ export const Workflow = ({
   
   // Initial data fetch and real-time subscription
   useEffect(() => {
+    // Clean up previous subscription
+    if (subscriptionRef.current) {
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+    
     if (!chatId) {
       setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
       setChatData(null);
@@ -86,6 +94,9 @@ export const Workflow = ({
     }
 
     const fetchChatData = async () => {
+      if (fetchingRef.current) return;
+      
+      fetchingRef.current = true;
       try {
         const { data, error } = await supabase
           .from('chats')
@@ -111,14 +122,16 @@ export const Workflow = ({
         updateCodeRewritingStatus(data);
       } catch (error) {
         console.error('Error in initial data fetch:', error);
+      } finally {
+        fetchingRef.current = false;
       }
     };
 
     fetchChatData();
 
-    // Set up real-time subscription
+    // Set up real-time subscription with a unique channel name to prevent duplication
     const channel = supabase
-      .channel(`direct-chat-subscription-${chatId}`)
+      .channel(`workflow-chat-${chatId}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -149,8 +162,13 @@ export const Workflow = ({
       )
       .subscribe();
 
+    subscriptionRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   }, [chatId, propSteps, initialSteps]);
 

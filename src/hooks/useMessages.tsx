@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +15,10 @@ export const useMessages = (chatId: string | null) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { chats } = useChats();
+  
+  // Use a ref to track if we've already loaded initial data
+  const initialDataLoadedRef = useRef(false);
+  const channelsRef = useRef<{ [key: string]: any }>({});
 
   // Helper function to normalize data into our state structure
   const normalizeData = (messagesData: any[], codeRunEventsData: any[] = [], browserEventsData: any[] = []) => {
@@ -67,6 +72,9 @@ export const useMessages = (chatId: string | null) => {
   const fetchMessages = async () => {
     if (!user || !chatId) return;
     
+    // Prevent redundant fetches
+    if (initialDataLoadedRef.current && !loading) return;
+    
     try {
       setLoading(true);
       
@@ -111,6 +119,7 @@ export const useMessages = (chatId: string | null) => {
       // Normalize the data into our nested structure
       const normalized = normalizeData(messagesData, codeRunEventsData, browserEventsData);
       setDataState(normalized);
+      initialDataLoadedRef.current = true;
     } catch (error: any) {
       toast({
         title: 'Error fetching messages',
@@ -167,15 +176,7 @@ export const useMessages = (chatId: string | null) => {
 
       if (error) throw error;
       
-      // Update local state with the new message
-      setDataState(prevState => {
-        const newState = { ...prevState };
-        newState.messages[data.id] = {
-          ...data,
-          coderunEvents: [] as string[],
-        };
-        return newState;
-      });
+      // The message will be added via the subscription, no need to manually update state
       
       return data;
     } catch (error: any) {
@@ -188,7 +189,7 @@ export const useMessages = (chatId: string | null) => {
     }
   };
 
-  // Add a new coderun event to its parent message
+  // Add a new coderun event to its parent message (not used directly anymore, handled by subscription)
   const addCoderunEventToMessage = (newEvent: CoderunEvent) => {
     setDataState(prevState => {
       // Skip if we already have this event
@@ -217,7 +218,7 @@ export const useMessages = (chatId: string | null) => {
     });
   };
 
-  // Add a new browser event to its parent coderun event
+  // Add a new browser event to its parent coderun event (not used directly anymore, handled by subscription)
   const addBrowserEventToCoderun = (newEvent: BrowserEvent) => {
     setDataState(prevState => {
       // Skip if we already have this event
@@ -245,117 +246,147 @@ export const useMessages = (chatId: string | null) => {
 
   // Set up real-time subscriptions
   useEffect(() => {
+    // Reset state when chat changes
+    if (chatId !== Object.keys(channelsRef.current)[0]) {
+      // Reset state and loading flag when chat changes
+      setDataState({
+        messages: {},
+        coderunEvents: {},
+        browserEvents: {},
+      });
+      setLoading(true);
+      initialDataLoadedRef.current = false;
+      
+      // Clean up previous subscriptions
+      Object.values(channelsRef.current).forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+      channelsRef.current = {};
+    }
+    
     if (!user || !chatId) return;
+    
+    // Fetch initial messages if not already loaded
+    if (!initialDataLoadedRef.current) {
+      fetchMessages();
+    }
 
-    // Subscribe to message changes for the current chat
-    const messageChannel = supabase
-      .channel('schema-db-changes-messages')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          // Add new message to state
-          const newMessage = payload.new as Message;
-          setDataState(prevState => {
-            // Skip if we already have this message
-            if (prevState.messages[newMessage.id]) {
-              return prevState;
-            }
+    // Only set up subscriptions if we don't already have them for this chat
+    if (!channelsRef.current[chatId]) {
+      // Subscribe to message changes for the current chat
+      const messageChannel = supabase
+        .channel(`messages-${chatId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+          (payload) => {
+            // Add new message to state
+            const newMessage = payload.new as Message;
+            console.log("New message received:", newMessage);
             
-            const newState = { ...prevState };
-            newState.messages[newMessage.id] = {
-              ...newMessage,
-              coderunEvents: [] as string[],
-            };
-            return newState;
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          // Update existing message
-          const updatedMessage = payload.new as Message;
-          setDataState(prevState => {
-            // Only update if we have this message
-            if (!prevState.messages[updatedMessage.id]) {
-              return prevState;
-            }
+            setDataState(prevState => {
+              // Skip if we already have this message
+              if (prevState.messages[newMessage.id]) {
+                return prevState;
+              }
+              
+              const newState = { ...prevState };
+              newState.messages[newMessage.id] = {
+                ...newMessage,
+                coderunEvents: [] as string[],
+              };
+              return newState;
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+          (payload) => {
+            // Update existing message
+            const updatedMessage = payload.new as Message;
+            console.log("Message updated:", updatedMessage);
             
-            const newState = { ...prevState };
-            // Preserve the coderunEvents references
-            const coderunEvents = newState.messages[updatedMessage.id].coderunEvents || [];
-            newState.messages[updatedMessage.id] = {
-              ...updatedMessage,
-              coderunEvents,
-            };
-            return newState;
-          });
-        }
-      )
-      .subscribe();
+            setDataState(prevState => {
+              // Only update if we have this message
+              if (!prevState.messages[updatedMessage.id]) {
+                return prevState;
+              }
+              
+              const newState = { ...prevState };
+              // Preserve the coderunEvents references
+              const coderunEvents = newState.messages[updatedMessage.id].coderunEvents || [];
+              newState.messages[updatedMessage.id] = {
+                ...updatedMessage,
+                coderunEvents,
+              };
+              return newState;
+            });
+          }
+        )
+        .subscribe();
 
-    // Subscribe to ALL coderun events
-    // We'll filter based on message_id being in our messages object
-    const coderunChannel = supabase
-      .channel('schema-db-changes-coderun')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'coderun_events', filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          const newEvent = payload.new as CoderunEvent;
-          console.log("New coderun event received:", newEvent);
-          addCoderunEventToMessage(newEvent);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'coderun_events', filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          const updatedEvent = payload.new as CoderunEvent;
-          setDataState(prevState => {
-            // Only update if we have this event
-            if (!prevState.coderunEvents[updatedEvent.id]) {
-              return prevState;
-            }
+      // Subscribe to coderun events for the current chat
+      const coderunChannel = supabase
+        .channel(`coderun-${chatId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'coderun_events', filter: `chat_id=eq.${chatId}` },
+          (payload) => {
+            const newEvent = payload.new as CoderunEvent;
+            console.log("New coderun event received:", newEvent);
+            addCoderunEventToMessage(newEvent);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'coderun_events', filter: `chat_id=eq.${chatId}` },
+          (payload) => {
+            const updatedEvent = payload.new as CoderunEvent;
+            console.log("Coderun event updated:", updatedEvent);
             
-            const newState = { ...prevState };
-            // Preserve the browserEvents references
-            const browserEvents = newState.coderunEvents[updatedEvent.id].browserEvents || [];
-            newState.coderunEvents[updatedEvent.id] = {
-              ...updatedEvent,
-              browserEvents,
-            };
-            return newState;
-          });
-        }
-      )
-      .subscribe();
+            setDataState(prevState => {
+              // Only update if we have this event
+              if (!prevState.coderunEvents[updatedEvent.id]) {
+                return prevState;
+              }
+              
+              const newState = { ...prevState };
+              // Preserve the browserEvents references
+              const browserEvents = newState.coderunEvents[updatedEvent.id].browserEvents || [];
+              newState.coderunEvents[updatedEvent.id] = {
+                ...updatedEvent,
+                browserEvents,
+              };
+              return newState;
+            });
+          }
+        )
+        .subscribe();
 
-    // Subscribe to ALL browser events
-    // We'll filter based on coderun_event_id being in our coderunEvents object
-    const browserChannel = supabase
-      .channel('schema-db-changes-browser')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'browser_events', filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          const newEvent = payload.new as BrowserEvent;
-          console.log("New browser event received:", newEvent);
-          addBrowserEventToCoderun(newEvent);
-        }
-      )
-      .subscribe();
-
-    // Fetch initial messages
-    fetchMessages();
+      // Subscribe to browser events for the current chat
+      const browserChannel = supabase
+        .channel(`browser-${chatId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'browser_events', filter: `chat_id=eq.${chatId}` },
+          (payload) => {
+            const newEvent = payload.new as BrowserEvent;
+            console.log("New browser event received:", newEvent);
+            addBrowserEventToCoderun(newEvent);
+          }
+        )
+        .subscribe();
+        
+      // Store channels in the ref
+      channelsRef.current = {
+        [chatId]: [messageChannel, coderunChannel, browserChannel]
+      };
+    }
 
     // Cleanup
     return () => {
-      supabase.removeChannel(messageChannel);
-      supabase.removeChannel(coderunChannel);
-      supabase.removeChannel(browserChannel);
+      // We'll clean up only when chatId changes, not on every render
     };
   }, [user, chatId, chats]);
 

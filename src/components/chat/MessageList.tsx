@@ -23,12 +23,14 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
+  const previousContentRef = useRef(message.content);
   
-  // Highlight content when it changes
+  // Highlight content only when it changes from previous render
   useEffect(() => {
-    if (contentRef.current) {
+    if (contentRef.current && message.content !== previousContentRef.current) {
       setHighlight(true);
       const timer = setTimeout(() => setHighlight(false), 1000);
+      previousContentRef.current = message.content;
       return () => clearTimeout(timer);
     }
   }, [message.content]);
@@ -187,12 +189,14 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const previousContentRef = useRef(message.content);
   
-  // Highlight content when it changes
+  // Highlight content only when it changes from previous render
   useEffect(() => {
-    if (contentRef.current) {
+    if (contentRef.current && message.content !== previousContentRef.current) {
       setHighlight(true);
       const timer = setTimeout(() => setHighlight(false), 1000);
+      previousContentRef.current = message.content;
       return () => clearTimeout(timer);
     }
   }, [message.content]);
@@ -326,19 +330,26 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, browserEvents } = dataState;
   const prevMessageCountRef = useRef(Object.keys(messages).length);
+  const prevMessagesRef = useRef<string[]>([]);
   
   // Auto-scroll to bottom when new messages are added, but not when existing messages are updated
   useEffect(() => {
     const currentMessageCount = Object.keys(messages).length;
+    const currentMessageIds = Object.keys(messages);
+    
+    // Check if there are new messages added (not just updates)
+    const hasNewMessages = currentMessageIds.some(id => !prevMessagesRef.current.includes(id));
     
     // Only auto-scroll if new messages were added, not when existing ones are updated
-    if (currentMessageCount > prevMessageCountRef.current && scrollRef.current) {
+    if ((currentMessageCount > prevMessageCountRef.current || hasNewMessages) && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
     
     prevMessageCountRef.current = currentMessageCount;
-  }, [Object.keys(messages).length, messages]);
+    prevMessagesRef.current = currentMessageIds;
+  }, [messages]);
 
+  // Sort messages by created_at once instead of re-sorting on every render
   const messageList = Object.values(messages).sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
