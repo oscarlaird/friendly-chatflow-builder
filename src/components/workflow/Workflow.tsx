@@ -1,9 +1,14 @@
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
 import { Button } from '@/components/ui/button';
-import { Play, Square } from 'lucide-react';
-import { BrowserEvent } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { useMessages } from '@/hooks/useMessages';
+import { supabase } from '@/integrations/supabase/client';
+import { CodeRewritingStatus, Chat } from '@/types';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface WorkflowProps {
   initialSteps?: any[];
@@ -17,9 +22,28 @@ interface WorkflowProps {
   input_editable?: boolean;
 }
 
+const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
+  const isReady = status === 'done';
+
+  return (
+    <div className="flex items-center gap-1">
+      {!isReady && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+      <Badge 
+        variant={isReady ? "default" : "outline"}
+        className={cn(
+          "text-sm font-medium px-2.5 py-1",
+          isReady ? "bg-green-600 hover:bg-green-700" : "border-yellow-500 text-yellow-600"
+        )}
+      >
+        {isReady ? "Ready" : status === 'thinking' ? "Thinking..." : "Rebuilding Workflow"}
+      </Badge>
+    </div>
+  );
+};
+
 export const Workflow = ({ 
   initialSteps, 
-  steps = [],
+  steps: propSteps = [],
   chatId,
   onStepsChange, 
   autoStart = false,
@@ -29,16 +53,19 @@ export const Workflow = ({
   input_editable = false,
 }: WorkflowProps) => {
   // Use either initialSteps or steps prop, prioritizing steps if both are provided
-  const [workflowSteps, setWorkflowSteps] = useState<any[]>(steps?.length > 0 ? steps : (initialSteps || []));
+  const [workflowSteps, setWorkflowSteps] = useState<any[]>(propSteps?.length > 0 ? propSteps : (initialSteps || []));
   const [isRunning, setIsRunning] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  const [browserEvents, setBrowserEvents] = useState<Record<string, BrowserEvent[]>>({});
+  const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
+  const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
+  const [chatData, setChatData] = useState<Chat | null>(null);
   
   const workflowRef = useRef<{ getUserInputs: () => any }>(null);
+  const { sendMessage } = useMessages(chatId || null);
   
   // Initialize with steps coming from props
   useEffect(() => {
-    const stepsToUse = steps?.length > 0 ? steps : initialSteps;
+    const stepsToUse = propSteps?.length > 0 ? propSteps : initialSteps;
     if (stepsToUse && stepsToUse.length > 0) {
       setWorkflowSteps(stepsToUse);
       
@@ -47,7 +74,102 @@ export const Workflow = ({
         startWorkflow();
       }
     }
-  }, [initialSteps, steps, autoStart]);
+  }, [initialSteps, propSteps, autoStart]);
+  
+  // Initial data fetch and real-time subscription
+  useEffect(() => {
+    if (!chatId) {
+      setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
+      setChatData(null);
+      setCodeRewritingStatus('thinking');
+      return;
+    }
+
+    const fetchChatData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('id', chatId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching chat data:', error);
+          return;
+        }
+
+        setChatData(data);
+
+        // Set steps from chat data if available
+        if (data.steps) {
+          setWorkflowSteps(data.steps);
+        } else {
+          setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
+        }
+
+        // Set code rewriting status based on chat data
+        updateCodeRewritingStatus(data);
+      } catch (error) {
+        console.error('Error in initial data fetch:', error);
+      }
+    };
+
+    fetchChatData();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel(`direct-chat-subscription-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chats',
+          filter: `id=eq.${chatId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            setChatData(null);
+            setCodeRewritingStatus('thinking');
+            setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
+          } else {
+            // Handle chat insertion or update
+            const updatedChat = payload.new as Chat;
+            setChatData(updatedChat);
+            
+            // Update steps if available
+            if (updatedChat.steps) {
+              setWorkflowSteps(updatedChat.steps);
+            }
+            
+            // Update status
+            updateCodeRewritingStatus(updatedChat);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, propSteps, initialSteps]);
+
+  // Helper function to update code rewriting status
+  const updateCodeRewritingStatus = (chat: Chat | null) => {
+    if (!chat) {
+      setCodeRewritingStatus('thinking');
+      return;
+    }
+
+    if (chat.requires_code_rewrite === null) {
+      setCodeRewritingStatus('thinking');
+    } else if (chat.requires_code_rewrite === false) {
+      setCodeRewritingStatus('done');
+    } else {
+      // requires_code_rewrite is true
+      setCodeRewritingStatus(chat.code_approved ? 'done' : 'rewriting_code');
+    }
+  };
   
   const startWorkflow = () => {
     if (isRunning) return;
@@ -119,7 +241,7 @@ export const Workflow = ({
     if (!functionName) return;
     
     // Example browser event
-    const newEvent: BrowserEvent = {
+    const newEvent = {
       id: `event-${Date.now()}`,
       created_at: new Date().toISOString(),
       coderun_event_id: 'example-coderun-id',
@@ -144,55 +266,65 @@ export const Workflow = ({
       };
     });
   };
-  
-  // Get user inputs from the workflow display
-  const getUserInputs = () => {
-    if (workflowRef.current) {
-      return workflowRef.current.getUserInputs();
+
+  const handleRunWorkflow = async () => {
+    if (!chatId) return;
+    
+    // Get current user inputs directly from the WorkflowDisplay component
+    const userInputs = workflowRef.current?.getUserInputs() || {};
+    
+    try {
+      // Send a message with type code_run and include the user inputs
+      await sendMessage("Run workflow", "user", "code_run", userInputs);
+      window.postMessage({
+        type: 'CREATE_RECORDING_WINDOW',
+        payload: {
+          chatId,
+          roomId: chatId
+        }
+      }, '*');
+    } catch (error) {
+      console.error("Error running workflow:", error);
     }
-    return {};
   };
   
   return (
-    <div className={`${className} w-full`}>
-      <div className={`${compact ? 'mb-2' : 'mb-4'} flex justify-between items-center`}>
-        {/* Workflow Controls */}
-        <div className="flex space-x-2">
-          {!isRunning && (currentStepIndex === -1 || allowRestart) && (
-            <Button 
-              onClick={startWorkflow} 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-1.5"
-            >
-              <Play className="h-3.5 w-3.5" />
-              <span>Run Example</span>
-            </Button>
-          )}
-          
-          {isRunning && (
-            <Button 
-              onClick={stopWorkflow} 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-1.5 text-destructive"
-            >
-              <Square className="h-3.5 w-3.5" />
-              <span>Stop</span>
-            </Button>
-          )}
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0">
+        <h2 className="text-lg font-semibold">Workflow</h2>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={codeRewritingStatus} />
+          <Button 
+            size="sm" 
+            className="gap-1 ml-1" 
+            onClick={handleRunWorkflow} 
+            disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
+          >
+            <Play className="h-4 w-4" />
+            Run
+          </Button>
         </div>
       </div>
-      
-      {/* Workflow Visualization */}
-      <WorkflowDisplay
-        ref={workflowRef}
-        steps={workflowSteps}
-        browserEvents={browserEvents}
-        compact={compact}
-        input_editable={input_editable}
-        autoActivateSteps={isRunning}
-      />
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-4">
+            {(!workflowSteps || workflowSteps.length === 0) ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                No workflow steps defined
+              </div>
+            ) : (
+              <WorkflowDisplay 
+                ref={workflowRef}
+                steps={workflowSteps} 
+                browserEvents={browserEvents}
+                compact={compact}
+                input_editable={input_editable}
+                autoActivateSteps={isRunning}
+              />
+            )}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };
