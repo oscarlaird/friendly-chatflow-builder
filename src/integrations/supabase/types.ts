@@ -182,6 +182,7 @@ export type Database = {
           text_is_currently_streaming: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          update_counter: number
           user_inputs: Json | null
           window_has_spawned: boolean | null
         }
@@ -200,6 +201,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type: Database["public"]["Enums"]["message_type"]
           uid: string
+          update_counter?: number
           user_inputs?: Json | null
           window_has_spawned?: boolean | null
         }
@@ -218,6 +220,7 @@ export type Database = {
           text_is_currently_streaming?: boolean | null
           type?: Database["public"]["Enums"]["message_type"]
           uid?: string
+          update_counter?: number
           user_inputs?: Json | null
           window_has_spawned?: boolean | null
         }

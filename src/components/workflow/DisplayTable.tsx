@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Minus } from 'lucide-react';
+import { Minus, Check, X } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
@@ -33,6 +33,11 @@ const formatValue = (value: any): string => {
     } catch (error) {
       return String(value);
     }
+  }
+  
+  // Don't convert booleans to strings here
+  if (typeof value === 'boolean') {
+    return value.toString();
   }
   
   return String(value);
@@ -125,6 +130,21 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
   // Use the editable data when in editable mode, otherwise use the display data
   const tableData = isEditable ? editableData : displayData;
 
+  // Render cell content based on value type
+  const renderCellContent = (value: any) => {
+    if (typeof value === 'boolean') {
+      return value ? 
+        <Check className="h-4 w-4 text-green-500" /> : 
+        <X className="h-4 w-4 text-red-500" />;
+    }
+    
+    return (
+      <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
+        {formatValue(value)}
+      </pre>
+    );
+  };
+
   return (
     <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
       {/* Title bar with optional title and remove button */}
@@ -199,9 +219,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
                           size={15}
                         />
                       ) : (
-                        <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
-                          {formatValue(row[column])}
-                        </pre>
+                        renderCellContent(row[column])
                       )}
                     </TableCell>
                   ))}
