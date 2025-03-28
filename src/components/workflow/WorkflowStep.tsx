@@ -112,14 +112,11 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
   const getNestedBorderStyle = () => {
     if (nestingLevel === 0) return {};
     
-    // We'll use a different opacity for each nesting level
-    const baseOpacity = isActive ? 1 : 0.5;
-    const opacity = Math.max(baseOpacity - (nestingLevel * 0.15), 0.3);
+    // Use color with varying opacity based on active state
+    const opacity = isActive ? 0.9 : 0.5;
     
     return {
       borderLeft: `2px solid hsl(var(--primary) / ${opacity})`,
-      marginLeft: `${nestingLevel * 10}px`,
-      paddingLeft: '8px',
     };
   };
   
@@ -226,3 +223,4 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     </Card>
   );
 };
+
