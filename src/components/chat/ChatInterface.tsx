@@ -73,7 +73,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         ) : (
           <div className="h-full overflow-hidden w-full">
             <Workflow 
-              steps={initialWorkflowSteps} 
+              initialSteps={initialWorkflowSteps} 
               chatId={chatId} 
             />
           </div>
@@ -94,7 +94,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           <ResizablePanel defaultSize={40} minSize={30}>
             <Workflow 
-              steps={initialWorkflowSteps} 
+              initialSteps={initialWorkflowSteps} 
               chatId={chatId} 
             />
           </ResizablePanel>

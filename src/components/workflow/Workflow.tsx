@@ -6,7 +6,9 @@ import { Play, Square } from 'lucide-react';
 import { BrowserEvent } from '@/types';
 
 interface WorkflowProps {
-  initialSteps: any[];
+  initialSteps?: any[];
+  steps?: any[];
+  chatId?: string;
   onStepsChange?: (steps: any[]) => void;
   autoStart?: boolean;
   allowRestart?: boolean;
@@ -17,6 +19,8 @@ interface WorkflowProps {
 
 export const Workflow = ({ 
   initialSteps, 
+  steps = [],
+  chatId,
   onStepsChange, 
   autoStart = false,
   allowRestart = false,
@@ -24,7 +28,8 @@ export const Workflow = ({
   className = '',
   input_editable = false,
 }: WorkflowProps) => {
-  const [steps, setSteps] = useState<any[]>(initialSteps || []);
+  // Use either initialSteps or steps prop, prioritizing steps if both are provided
+  const [workflowSteps, setWorkflowSteps] = useState<any[]>(steps?.length > 0 ? steps : (initialSteps || []));
   const [isRunning, setIsRunning] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [browserEvents, setBrowserEvents] = useState<Record<string, BrowserEvent[]>>({});
@@ -33,15 +38,16 @@ export const Workflow = ({
   
   // Initialize with steps coming from props
   useEffect(() => {
-    if (initialSteps && initialSteps.length > 0) {
-      setSteps(initialSteps);
+    const stepsToUse = steps?.length > 0 ? steps : initialSteps;
+    if (stepsToUse && stepsToUse.length > 0) {
+      setWorkflowSteps(stepsToUse);
       
       // Auto-start if indicated
       if (autoStart) {
         startWorkflow();
       }
     }
-  }, [initialSteps, autoStart]);
+  }, [initialSteps, steps, autoStart]);
   
   const startWorkflow = () => {
     if (isRunning) return;
@@ -50,8 +56,8 @@ export const Workflow = ({
     setCurrentStepIndex(0);
     
     // Reset active state on all steps
-    const updatedSteps = steps.map(step => ({ ...step, active: false }));
-    setSteps(updatedSteps);
+    const updatedSteps = workflowSteps.map(step => ({ ...step, active: false }));
+    setWorkflowSteps(updatedSteps);
     setBrowserEvents({});
   };
   
@@ -60,8 +66,8 @@ export const Workflow = ({
     setCurrentStepIndex(-1);
     
     // Remove active state from all steps
-    const updatedSteps = steps.map(step => ({ ...step, active: false }));
-    setSteps(updatedSteps);
+    const updatedSteps = workflowSteps.map(step => ({ ...step, active: false }));
+    setWorkflowSteps(updatedSteps);
     
     if (onStepsChange) {
       onStepsChange(updatedSteps);
@@ -73,14 +79,14 @@ export const Workflow = ({
     let timeoutId: any;
     
     if (isRunning && currentStepIndex >= 0) {
-      if (currentStepIndex < steps.length) {
+      if (currentStepIndex < workflowSteps.length) {
         // Update the next step to be active
-        const updatedSteps = [...steps];
+        const updatedSteps = [...workflowSteps];
         updatedSteps[currentStepIndex] = { 
           ...updatedSteps[currentStepIndex], 
           active: true 
         };
-        setSteps(updatedSteps);
+        setWorkflowSteps(updatedSteps);
         
         if (onStepsChange) {
           onStepsChange(updatedSteps);
@@ -106,7 +112,7 @@ export const Workflow = ({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isRunning, currentStepIndex, steps, onStepsChange]);
+  }, [isRunning, currentStepIndex, workflowSteps, onStepsChange]);
   
   // Simulate browser events for a function
   const simulateBrowserEvents = (functionName: string) => {
@@ -116,7 +122,6 @@ export const Workflow = ({
     const newEvent: BrowserEvent = {
       id: `event-${Date.now()}`,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       coderun_event_id: 'example-coderun-id',
       function_name: functionName,
       data: {
@@ -124,7 +129,10 @@ export const Workflow = ({
         browser_state: {
           url: 'https://example.com'
         }
-      }
+      },
+      message_id: chatId || '',
+      chat_id: chatId || '',
+      uid: ''
     };
     
     // Add this event to the browser events for this function
@@ -179,7 +187,7 @@ export const Workflow = ({
       {/* Workflow Visualization */}
       <WorkflowDisplay
         ref={workflowRef}
-        steps={steps}
+        steps={workflowSteps}
         browserEvents={browserEvents}
         compact={compact}
         input_editable={input_editable}

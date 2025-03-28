@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, CircleQuestion, Component, SquareCheck } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,7 @@ const getStepIcon = (type: string) => {
     case 'for':
       return <ListOrdered className="h-4 w-4" />;
     case 'if':
-      return <CircleQuestion className="h-4 w-4" />;
+      return <FileQuestion className="h-4 w-4" />;
     case 'done':
       return <SquareCheck className="h-4 w-4" />;
     default:
