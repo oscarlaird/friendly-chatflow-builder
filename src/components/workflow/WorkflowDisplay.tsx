@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
@@ -77,10 +76,9 @@ export const WorkflowDisplay = forwardRef<
         </div>
       )}
       
-      {/* Display workflow steps */}
+      {/* Display workflow steps - removed the "Workflow Steps" heading */}
       {steps?.length > 0 ? (
         <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
-          <h3 className={`text-base font-semibold ${compact ? "mb-1.5" : "mb-2"}`}>Workflow Steps</h3>
           <div className="space-y-0.5">
             {steps.map((step) => (
               <WorkflowStep
