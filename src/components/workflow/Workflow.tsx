@@ -100,8 +100,8 @@ export const Workflow = ({
 
         setChatData(data);
 
-        // Set steps from chat data if available
-        if (data.steps) {
+        // Set steps from chat data if available and ensure it's an array
+        if (data.steps && Array.isArray(data.steps)) {
           setWorkflowSteps(data.steps);
         } else {
           setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
@@ -137,8 +137,8 @@ export const Workflow = ({
             const updatedChat = payload.new as Chat;
             setChatData(updatedChat);
             
-            // Update steps if available
-            if (updatedChat.steps) {
+            // Update steps if available and ensure it's an array
+            if (updatedChat.steps && Array.isArray(updatedChat.steps)) {
               setWorkflowSteps(updatedChat.steps);
             }
             
