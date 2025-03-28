@@ -157,53 +157,51 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
             <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
           )}
           
-          {stepType === 'function' && (
-            <div className="pt-1 space-y-1.5">
-              {hasInput && (
-                <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Input
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <KeyValueDisplay data={step.input} compact={true} />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasBrowserEvents && (
-                <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Browser Events
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="border rounded-sm text-xs overflow-hidden">
-                      <ScrollArea className="max-h-32">
-                        {browserEvents
-                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                          .map((event, index) => (
-                            <BrowserEventItem key={index} event={event} />
-                          ))}
-                      </ScrollArea>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasOutput && (
-                <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Output
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <KeyValueDisplay data={step.output} compact={true} />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-            </div>
-          )}
+          <div className="pt-1 space-y-1.5">
+            {hasInput && (
+              <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
+                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  Input
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-1.5">
+                  <KeyValueDisplay data={step.input} compact={true} />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+            
+            {hasBrowserEvents && stepType === 'function' && (
+              <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
+                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  Browser Events
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-1.5">
+                  <div className="border rounded-sm text-xs overflow-hidden">
+                    <ScrollArea className="max-h-32">
+                      {browserEvents
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((event, index) => (
+                          <BrowserEventItem key={index} event={event} />
+                        ))}
+                    </ScrollArea>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+            
+            {hasOutput && (
+              <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
+                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  Output
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-1.5">
+                  <KeyValueDisplay data={step.output} compact={true} />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
         </div>
       </div>
     </Card>

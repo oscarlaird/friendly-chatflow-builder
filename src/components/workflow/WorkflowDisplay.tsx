@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
@@ -27,11 +28,6 @@ export const WorkflowDisplay = forwardRef<
   const userInputStep = steps?.find(step => 
     step.type === "function" && step.function_name === "mock_get_user_inputs"
   );
-  
-  // Get the final output (we'll keep this from the original implementation)
-  const finalOutput = steps?.find(step =>
-    step.type === "done"
-  )?.output || null;
   
   // Local state for user inputs
   const [inputValues, setInputValues] = useState<any>(userInputStep?.output || {});
@@ -91,16 +87,6 @@ export const WorkflowDisplay = forwardRef<
           </div>
         </div>
       ) : null}
-      
-      {/* Final output display */}
-      {finalOutput && (
-        <div className={compact ? "mt-3" : "mt-4"}>
-          <h3 className={`text-base font-semibold ${compact ? "mb-1.5" : "mb-2"}`}>Example Output</h3>
-          <div className="w-full overflow-hidden">
-            <KeyValueDisplay data={finalOutput} compact={compact} />
-          </div>
-        </div>
-      )}
     </div>
   );
 });
