@@ -108,129 +108,121 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     );
   };
   
+  // Generate a left border color for nested items
+  const getNestedBorderStyle = () => {
+    if (nestingLevel === 0) return {};
+    
+    // We'll use a different opacity for each nesting level
+    const baseOpacity = isActive ? 1 : 0.5;
+    const opacity = Math.max(baseOpacity - (nestingLevel * 0.15), 0.3);
+    
+    return {
+      borderLeft: `2px solid hsl(var(--primary) / ${opacity})`,
+      marginLeft: `${nestingLevel * 10}px`,
+      paddingLeft: '8px',
+    };
+  };
+  
   return (
-    <div className="flex items-start gap-1">
-      {/* Nesting guides with improved visualization */}
-      <div className="flex h-full flex-shrink-0" style={{ width: `${nestingLevel * 24}px` }}>
-        {Array.from({ length: nestingLevel }).map((_, i) => (
-          <div key={i} className="w-6 flex-shrink-0 relative">
-            <div className={cn(
-              "absolute left-3 top-0 bottom-0 w-0.5",
-              isActive ? "bg-primary/50" : "bg-border"
-            )}></div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Connecting line from parent to child (horizontal line) */}
-      {nestingLevel > 0 && (
-        <div className="relative flex-shrink-0 w-3 self-stretch">
-          <div className={cn(
-            "absolute top-6 left-0 h-0.5 w-3", 
-            isActive ? "bg-primary/50" : "bg-border"
-          )}></div>
-        </div>
+    <Card 
+      className={cn(
+        "relative mb-2 p-3",
+        isActive && "border-primary shadow-sm bg-primary/5"
       )}
-      
-      <Card 
-        className={cn(
-          "relative flex-1 mb-2 p-3",
-          isActive && "border-primary shadow-sm bg-primary/5"
-        )}
-      >
-        <div className="flex items-start gap-3">
-          <div className={cn(
-            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
-            isActive 
-              ? "bg-primary text-primary-foreground border-primary" 
-              : "bg-primary/10 text-primary border-primary/20"
-          )}>
-            {step.step_number}
-          </div>
-          
-          <div className="flex-1 space-y-2">
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="flex items-center gap-2">
-                {getStepIcon(stepType)}
-                <h3 className={cn(
-                  "font-medium",
-                  isActive && "text-primary"
-                )}>
-                  {getStepTitle()}
-                </h3>
-              </div>
-              
-              {stepType === 'function' && step.browser_required && (
-                <Badge 
-                  variant="outline" 
-                  className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Browser
-                </Badge>
-              )}
-              
-              {isActive && (
-                <Badge className="bg-primary text-primary-foreground">
-                  Active
-                </Badge>
-              )}
+      style={getNestedBorderStyle()}
+    >
+      <div className="flex items-start gap-3">
+        <div className={cn(
+          "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
+          isActive 
+            ? "bg-primary text-primary-foreground border-primary" 
+            : "bg-primary/10 text-primary border-primary/20"
+        )}>
+          {step.step_number}
+        </div>
+        
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex items-center gap-2">
+              {getStepIcon(stepType)}
+              <h3 className={cn(
+                "font-medium",
+                isActive && "text-primary"
+              )}>
+                {getStepTitle()}
+              </h3>
             </div>
             
-            {getStepDescription() && (
-              <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+            {stepType === 'function' && step.browser_required && (
+              <Badge 
+                variant="outline" 
+                className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Browser
+              </Badge>
             )}
             
-            {stepType === 'function' && (
-              <div className="pt-1 space-y-1.5">
-                {hasInput && (
-                  <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Input
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.input} compact={true} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-                
-                {hasBrowserEvents && (
-                  <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Browser Events
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-1.5">
-                      <div className="border rounded-sm text-xs overflow-hidden">
-                        <ScrollArea className="max-h-32">
-                          {browserEvents
-                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                            .map((event, index) => (
-                              <BrowserEventItem key={index} event={event} />
-                            ))}
-                        </ScrollArea>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-                
-                {hasOutput && (
-                  <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Output
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.output} compact={true} />
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-              </div>
+            {isActive && (
+              <Badge className="bg-primary text-primary-foreground">
+                Active
+              </Badge>
             )}
           </div>
+          
+          {getStepDescription() && (
+            <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+          )}
+          
+          {stepType === 'function' && (
+            <div className="pt-1 space-y-1.5">
+              {hasInput && (
+                <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    Input
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5">
+                    <KeyValueDisplay data={step.input} compact={true} />
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              
+              {hasBrowserEvents && (
+                <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    Browser Events
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5">
+                    <div className="border rounded-sm text-xs overflow-hidden">
+                      <ScrollArea className="max-h-32">
+                        {browserEvents
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((event, index) => (
+                            <BrowserEventItem key={index} event={event} />
+                          ))}
+                      </ScrollArea>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              
+              {hasOutput && (
+                <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    Output
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5">
+                    <KeyValueDisplay data={step.output} compact={true} />
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
+          )}
         </div>
-      </Card>
-    </div>
+      </div>
+    </Card>
   );
 };
