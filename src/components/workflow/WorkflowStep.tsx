@@ -45,7 +45,6 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
   
   const stepType = step.type;
-  const nestingLevel = step.nesting_level || 0;
   const isActive = step.active || false;
   
   const hasInput = step.input && Object.keys(step.input).length > 0;
@@ -108,25 +107,12 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     );
   };
   
-  // Generate a left border color for nested items without any indentation
-  const getNestedBorderStyle = () => {
-    if (nestingLevel === 0) return {};
-    
-    // Use color with varying opacity based on active state
-    const opacity = isActive ? 0.9 : 0.5;
-    
-    return {
-      borderLeft: `2px solid hsl(var(--primary) / ${opacity})`,
-    };
-  };
-  
   return (
     <Card 
       className={cn(
         "relative mb-2 p-3",
         isActive && "border-primary shadow-sm bg-primary/5"
       )}
-      style={getNestedBorderStyle()}
     >
       <div className="flex items-start gap-3">
         <div className={cn(
