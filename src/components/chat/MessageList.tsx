@@ -213,6 +213,29 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
     );
   };
   
+  // Process workflow steps to include browser events
+  const processStepsWithBrowserEvents = (steps: any[]) => {
+    if (!steps || !Array.isArray(steps)) return [];
+    
+    return steps.map(step => {
+      // Only process function steps to add browser events
+      if (step.type === 'function' && step.function_name) {
+        const functionEvents = messageBrowserEvents.filter(
+          event => event.function_name === step.function_name
+        );
+        
+        if (functionEvents.length > 0) {
+          return {
+            ...step,
+            browserEvents: functionEvents,
+            active: true
+          };
+        }
+      }
+      return step;
+    });
+  };
+  
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={`w-full max-w-[95%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
@@ -224,7 +247,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                   <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                 </Button>
               </CollapsibleTrigger>
-              <h3 className="text-sm font-medium">Code Run ({message.id})</h3>
+              <h3 className="text-sm font-medium">Code Run</h3>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Only show Jump to Window button if code_run_state is not stopped */}
@@ -255,22 +278,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
             {message.steps && message.steps.length > 0 && (
               <div className="w-full overflow-hidden">
                 <WorkflowDisplay 
-                  steps={message.steps.map(step => {
-                    // Find browser events that match this function
-                    if (step.function_name) {
-                      const functionEvents = messageBrowserEvents.filter(
-                        event => event.function_name === step.function_name
-                      );
-                      if (functionEvents.length > 0) {
-                        return {
-                          ...step,
-                          browserEvents: functionEvents,
-                          active: true
-                        };
-                      }
-                    }
-                    return step;
-                  })}
+                  steps={processStepsWithBrowserEvents(message.steps)}
                   compact={true}
                   autoActivateSteps={true}
                 />

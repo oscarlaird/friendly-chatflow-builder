@@ -1,8 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, Globe } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ChevronDown, ChevronRight, ExternalLink, GitBranch, Function, Code, SquareCheck } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -10,19 +10,28 @@ import { BrowserEvent } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WorkflowStepProps {
-  stepNumber: number;
-  functionName: string;
-  description: string;
-  input?: Record<string, any>;
-  output?: Record<string, any>;
-  requiresBrowser?: boolean;
-  isLast?: boolean;
-  active?: boolean;
-  autoOpen?: boolean;
+  step: any;
   browserEvents?: BrowserEvent[];
+  autoOpen?: boolean;
 }
 
-// Helper function to format function name
+// Get the appropriate icon for the step type
+const getStepIcon = (type: string) => {
+  switch (type) {
+    case 'function':
+      return <Function className="h-4 w-4" />;
+    case 'for':
+      return <GitBranch className="h-4 w-4" />;
+    case 'if':
+      return <Code className="h-4 w-4" />;
+    case 'done':
+      return <SquareCheck className="h-4 w-4" />;
+    default:
+      return <Function className="h-4 w-4" />;
+  }
+};
+
+// Format function name for display
 const formatFunctionName = (name: string): string => {
   return name
     .split('_')
@@ -30,141 +39,176 @@ const formatFunctionName = (name: string): string => {
     .join(' ');
 };
 
-// Browser event item component
-const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
-  // Extract domain from URL for favicon
-  const getFaviconUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
-    } catch (e) {
-      return null;
+export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: WorkflowStepProps) => {
+  const [isInputOpen, setIsInputOpen] = useState(autoOpen);
+  const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
+  const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
+  
+  const stepType = step.type;
+  const nestingLevel = step.nesting_level || 0;
+  const isActive = step.active || false;
+  
+  const hasInput = step.input && Object.keys(step.input).length > 0;
+  const hasOutput = step.output && Object.keys(step.output).length > 0;
+  const hasBrowserEvents = browserEvents.length > 0;
+  
+  const getStepTitle = () => {
+    switch (stepType) {
+      case 'function':
+        return formatFunctionName(step.function_name);
+      case 'for':
+        return 'For Loop';
+      case 'if':
+        return 'Conditional';
+      case 'done':
+        return 'End';
+      default:
+        return 'Step';
     }
   };
-
-  const browserState = event?.data?.browser_state;
-  const currentGoal = event?.data?.current_goal;
-  const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
-
-  return (
-    <div className="flex items-center gap-2 text-xs py-1 px-2 border-b border-muted/40 last:border-0">
-      {faviconUrl ? (
-        <img src={faviconUrl} alt="site favicon" className="w-4 h-4 flex-shrink-0" />
-      ) : (
-        <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-      )}
-      <span className="truncate">{currentGoal || 'Browser action'}</span>
-    </div>
-  );
-};
-
-export const WorkflowStep = ({
-  stepNumber,
-  functionName,
-  description,
-  input,
-  output,
-  requiresBrowser = false,
-  isLast = false,
-  active = false,
-  autoOpen = false,
-  browserEvents = [],
-}: WorkflowStepProps) => {
-  const [isInputOpen, setIsInputOpen] = useState(false);
-  const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(false);
-  const [isOutputOpen, setIsOutputOpen] = useState(false);
   
-  const hasInput = input && Object.keys(input).length > 0;
-  const hasBrowserEvents = browserEvents && browserEvents.length > 0;
-  const hasOutput = output && Object.keys(output).length > 0;
-  
-  // Auto-open sections based on active status and autoOpen prop
-  useEffect(() => {
-    if (active && autoOpen) {
-      setIsInputOpen(true);
-      setIsBrowserEventsOpen(true);
-      setIsOutputOpen(true);
-    } else if (active) {
-      // If just active but not autoOpen, only open browser events
-      setIsBrowserEventsOpen(true);
+  const getStepDescription = () => {
+    switch (stepType) {
+      case 'function':
+        return step.function_description;
+      case 'for':
+      case 'if':
+        return step.control_description;
+      case 'done':
+        return 'Workflow completed';
+      default:
+        return '';
     }
-  }, [active, autoOpen]);
+  };
+  
+  // Browser event item component for function steps
+  const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
+    // Extract domain from URL for favicon
+    const getFaviconUrl = (url: string) => {
+      try {
+        const urlObj = new URL(url);
+        return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const browserState = event?.data?.browser_state;
+    const currentGoal = event?.data?.current_goal;
+    const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
+
+    return (
+      <div className="flex items-center gap-2 text-xs py-1 px-2 border-b border-muted/40 last:border-0">
+        {faviconUrl ? (
+          <img src={faviconUrl} alt="site favicon" className="w-4 h-4 flex-shrink-0" />
+        ) : (
+          <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+        )}
+        <span className="truncate">{currentGoal || 'Browser action'}</span>
+      </div>
+    );
+  };
+  
+  // For done step, render a simplified view
+  if (stepType === 'done') {
+    return (
+      <div 
+        className={cn(
+          "flex items-center gap-2 p-2 text-sm rounded-md",
+          isActive ? "text-primary font-medium" : "text-muted-foreground"
+        )}
+        style={{ marginLeft: `${nestingLevel * 2}rem` }}
+      >
+        <SquareCheck className="h-5 w-5" />
+        <span>Workflow completed</span>
+      </div>
+    );
+  }
   
   return (
-    <div className="relative">
-      {!isLast && (
-        <div className="absolute left-4 top-14 bottom-0 w-0.5 bg-border z-0"></div>
-      )}
-      <Card className={cn(
-        "relative z-10 mb-3",
-        active && "border-primary shadow-md"
-      )}>
-        <CardContent className={cn(
-          "p-4",
-          active && "bg-primary/5"
-        )}>
-          <div className="flex items-start gap-3">
-            <div className={cn(
-              "flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full font-medium border",
-              active 
-                ? "bg-primary text-primary-foreground border-primary" 
-                : "bg-primary/10 text-primary border-primary/20"
-            )}>
-              {stepNumber}
+    <div className="flex items-start gap-1">
+      {/* Nesting guides */}
+      {nestingLevel > 0 && (
+        <div className="flex h-full">
+          {Array.from({ length: nestingLevel }).map((_, i) => (
+            <div key={i} className="w-8 flex-shrink-0 relative">
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"></div>
             </div>
-            
-            <div className="flex-1 space-y-2">
-              <div className="flex flex-wrap gap-2 items-center">
+          ))}
+        </div>
+      )}
+      
+      <Card 
+        className={cn(
+          "relative flex-1 mb-2 p-3",
+          isActive && "border-primary shadow-sm bg-primary/5"
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <div className={cn(
+            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
+            isActive 
+              ? "bg-primary text-primary-foreground border-primary" 
+              : "bg-primary/10 text-primary border-primary/20"
+          )}>
+            {step.step_number}
+          </div>
+          
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex items-center gap-2">
+                {getStepIcon(stepType)}
                 <h3 className={cn(
-                  "font-medium text-lg",
-                  active && "text-primary"
+                  "font-medium",
+                  isActive && "text-primary"
                 )}>
-                  {formatFunctionName(functionName)}
+                  {getStepTitle()}
                 </h3>
-                
-                {requiresBrowser && (
-                  <Badge 
-                    variant="outline" 
-                    className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600 hover:bg-violet-600"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Browser Required
-                  </Badge>
-                )}
-                
-                {active && (
-                  <Badge className="bg-primary text-primary-foreground">
-                    Active
-                  </Badge>
-                )}
               </div>
               
-              <p className="text-muted-foreground">{description}</p>
+              {stepType === 'function' && step.browser_required && (
+                <Badge 
+                  variant="outline" 
+                  className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Browser
+                </Badge>
+              )}
               
-              <div className="pt-2 space-y-2">
+              {isActive && (
+                <Badge className="bg-primary text-primary-foreground">
+                  Active
+                </Badge>
+              )}
+            </div>
+            
+            <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+            
+            {stepType === 'function' && (
+              <div className="pt-1 space-y-1.5">
                 {hasInput && (
                   <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {isInputOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      Example Input
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      Input
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <KeyValueDisplay data={input} />
+                    <CollapsibleContent className="pt-1.5">
+                      <KeyValueDisplay data={step.input} compact={true} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
                 
                 {hasBrowserEvents && (
                   <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {isBrowserEventsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                       Browser Events
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
+                    <CollapsibleContent className="pt-1.5">
                       <div className="border rounded-sm text-xs overflow-hidden">
-                        <ScrollArea className="max-h-36">
-                          {/* Sort browser events in reverse chronological order */}
-                          {[...browserEvents]
+                        <ScrollArea className="max-h-32">
+                          {browserEvents
                             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                             .map((event, index) => (
                               <BrowserEventItem key={index} event={event} />
@@ -177,19 +221,19 @@ export const WorkflowStep = ({
                 
                 {hasOutput && (
                   <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {isOutputOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      Example Output
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      Output
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <KeyValueDisplay data={output} />
+                    <CollapsibleContent className="pt-1.5">
+                      <KeyValueDisplay data={step.output} compact={true} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
               </div>
-            </div>
+            )}
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );

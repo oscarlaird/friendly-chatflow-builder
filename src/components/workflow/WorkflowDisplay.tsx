@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
@@ -23,36 +22,24 @@ export const WorkflowDisplay = forwardRef<
   input_editable = false,
   autoActivateSteps = false,
 }, ref) => {
-  // Memoize the filtered steps to prevent unnecessary re-renders
-  const IGNORED_FUNCTIONS = ["mock_get_user_inputs", "main"];
-  
-  // Filter out the ignored functions
-  const filteredSteps = steps?.filter(step => 
-    !IGNORED_FUNCTIONS.includes(step.function_name)
-  ) || [];
-  
-  // Get the user input from mock_get_user_inputs step
-  const mockInputStep = steps?.find(step => 
-    step.function_name === "mock_get_user_inputs"
+  // Get the user input from the first mock_get_user_inputs step
+  const userInputStep = steps?.find(step => 
+    step.type === "function" && step.function_name === "mock_get_user_inputs"
   );
   
-  // Get the final output from the main step
-  const mainStep = steps?.find(step => 
-    step.function_name === "main"
-  );
+  // Get the final output (we'll keep this from the original implementation)
+  const finalOutput = steps?.find(step =>
+    step.type === "done"
+  )?.output || null;
   
-  const userInputs = mockInputStep?.output || {};
-  const finalOutput = mainStep?.output || null;
+  // Local state for user inputs
+  const [inputValues, setInputValues] = useState<any>(userInputStep?.output || {});
   
-  // Local state for the input value
-  const [inputValues, setInputValues] = useState<any>(userInputs);
-  
-  // Update local inputs when userInputs change, using JSON stringify to avoid needless rerenders
-  const userInputsJson = JSON.stringify(userInputs);
+  // Update local inputs when userInputs change
   useEffect(() => {
-    const parsedInputs = JSON.parse(userInputsJson);
-    setInputValues(parsedInputs);
-  }, [userInputsJson]);
+    const newInputs = userInputStep?.output || {};
+    setInputValues(newInputs);
+  }, [userInputStep]);
   
   // Handle input changes
   const handleInputChange = (newInputs: any) => {
@@ -64,50 +51,55 @@ export const WorkflowDisplay = forwardRef<
     getUserInputs: () => inputValues
   }));
   
+  // Get browser events mapped by function name for easy lookup
+  const getBrowserEventsForStep = (step: any, browserEvents: BrowserEvent[] = []) => {
+    if (step.type !== 'function' || !step.function_name) return [];
+    
+    return browserEvents.filter(event => 
+      event.function_name === step.function_name
+    );
+  };
+  
   return (
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>
       {/* User input form based on mock_get_user_inputs output */}
-      {Object.keys(userInputs).length > 0 && (
-        <div className={compact ? "mb-4" : "mb-6"}>
-          <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Input</h3>
+      {userInputStep?.output && Object.keys(userInputStep.output).length > 0 && (
+        <div className={compact ? "mb-3" : "mb-4"}>
+          <h3 className={`text-base font-semibold ${compact ? "mb-1.5" : "mb-2"}`}>Example Input</h3>
           <div className="w-full overflow-hidden">
             <KeyValueDisplay 
-              data={userInputs} 
+              data={userInputStep.output} 
               isEditable={input_editable}
-              onChange={input_editable ? handleInputChange : null} // Only allow changes if editable
+              onChange={input_editable ? handleInputChange : undefined}
+              compact={compact}
             />
           </div>
         </div>
       )}
       
       {/* Display workflow steps */}
-      {filteredSteps.length > 0 ? (
-        <div className={compact ? "space-y-1 mb-4" : "space-y-1"}>
-          <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Workflow Steps</h3>
-          {filteredSteps.map((step, index) => (
-            <WorkflowStep
-              key={`${step.function_name}-${index}`}
-              stepNumber={index + 1}
-              functionName={step.function_name}
-              description={step.description}
-              input={step.input}
-              output={step.output}
-              requiresBrowser={step.requires_browser}
-              isLast={index === filteredSteps.length - 1}
-              active={step.active === true} // Pass the active state to highlight the step
-              autoOpen={autoActivateSteps && step.active === true} // Auto open sections if step is active and autoActivateSteps is true
-              browserEvents={step.browserEvents} // Pass browser events to the step
-            />
-          ))}
+      {steps?.length > 0 ? (
+        <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
+          <h3 className={`text-base font-semibold ${compact ? "mb-1.5" : "mb-2"}`}>Workflow Steps</h3>
+          <div className="space-y-0.5">
+            {steps.map((step) => (
+              <WorkflowStep
+                key={`${step.type}-${step.step_number}`}
+                step={step}
+                browserEvents={[]} // We'll pass browser events in a real implementation
+                autoOpen={autoActivateSteps && step.active === true}
+              />
+            ))}
+          </div>
         </div>
       ) : null}
       
       {/* Final output display */}
       {finalOutput && (
-        <div className={compact ? "mt-4" : "mt-6"}>
-          <h3 className={`text-base font-semibold ${compact ? "mb-2" : "mb-3"}`}>Example Output</h3>
+        <div className={compact ? "mt-3" : "mt-4"}>
+          <h3 className={`text-base font-semibold ${compact ? "mb-1.5" : "mb-2"}`}>Example Output</h3>
           <div className="w-full overflow-hidden">
-            <KeyValueDisplay data={finalOutput} />
+            <KeyValueDisplay data={finalOutput} compact={compact} />
           </div>
         </div>
       )}
