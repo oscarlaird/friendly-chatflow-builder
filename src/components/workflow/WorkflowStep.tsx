@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, GitBranch, Code, SquareCheck, Component } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, CircleQuestion, Component, SquareCheck } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -21,9 +21,9 @@ const getStepIcon = (type: string) => {
     case 'function':
       return <Component className="h-4 w-4" />;
     case 'for':
-      return <GitBranch className="h-4 w-4" />;
+      return <ListOrdered className="h-4 w-4" />;
     case 'if':
-      return <Code className="h-4 w-4" />;
+      return <CircleQuestion className="h-4 w-4" />;
     case 'done':
       return <SquareCheck className="h-4 w-4" />;
     default:
@@ -57,11 +57,10 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
       case 'function':
         return formatFunctionName(step.function_name);
       case 'for':
-        return 'For Loop';
       case 'if':
-        return 'Conditional';
+        return step.control_description || (stepType === 'for' ? 'Repeat Steps' : 'Check Condition');
       case 'done':
-        return 'End';
+        return 'Workflow Complete';
       default:
         return 'Step';
     }
@@ -73,9 +72,9 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
         return step.function_description;
       case 'for':
       case 'if':
-        return step.control_description;
+        return null; // We'll use control_description as the main title now
       case 'done':
-        return 'Workflow completed';
+        return 'All steps have been completed';
       default:
         return '';
     }
@@ -109,32 +108,27 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     );
   };
   
-  // For done step, render a simplified view
-  if (stepType === 'done') {
-    return (
-      <div 
-        className={cn(
-          "flex items-center gap-2 p-2 text-sm rounded-md",
-          isActive ? "text-primary font-medium" : "text-muted-foreground"
-        )}
-        style={{ marginLeft: `${nestingLevel * 2}rem` }}
-      >
-        <SquareCheck className="h-5 w-5" />
-        <span>Workflow completed</span>
-      </div>
-    );
-  }
-  
   return (
     <div className="flex items-start gap-1">
-      {/* Nesting guides */}
+      {/* Nesting guides with improved visualization */}
+      <div className="flex h-full flex-shrink-0" style={{ width: `${nestingLevel * 24}px` }}>
+        {Array.from({ length: nestingLevel }).map((_, i) => (
+          <div key={i} className="w-6 flex-shrink-0 relative">
+            <div className={cn(
+              "absolute left-3 top-0 bottom-0 w-0.5",
+              isActive ? "bg-primary/50" : "bg-border"
+            )}></div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Connecting line from parent to child (horizontal line) */}
       {nestingLevel > 0 && (
-        <div className="flex h-full">
-          {Array.from({ length: nestingLevel }).map((_, i) => (
-            <div key={i} className="w-8 flex-shrink-0 relative">
-              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"></div>
-            </div>
-          ))}
+        <div className="relative flex-shrink-0 w-3 self-stretch">
+          <div className={cn(
+            "absolute top-6 left-0 h-0.5 w-3", 
+            isActive ? "bg-primary/50" : "bg-border"
+          )}></div>
         </div>
       )}
       
@@ -183,7 +177,9 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               )}
             </div>
             
-            <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+            {getStepDescription() && (
+              <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+            )}
             
             {stepType === 'function' && (
               <div className="pt-1 space-y-1.5">
@@ -194,7 +190,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
                       Input
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.input} />
+                      <KeyValueDisplay data={step.input} compact={true} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
@@ -226,7 +222,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
                       Output
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.output} />
+                      <KeyValueDisplay data={step.output} compact={true} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}

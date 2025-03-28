@@ -1,11 +1,12 @@
-import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrowserEvent } from "@/types";
 
 interface WorkflowDisplayProps {
   steps: any[];
+  browserEvents?: Record<string, BrowserEvent[]>;
   className?: string;
   compact?: boolean;
   input_editable?: boolean;
@@ -17,6 +18,7 @@ export const WorkflowDisplay = forwardRef<
   WorkflowDisplayProps
 >(({ 
   steps, 
+  browserEvents = {}, 
   className, 
   compact = false, 
   input_editable = false,
@@ -51,13 +53,11 @@ export const WorkflowDisplay = forwardRef<
     getUserInputs: () => inputValues
   }));
   
-  // Get browser events mapped by function name for easy lookup
-  const getBrowserEventsForStep = (step: any, browserEvents: BrowserEvent[] = []) => {
+  // Get browser events for a specific step
+  const getBrowserEventsForStep = (step: any) => {
     if (step.type !== 'function' || !step.function_name) return [];
     
-    return browserEvents.filter(event => 
-      event.function_name === step.function_name
-    );
+    return browserEvents[step.function_name] || [];
   };
   
   return (
@@ -86,7 +86,7 @@ export const WorkflowDisplay = forwardRef<
               <WorkflowStep
                 key={`${step.type}-${step.step_number}`}
                 step={step}
-                browserEvents={[]} // We'll pass browser events in a real implementation
+                browserEvents={getBrowserEventsForStep(step)}
                 autoOpen={autoActivateSteps && step.active === true}
               />
             ))}
