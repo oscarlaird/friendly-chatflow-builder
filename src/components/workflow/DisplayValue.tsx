@@ -85,7 +85,6 @@ export const DisplayValue = ({
         isEditable={isEditable}
         onChange={isEditable ? handleValueChange : undefined}
         originalData={originalValue}
-        compact={compact}
       />
     );
   }

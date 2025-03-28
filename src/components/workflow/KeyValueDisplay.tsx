@@ -13,6 +13,7 @@ interface KeyValueDisplayProps {
   isEditable?: boolean;
   onChange?: ((data: Record<string, any>) => void) | null;
   onRemove?: () => void;
+  compact?: boolean;
 }
 
 // Helper function to format key names (remove underscores and capitalize)
@@ -28,7 +29,8 @@ export const KeyValueDisplay = ({
   title, 
   isEditable = false, 
   onChange,
-  onRemove
+  onRemove,
+  compact = false
 }: KeyValueDisplayProps) => {
   const [localData, setLocalData] = useState<Record<string, any>>(data || {});
   const isMobile = useIsMobile();
@@ -97,7 +99,6 @@ export const KeyValueDisplay = ({
                   }
                 }}
                 originalData={data[singleKey]}
-                onRemove={onRemove}
               />
             </div>
           </CardContent>
@@ -130,6 +131,7 @@ export const KeyValueDisplay = ({
             onChange={isEditableMode ? (newValue) => handleValueChange(singleKey, newValue) : undefined}
             path={singleKey}
             originalValue={data[singleKey]}
+            compact={compact}
           />
         </CardContent>
       </Card>
@@ -178,6 +180,7 @@ export const KeyValueDisplay = ({
                     onChange={isEditableMode ? (newValue) => handleValueChange(key, newValue) : undefined}
                     path={key}
                     originalValue={data[key]}
+                    compact={compact}
                   />
                 </div>
               </div>

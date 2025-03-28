@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, GitBranch, Function, Code, SquareCheck } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, GitBranch, Code, SquareCheck, Component } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ interface WorkflowStepProps {
 const getStepIcon = (type: string) => {
   switch (type) {
     case 'function':
-      return <Function className="h-4 w-4" />;
+      return <Component className="h-4 w-4" />;
     case 'for':
       return <GitBranch className="h-4 w-4" />;
     case 'if':
@@ -27,7 +27,7 @@ const getStepIcon = (type: string) => {
     case 'done':
       return <SquareCheck className="h-4 w-4" />;
     default:
-      return <Function className="h-4 w-4" />;
+      return <Component className="h-4 w-4" />;
   }
 };
 
@@ -194,7 +194,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
                       Input
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.input} compact={true} />
+                      <KeyValueDisplay data={step.input} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
@@ -226,7 +226,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
                       Output
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-1.5">
-                      <KeyValueDisplay data={step.output} compact={true} />
+                      <KeyValueDisplay data={step.output} />
                     </CollapsibleContent>
                   </Collapsible>
                 )}
