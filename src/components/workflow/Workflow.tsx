@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -292,8 +291,8 @@ export const Workflow = ({
     const userInputs = workflowRef.current?.getUserInputs() || {};
     
     try {
-      // Send a message with type code_run and include the user inputs
-      await sendMessage("Run workflow", "user", "code_run", userInputs);
+      // Send an empty message instead of "Run workflow"
+      await sendMessage("", "user", "code_run", userInputs);
       window.postMessage({
         type: 'CREATE_RECORDING_WINDOW',
         payload: {

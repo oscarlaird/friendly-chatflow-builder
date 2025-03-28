@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -62,11 +61,11 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
   const getStateIcon = () => {
     switch (state) {
       case 'running':
-        return <Play className="h-3 w-3" />;
+        return <Play className="h-4 w-4" />;
       case 'paused':
-        return <Pause className="h-3 w-3" />;
+        return <Pause className="h-4 w-4" />;
       case 'stopped':
-        return <Square className="h-3 w-3" />;
+        return <Square className="h-4 w-4" />;
       default:
         return null;
     }
@@ -86,7 +85,7 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
   };
 
   return (
-    <Badge className={`${getStateColor()} flex items-center gap-1`}>
+    <Badge className={`${getStateColor()} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
       {getStateIcon()}
       <span className="capitalize">{state}</span>
     </Badge>
@@ -185,15 +184,17 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
 }) => {
-  // Content ref and highlight states
-  const contentRef = useRef<HTMLDivElement>(null);
+  // Determine if this is a recent message (created in the last 5 seconds)
+  const isRecentMessage = new Date().getTime() - new Date(message.created_at).getTime() < 5000;
+  
+  // Start with open state for recent messages
+  const [isOpen, setIsOpen] = useState(isRecentMessage);
   const [highlight, setHighlight] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const previousContentRef = useRef(message.content);
   
   // Highlight content only when it changes from previous render
   useEffect(() => {
-    if (contentRef.current && message.content !== previousContentRef.current) {
+    if (message.content !== previousContentRef.current) {
       setHighlight(true);
       const timer = setTimeout(() => setHighlight(false), 1000);
       previousContentRef.current = message.content;
@@ -273,9 +274,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
             </div>
           </div>
           
-          <div ref={contentRef} className="whitespace-pre-wrap mb-4 break-words overflow-hidden">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-          </div>
+          {/* Don't show message content for code_run messages */}
           
           <CollapsibleContent>
             {/* Display workflow steps with browser events */}

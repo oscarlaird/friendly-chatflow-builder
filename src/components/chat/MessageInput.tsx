@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
   const handleSubmit = async (e: React.FormEvent, type: 'text_message' | 'code_run' = 'text_message') => {
     e.preventDefault();
     
-    if (!message.trim() || isSubmitting || disabled) return;
+    if ((!message.trim() && type === 'text_message') || isSubmitting || disabled) return;
     
     setIsSubmitting(true);
     
