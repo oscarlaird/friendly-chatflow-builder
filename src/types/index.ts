@@ -52,6 +52,9 @@ export interface CoderunEvent {
   function_name?: string;
   progress_title?: string;
   description?: string;
+  control_value?: any; // Added field for control steps (for/if)
+  control_description?: string; // Added field for control step description
+  disabled?: boolean; // Added field for disabled steps
 }
 
 export interface BrowserEvent {

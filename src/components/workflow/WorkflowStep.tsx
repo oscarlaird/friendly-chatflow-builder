@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -43,13 +44,17 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
+  const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
   
   const stepType = step.type;
   const isActive = step.active || false;
+  const isDisabled = step.disabled || false;
   
   const hasInput = step.input && Object.keys(step.input).length > 0;
   const hasOutput = step.output && Object.keys(step.output).length > 0;
   const hasBrowserEvents = browserEvents.length > 0;
+  const hasControlValue = stepType === 'for' && step.control_value !== undefined;
+  const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
   
   // Determine if step has progress info
   const hasProgress = stepType === 'for' && 
@@ -122,15 +127,18 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
     <Card 
       className={cn(
         "relative mb-2 p-3",
-        isActive && "border-primary shadow-sm bg-primary/5"
+        isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
+        isDisabled && "opacity-60 bg-muted/20"
       )}
     >
       <div className="flex items-start gap-3">
         <div className={cn(
           "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
-          isActive 
+          isActive && !isDisabled 
             ? "bg-primary text-primary-foreground border-primary" 
-            : "bg-primary/10 text-primary border-primary/20"
+            : isDisabled 
+              ? "bg-muted text-muted-foreground border-muted" 
+              : "bg-primary/10 text-primary border-primary/20"
         )}>
           {step.step_number}
         </div>
@@ -141,7 +149,8 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               {getStepIcon(stepType)}
               <h3 className={cn(
                 "font-medium",
-                isActive && "text-primary"
+                isActive && !isDisabled && "text-primary",
+                isDisabled && "text-muted-foreground"
               )}>
                 {getStepTitle()}
               </h3>
@@ -157,15 +166,44 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               </Badge>
             )}
             
-            {isActive && (
+            {isActive && !isDisabled && (
               <Badge className="bg-primary text-primary-foreground">
                 Active
+              </Badge>
+            )}
+            
+            {hasIfControlValue && (
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "flex items-center gap-1 text-xs font-normal border",
+                  step.control_value 
+                    ? "bg-green-100 text-green-800 border-green-200" 
+                    : "bg-red-100 text-red-800 border-red-200"
+                )}
+              >
+                {step.control_value ? (
+                  <><Check className="h-3 w-3" /> True</>
+                ) : (
+                  <><X className="h-3 w-3" /> False</>
+                )}
+              </Badge>
+            )}
+            
+            {isDisabled && (
+              <Badge variant="outline" className="bg-gray-200 text-gray-600 border-gray-300">
+                Disabled
               </Badge>
             )}
           </div>
           
           {getStepDescription() && (
-            <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+            <p className={cn(
+              "text-sm",
+              isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
+            )}>
+              {getStepDescription()}
+            </p>
           )}
 
           {/* Add progress bar for "for" type steps */}
@@ -177,6 +215,19 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               </div>
               <Progress value={progressValue} className="h-2" />
             </div>
+          )}
+          
+          {/* Display control_value for "for" steps */}
+          {hasControlValue && (
+            <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
+              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                Current Item
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-1.5">
+                <KeyValueDisplay data={step.control_value} compact={true} />
+              </CollapsibleContent>
+            </Collapsible>
           )}
           
           <div className="pt-1 space-y-1.5">
