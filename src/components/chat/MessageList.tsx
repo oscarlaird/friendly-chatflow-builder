@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -13,6 +14,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatDistanceToNow } from 'date-fns';
+
+// Define the interface for MessageList props
+interface MessageListProps {
+  dataState: DataState;
+  loading: boolean;
+}
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
   // Add a ref to track content changes for highlighting
