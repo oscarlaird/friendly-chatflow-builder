@@ -61,78 +61,159 @@ export const WorkflowDisplay = forwardRef<
       return [];
     }
     
-    // Use a map to track processed steps by their function name or control block type
-    // This ensures we only process each unique step once
-    const processedStepMap = new Map();
-    const topLevelSteps: any[] = [];
+    // Global step tracking to prevent any duplicates across all nesting levels
+    const globalProcessedSteps = new Map();
     
-    for (let i = 0; i < stepsToOrganize.length; i++) {
-      const step = stepsToOrganize[i];
-      
-      // Generate a unique ID for this step based on its characteristics
+    // Function to check if we've seen this step globally
+    const hasProcessedGlobally = (step: any) => {
       const stepKey = step.type === 'function' 
         ? `function-${step.function_name}`
         : `${step.type}-${step.step_number}`;
       
-      // For control flow steps (for/if), handle them specially
+      return globalProcessedSteps.has(stepKey);
+    };
+    
+    // Function to mark a step as processed globally
+    const markProcessedGlobally = (step: any) => {
+      const stepKey = step.type === 'function' 
+        ? `function-${step.function_name}`
+        : `${step.type}-${step.step_number}`;
+      
+      globalProcessedSteps.set(stepKey, true);
+    };
+    
+    // Find all unique steps first (for display purposes)
+    const uniqueSteps: any[] = [];
+    
+    for (let i = 0; i < stepsToOrganize.length; i++) {
+      const step = stepsToOrganize[i];
+      
+      // Skip end markers
+      if (step.type === 'end_for' || step.type === 'end_if') {
+        continue;
+      }
+      
+      // For control steps, we treat them specially
       if (step.type === 'for' || step.type === 'if') {
-        // Skip if we've already processed an identical control block
-        if (processedStepMap.has(stepKey)) {
-          continue;
-        }
-        processedStepMap.set(stepKey, true);
-        
-        // Start a new control block
-        const controlStep = { ...step, childSteps: [] };
-        topLevelSteps.push(controlStep);
-        
-        // Find all steps within this control block
-        let nestedLevel = 1;
-        let j = i + 1;
-        const childSteps = [];
-        
-        while (j < stepsToOrganize.length && nestedLevel > 0) {
-          const nextStep = stepsToOrganize[j];
+        // If we haven't processed this control step yet
+        if (!hasProcessedGlobally(step)) {
+          markProcessedGlobally(step);
           
-          // Increase nesting level for new control blocks
-          if (nextStep.type === 'for' || nextStep.type === 'if') {
-            nestedLevel++;
+          // Create a new control block
+          const controlStep = { ...step, childSteps: [] };
+          uniqueSteps.push(controlStep);
+          
+          // Find the matching end block
+          let nestedLevel = 1;
+          let j = i + 1;
+          const childSteps = [];
+          
+          while (j < stepsToOrganize.length && nestedLevel > 0) {
+            const nextStep = stepsToOrganize[j];
+            
+            // Increase nesting level for nested control blocks
+            if (nextStep.type === 'for' || nextStep.type === 'if') {
+              nestedLevel++;
+            }
+            
+            // Decrease nesting for end blocks
+            if (nextStep.type === 'end_for' || nextStep.type === 'end_if') {
+              nestedLevel--;
+              
+              // Skip the end marker itself
+              if (nestedLevel === 0) {
+                i = j; // Skip to after this block in the outer loop
+                break;
+              }
+            }
+            
+            // Add steps inside our control block to childSteps
+            if (nestedLevel > 0) {
+              childSteps.push(nextStep);
+            }
+            
+            j++;
           }
           
-          // Decrease nesting level for end blocks
-          if (nextStep.type === 'end_for' || nextStep.type === 'end_if') {
-            nestedLevel--;
+          // Process child steps (each distinct step should only appear once)
+          const innerUniqueSteps = [];
+          const innerProcessed = new Map();
+          
+          for (const childStep of childSteps) {
+            // Skip end markers
+            if (childStep.type === 'end_for' || childStep.type === 'end_if') {
+              continue;
+            }
             
-            // Skip the end marker if we're closing our current block
-            if (nestedLevel === 0) {
-              i = j; // Skip to after this block in the outer loop
-              break;
+            // Only include each unique step once in this level
+            const childKey = childStep.type === 'function' 
+              ? `function-${childStep.function_name}`
+              : `${childStep.type}-${childStep.step_number}`;
+            
+            if (!innerProcessed.has(childKey)) {
+              innerProcessed.set(childKey, true);
+              
+              // For nested control blocks, process recursively
+              if (childStep.type === 'for' || childStep.type === 'if') {
+                // Find matching end block
+                const nestedIndex = childSteps.indexOf(childStep);
+                let nestedLevel = 1;
+                let k = nestedIndex + 1;
+                const nestedChildSteps = [];
+                
+                while (k < childSteps.length && nestedLevel > 0) {
+                  const nestedStep = childSteps[k];
+                  
+                  if (nestedStep.type === 'for' || nestedStep.type === 'if') {
+                    nestedLevel++;
+                  }
+                  
+                  if (nestedStep.type === 'end_for' || nestedStep.type === 'end_if') {
+                    nestedLevel--;
+                    if (nestedLevel === 0) {
+                      break;
+                    }
+                  }
+                  
+                  if (nestedLevel > 0) {
+                    nestedChildSteps.push(nestedStep);
+                  }
+                  
+                  k++;
+                }
+                
+                // Create nested control step with its own child steps
+                const nestedControlStep = {
+                  ...childStep,
+                  childSteps: organizeStepsHierarchically(nestedChildSteps)
+                };
+                
+                innerUniqueSteps.push(nestedControlStep);
+                
+                // Mark as processed globally
+                markProcessedGlobally(childStep);
+              } else {
+                // Regular function step
+                innerUniqueSteps.push(childStep);
+                
+                // Mark as processed globally
+                markProcessedGlobally(childStep);
+              }
             }
           }
           
-          // Add steps inside our control block to childSteps
-          if (nestedLevel > 0) {
-            childSteps.push(nextStep);
-          }
-          
-          j++;
+          // Set the child steps for this control block
+          controlStep.childSteps = innerUniqueSteps;
         }
-        
-        // Recursively organize child steps with their own deduplication
-        controlStep.childSteps = organizeStepsHierarchically(childSteps);
       } 
-      // Function and other non-control flow steps
-      else if (step.type !== 'end_for' && step.type !== 'end_if') {
-        // Skip if we've already processed this type of step, unless it's a special step
-        // that should always be shown (like done)
-        if (step.type === 'done' || !processedStepMap.has(stepKey)) {
-          processedStepMap.set(stepKey, true);
-          topLevelSteps.push(step);
-        }
+      // Regular function steps or other non-control flow steps
+      else if (!hasProcessedGlobally(step)) {
+        markProcessedGlobally(step);
+        uniqueSteps.push(step);
       }
     }
     
-    return topLevelSteps;
+    return uniqueSteps;
   };
   
   // Organize steps hierarchically with deduplication
