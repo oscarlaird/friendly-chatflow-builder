@@ -190,11 +190,7 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               </Badge>
             )}
             
-            {isDisabled && (
-              <Badge variant="outline" className="bg-gray-200 text-gray-600 border-gray-300">
-                Disabled
-              </Badge>
-            )}
+            {/* Removed the disabled badge as requested */}
           </div>
           
           {getStepDescription() && (
