@@ -38,22 +38,13 @@ interface WorkflowStepProps {
   step: any;
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
-  nestedLevel?: number;
-  childSteps?: any[];
 }
 
-export const WorkflowStep = ({ 
-  step, 
-  browserEvents = [], 
-  autoOpen = false, 
-  nestedLevel = 0,
-  childSteps = []
-}: WorkflowStepProps) => {
+export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
   const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
-  const [isChildStepsOpen, setIsChildStepsOpen] = useState(autoOpen || nestedLevel === 0);
   
   const stepType = step.type;
   const isActive = step.active || false;
@@ -64,7 +55,6 @@ export const WorkflowStep = ({
   const hasBrowserEvents = browserEvents.length > 0;
   const hasControlValue = stepType === 'for' && step.control_value !== undefined;
   const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
-  const hasChildSteps = childSteps && childSteps.length > 0;
   
   // Determine if step has progress info
   const hasProgress = stepType === 'for' && 
@@ -138,8 +128,7 @@ export const WorkflowStep = ({
       className={cn(
         "relative mb-2 p-3",
         isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
-        isDisabled && "opacity-60 bg-muted/20",
-        nestedLevel > 0 && "ml-6 border-l-4"
+        isDisabled && "opacity-60 bg-muted/20"
       )}
     >
       <div className="flex items-start gap-3">
@@ -200,6 +189,8 @@ export const WorkflowStep = ({
                 )}
               </Badge>
             )}
+            
+            {/* Removed the disabled badge as requested */}
           </div>
           
           {getStepDescription() && (
@@ -276,33 +267,6 @@ export const WorkflowStep = ({
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-1.5">
                   <KeyValueDisplay data={step.output} compact={true} />
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-            
-            {/* Child steps (nested steps for loops and conditionals) */}
-            {hasChildSteps && (
-              <Collapsible open={isChildStepsOpen} onOpenChange={setIsChildStepsOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isChildStepsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  {stepType === 'for' ? 'Loop Steps' : stepType === 'if' ? (step.control_value ? 'If True Steps' : 'If False Steps') : 'Nested Steps'}
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5 pl-2 border-l-2 border-muted/50 ml-2">
-                  <div className="space-y-0.5">
-                    {childSteps.map((childStep) => (
-                      <WorkflowStep
-                        key={`${childStep.type}-${childStep.step_number}-${nestedLevel}`}
-                        step={childStep}
-                        browserEvents={browserEvents.filter(event => 
-                          childStep.type === 'function' && 
-                          event.function_name === childStep.function_name
-                        )}
-                        autoOpen={autoOpen}
-                        nestedLevel={nestedLevel + 1}
-                        childSteps={childStep.childSteps || []}
-                      />
-                    ))}
-                  </div>
                 </CollapsibleContent>
               </Collapsible>
             )}
