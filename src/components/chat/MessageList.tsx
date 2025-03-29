@@ -6,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,7 +55,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   );
 };
 
-const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stopped' }) => {
+const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stopped' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed' }) => {
   if (!state) return null;
   
   const getStateIcon = () => {
@@ -65,7 +65,14 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
       case 'paused':
         return <Pause className="h-4 w-4" />;
       case 'stopped':
+      case 'aborted':
         return <Square className="h-4 w-4" />;
+      case 'finished':
+        return <Check className="h-4 w-4" />;
+      case 'waiting_for_user':
+        return <UserCog className="h-4 w-4" />;
+      case 'window_closed':
+        return <XSquare className="h-4 w-4" />;
       default:
         return null;
     }
@@ -76,9 +83,14 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
       case 'running':
         return "bg-green-500 hover:bg-green-600";
       case 'paused':
+      case 'waiting_for_user':
         return "bg-yellow-500 hover:bg-yellow-600";
       case 'stopped':
+      case 'aborted':
+      case 'window_closed':
         return "bg-red-500 hover:bg-red-600";
+      case 'finished':
+        return "bg-blue-500 hover:bg-blue-600";
       default:
         return "bg-gray-500 hover:bg-gray-600";
     }
@@ -87,7 +99,7 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
   return (
     <Badge className={`${getStateColor()} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
       {getStateIcon()}
-      <span className="capitalize">{state}</span>
+      <span className="capitalize">{state.replace('_', ' ')}</span>
     </Badge>
   );
 };
@@ -97,9 +109,10 @@ const CodeRunControls = ({ message }: { message: Message }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const state = message.code_run_state;
 
-  if (!state || state === 'stopped') return null;
+  // Don't show controls for terminal states
+  if (!state || state === 'stopped' || state === 'aborted' || state === 'finished' || state === 'window_closed') return null;
 
-  const updateCodeRunState = async (newState: 'running' | 'paused' | 'stopped') => {
+  const updateCodeRunState = async (newState: 'running' | 'paused' | 'stopped' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed') => {
     if (!user || isUpdating) return;
 
     try {
@@ -114,11 +127,19 @@ const CodeRunControls = ({ message }: { message: Message }) => {
         throw error;
       }
       
+      const stateMessages = {
+        stopped: 'The workflow has been stopped.',
+        paused: 'The workflow has been paused.',
+        running: 'The workflow has resumed.',
+        aborted: 'The workflow has been aborted.',
+        finished: 'The workflow has completed successfully.',
+        waiting_for_user: 'The workflow is waiting for user input.',
+        window_closed: 'The workflow window has been closed.'
+      };
+      
       toast({
-        title: `Workflow ${newState}`,
-        description: newState === 'stopped' ? 'The workflow has been stopped.' : 
-                    newState === 'paused' ? 'The workflow has been paused.' : 
-                    'The workflow has resumed.',
+        title: `Workflow ${newState.replace('_', ' ')}`,
+        description: stateMessages[newState],
       });
     } catch (error: any) {
       toast({
@@ -175,6 +196,16 @@ const CodeRunControls = ({ message }: { message: Message }) => {
             Stop
           </Button>
         </>
+      ) : state === 'waiting_for_user' ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => updateCodeRunState('running')}
+          disabled={isUpdating}
+        >
+          <Play className="h-3.5 w-3.5 mr-1" />
+          Continue
+        </Button>
       ) : null}
     </div>
   );
@@ -241,6 +272,12 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
     });
   };
   
+  // Update the terminal states check
+  const isTerminalState = message.code_run_state === 'stopped' || 
+                          message.code_run_state === 'aborted' || 
+                          message.code_run_state === 'finished' || 
+                          message.code_run_state === 'window_closed';
+  
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={`w-full max-w-[95%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
@@ -255,8 +292,8 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               <h3 className="text-sm font-medium">Code Run</h3>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Only show Jump to Window button if code_run_state is not stopped */}
-              {message.code_run_state && message.code_run_state !== 'stopped' && (
+              {/* Only show Jump to Window button if code_run_state is not in a terminal state */}
+              {message.code_run_state && !isTerminalState && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -268,7 +305,7 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                 </Button>
               )}
               <CodeRunStateIndicator state={message.code_run_state} />
-              {message.code_run_state && message.code_run_state !== 'stopped' && (
+              {message.code_run_state && !isTerminalState && (
                 <CodeRunControls message={message} />
               )}
             </div>

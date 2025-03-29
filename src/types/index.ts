@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email?: string;
@@ -21,7 +20,7 @@ export interface Message {
   screenrecording_url?: string;
   uid: string;
   user_inputs?: any; // New field added for user inputs
-  code_run_state?: 'stopped' | 'paused' | 'running'; // Added field for code run state
+  code_run_state?: 'stopped' | 'paused' | 'running' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed'; // Updated field for code run state
 }
 
 export interface Chat {

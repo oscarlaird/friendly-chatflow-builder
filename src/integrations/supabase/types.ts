@@ -242,7 +242,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      code_run_state: "stopped" | "paused" | "running"
+      code_run_state:
+        | "stopped"
+        | "paused"
+        | "running"
+        | "aborted"
+        | "finished"
+        | "waiting_for_user"
+        | "window_closed"
       message_type: "text_message" | "code_run" | "screen_recording"
       role_type: "user" | "assistant"
     }
