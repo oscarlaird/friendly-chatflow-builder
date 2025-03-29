@@ -183,7 +183,7 @@ export const WorkflowDisplay = forwardRef<
         </div>
       )}
       
-      {/* Display workflow steps - removed the "Workflow Steps" heading */}
+      {/* Display workflow steps */}
       {organizedSteps?.length > 0 ? (
         <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
           <div className="space-y-0.5">

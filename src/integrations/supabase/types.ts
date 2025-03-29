@@ -344,6 +344,7 @@ export type Database = {
         | "finished"
         | "waiting_for_user"
         | "window_closed"
+        | "crashed"
       message_type: "text_message" | "code_run" | "screen_recording"
       model_provider: "openai" | "anthropic"
       model_use_type: "conversation" | "code" | "browser_use"
