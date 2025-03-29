@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -225,7 +224,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
 };
 
 const ElapsedTimeDisplay = ({ createdAt }: { createdAt: string }) => {
-  const [elapsedTime, setElapsedTime] = useState<string>('');
+  const [elapsedTime, setElapsedTime] = useState<string>('00:00');
   
   useEffect(() => {
     // Update elapsed time on component mount
@@ -240,18 +239,28 @@ const ElapsedTimeDisplay = ({ createdAt }: { createdAt: string }) => {
   
   const updateElapsedTime = () => {
     try {
-      const elapsed = formatDistanceToNow(new Date(createdAt), { addSuffix: false });
-      setElapsedTime(elapsed);
+      const startTime = new Date(createdAt).getTime();
+      const currentTime = new Date().getTime();
+      const elapsedMs = currentTime - startTime;
+      
+      // Calculate minutes and seconds
+      const totalSeconds = Math.floor(elapsedMs / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      
+      // Format as mm:ss
+      const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      setElapsedTime(formattedTime);
     } catch (error) {
       console.error('Error formatting time:', error);
-      setElapsedTime('');
+      setElapsedTime('00:00');
     }
   };
   
   return (
     <div className="flex items-center gap-1 text-xs text-muted-foreground">
       <Clock className="h-3 w-3" />
-      <span>Running for {elapsedTime}</span>
+      <span>{elapsedTime}</span>
     </div>
   );
 };
