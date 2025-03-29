@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -168,7 +169,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => updateCodeRunState('stopped')}
+            onClick={() => updateCodeRunState('aborted')}
             disabled={isUpdating}
           >
             <Square className="h-3.5 w-3.5 mr-1" />
@@ -189,7 +190,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => updateCodeRunState('stopped')}
+            onClick={() => updateCodeRunState('aborted')}
             disabled={isUpdating}
           >
             <Square className="h-3.5 w-3.5 mr-1" />
