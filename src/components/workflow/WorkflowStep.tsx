@@ -39,13 +39,15 @@ interface WorkflowStepProps {
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
   childSteps?: any[];
+  flatDisplay?: boolean;
 }
 
 export const WorkflowStep = ({ 
   step, 
   browserEvents = [], 
   autoOpen = false, 
-  childSteps = []
+  childSteps = [],
+  flatDisplay = false
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
@@ -197,7 +199,7 @@ export const WorkflowStep = ({
               </div>
             )}
             
-            {/* Child steps without indentation - modified to remove indentation */}
+            {/* Label for child steps */}
             {hasChildSteps && (
               <div className="pt-2 mt-2 border-t border-border/40">
                 <div className="text-xs font-medium mb-2">
@@ -205,19 +207,6 @@ export const WorkflowStep = ({
                     stepType === 'if' ? (step.control_value ? 'If True:' : 'If False:') : 
                     'Steps:'}
                 </div>
-                {/* Removed nesting div with space-y-1 class to eliminate indentation */}
-                {childSteps.map((childStep) => (
-                  <WorkflowStep
-                    key={`${childStep.type}-${childStep.step_number}`}
-                    step={childStep}
-                    browserEvents={browserEvents.filter(event => 
-                      childStep.type === 'function' && 
-                      event.function_name === childStep.function_name
-                    )}
-                    autoOpen={autoOpen}
-                    childSteps={childStep.childSteps || []}
-                  />
-                ))}
               </div>
             )}
             
@@ -249,6 +238,25 @@ export const WorkflowStep = ({
             </div>
           </div>
         </div>
+        
+        {/* Display child steps flat (when flatDisplay is true) */}
+        {hasChildSteps && flatDisplay && (
+          <div className="mt-2">
+            {childSteps.map((childStep) => (
+              <WorkflowStep
+                key={`${childStep.type}-${childStep.step_number}`}
+                step={childStep}
+                browserEvents={browserEvents.filter(event => 
+                  childStep.type === 'function' && 
+                  event.function_name === childStep.function_name
+                )}
+                autoOpen={autoOpen}
+                childSteps={childStep.childSteps || []}
+                flatDisplay={true}
+              />
+            ))}
+          </div>
+        )}
       </Card>
     );
   }
@@ -299,6 +307,12 @@ export const WorkflowStep = ({
             
             {isActive && !isDisabled && (
               <Badge className="bg-primary text-primary-foreground">
+                Active
+              </Badge>
+            )}
+            
+            {stepType === 'done' && (
+              <Badge className="bg-green-600 text-white">
                 Active
               </Badge>
             )}
