@@ -39,15 +39,13 @@ interface WorkflowStepProps {
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
   childSteps?: any[];
-  noNesting?: boolean; // New prop to control nesting behavior
 }
 
 export const WorkflowStep = ({ 
   step, 
   browserEvents = [], 
   autoOpen = false, 
-  childSteps = [],
-  noNesting = false // Default to false for backward compatibility
+  childSteps = []
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
@@ -62,7 +60,7 @@ export const WorkflowStep = ({
   const hasBrowserEvents = browserEvents.length > 0;
   const hasControlValue = stepType === 'for' && step.control_value !== undefined;
   const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
-  const hasChildSteps = childSteps && childSteps.length > 0 && !noNesting;
+  const hasChildSteps = childSteps && childSteps.length > 0;
   
   // Determine if step has progress info
   const hasProgress = stepType === 'for' && 
@@ -199,14 +197,15 @@ export const WorkflowStep = ({
               </div>
             )}
             
-            {/* Label for For Each Item/If True/False, but no nested content anymore */}
-            {hasChildSteps && noNesting === false && (
+            {/* Child steps without indentation - modified to remove indentation */}
+            {hasChildSteps && (
               <div className="pt-2 mt-2 border-t border-border/40">
                 <div className="text-xs font-medium mb-2">
                   {stepType === 'for' ? 'For Each Item:' : 
                     stepType === 'if' ? (step.control_value ? 'If True:' : 'If False:') : 
                     'Steps:'}
                 </div>
+                {/* Removed nesting div with space-y-1 class to eliminate indentation */}
                 {childSteps.map((childStep) => (
                   <WorkflowStep
                     key={`${childStep.type}-${childStep.step_number}`}
@@ -217,20 +216,8 @@ export const WorkflowStep = ({
                     )}
                     autoOpen={autoOpen}
                     childSteps={childStep.childSteps || []}
-                    noNesting={noNesting}
                   />
                 ))}
-              </div>
-            )}
-            
-            {/* Only show "For Each Item:" or "If True/False:" label when noNesting is true */}
-            {(stepType === 'for' || stepType === 'if') && noNesting === true && (
-              <div className="pt-1.5 border-t border-border/40 mt-2">
-                <div className="text-xs font-medium">
-                  {stepType === 'for' ? 'For Each Item:' : 
-                    stepType === 'if' ? (step.control_value ? 'If True:' : 'If False:') : 
-                    'Steps:'}
-                </div>
               </div>
             )}
             
@@ -256,26 +243,6 @@ export const WorkflowStep = ({
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pt-1.5">
                     <KeyValueDisplay data={step.output} compact={true} />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasBrowserEvents && stepType === 'function' && (
-                <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Browser Events
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="border rounded-sm text-xs overflow-hidden">
-                      <ScrollArea className="max-h-32">
-                        {browserEvents
-                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                          .map((event, index) => (
-                            <BrowserEventItem key={index} event={event} />
-                          ))}
-                      </ScrollArea>
-                    </div>
                   </CollapsibleContent>
                 </Collapsible>
               )}

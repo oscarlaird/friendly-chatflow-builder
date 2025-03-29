@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
@@ -54,72 +55,7 @@ export const WorkflowDisplay = forwardRef<
     return browserEvents[step.function_name] || [];
   };
   
-  // Flatten steps to avoid nested displays and eliminate duplicates
-  const flattenSteps = (stepsToFlatten: any[]): any[] => {
-    if (!stepsToFlatten || !Array.isArray(stepsToFlatten) || stepsToFlatten.length === 0) {
-      return [];
-    }
-
-    // Keep track of processed steps to avoid duplicates
-    const processedSteps = new Map();
-    const flatList: any[] = [];
-    
-    // Process each step
-    const processStep = (step: any, isMainSequence: boolean = true) => {
-      // Create a unique identifier for the step based on type and number
-      const stepKey = `${step.type}-${step.step_number}`;
-      
-      // Skip if we've already processed this step
-      if (processedSteps.has(stepKey)) {
-        return;
-      }
-      
-      // Mark this step as processed
-      processedSteps.set(stepKey, true);
-      
-      // Add the step to our flat list if it's part of the main sequence
-      if (isMainSequence) {
-        // For control structures, we'll add them with their child steps
-        if (step.type === 'for' || step.type === 'if') {
-          // Add this control step without child steps
-          const controlStep = { ...step };
-          delete controlStep.childSteps; // Remove childSteps to avoid them being processed twice
-          flatList.push(controlStep);
-        } else {
-          // Add normal function step
-          flatList.push(step);
-        }
-      }
-      
-      // Don't process further for end markers
-      if (step.type === 'end_for' || step.type === 'end_if') {
-        return;
-      }
-      
-      // Handle control structures - we'll show their children only in the main sequence
-      if ((step.type === 'for' || step.type === 'if') && step.childSteps) {
-        // Skip processing child steps if we're not in the main sequence
-        // This prevents showing nested steps multiple times in the flat list
-        if (!isMainSequence) {
-          return;
-        }
-        
-        // Process child steps directly in the main sequence
-        for (const childStep of step.childSteps) {
-          processStep(childStep, true);
-        }
-      }
-    };
-    
-    // Process all steps in the main sequence
-    for (const step of stepsToFlatten) {
-      processStep(step);
-    }
-    
-    return flatList;
-  };
-  
-  // Improved process steps to organize them hierarchically for reference, but we'll flatten for display
+  // Improved process steps to organize them hierarchically and better deduplicate steps
   const organizeStepsHierarchically = (stepsToOrganize: any[]): any[] => {
     if (!stepsToOrganize || !Array.isArray(stepsToOrganize) || stepsToOrganize.length === 0) {
       return [];
@@ -214,11 +150,8 @@ export const WorkflowDisplay = forwardRef<
     return processStepSequence(stepsToOrganize);
   };
   
-  // First organize steps hierarchically to establish parent-child relationships
+  // Organize steps hierarchically with improved deduplication
   const organizedSteps = organizeStepsHierarchically(steps);
-  
-  // Then flatten the steps for display
-  const flatSteps = flattenSteps(organizedSteps);
   
   return (
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>
@@ -237,16 +170,17 @@ export const WorkflowDisplay = forwardRef<
         </div>
       )}
       
-      {/* Display workflow steps in a flat structure */}
-      {flatSteps?.length > 0 ? (
+      {/* Display workflow steps */}
+      {organizedSteps?.length > 0 ? (
         <div className={compact ? "mb-3" : ""}>
-          {flatSteps.map((step) => (
+          {/* Removed space-y-0.5 class to eliminate vertical spacing */}
+          {organizedSteps.map((step) => (
             <WorkflowStep
               key={`${step.type}-${step.step_number}`}
               step={step}
               browserEvents={getBrowserEventsForStep(step)}
               autoOpen={autoActivateSteps && step.active === true}
-              noNesting={true} // New prop to disable nesting
+              childSteps={step.childSteps || []}
             />
           ))}
         </div>
