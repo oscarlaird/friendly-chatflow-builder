@@ -176,6 +176,7 @@ export type Database = {
         Row: {
           chat_id: string
           code_output: Json | null
+          code_run_error: string | null
           code_run_state: Database["public"]["Enums"]["code_run_state"] | null
           content: string
           created_at: string | null
@@ -197,6 +198,7 @@ export type Database = {
         Insert: {
           chat_id: string
           code_output?: Json | null
+          code_run_error?: string | null
           code_run_state?: Database["public"]["Enums"]["code_run_state"] | null
           content: string
           created_at?: string | null
@@ -218,6 +220,7 @@ export type Database = {
         Update: {
           chat_id?: string
           code_output?: Json | null
+          code_run_error?: string | null
           code_run_state?: Database["public"]["Enums"]["code_run_state"] | null
           content?: string
           created_at?: string | null
@@ -341,6 +344,7 @@ export type Database = {
         | "finished"
         | "waiting_for_user"
         | "window_closed"
+        | "crashed"
       message_type: "text_message" | "code_run" | "screen_recording"
       model_provider: "openai" | "anthropic"
       model_use_type: "conversation" | "code" | "browser_use"

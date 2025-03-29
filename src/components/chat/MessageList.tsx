@@ -6,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -112,6 +112,17 @@ const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stop
     <Badge className={`${getStateColor()} flex items-center gap-1.5 px-3 py-1.5 text-sm`}>
       {getStateIcon()}
       <span className="capitalize">{state.replace('_', ' ')}</span>
+    </Badge>
+  );
+};
+
+const CodeRunErrorBadge = ({ error }: { error?: string }) => {
+  if (!error) return null;
+  
+  return (
+    <Badge className="bg-red-500 hover:bg-red-600 flex items-center gap-1.5 px-3 py-1.5 text-sm">
+      <AlertTriangle className="h-4 w-4" />
+      <span className="truncate max-w-[200px]">{error}</span>
     </Badge>
   );
 };
@@ -364,6 +375,11 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               )}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Show error badge if there's a code_run_error */}
+              {message.code_run_error && (
+                <CodeRunErrorBadge error={message.code_run_error} />
+              )}
+              
               {/* Only show Jump to Window button if code_run_state is not in a terminal state */}
               {message.code_run_state && !isTerminalState && (
                 <Button 
