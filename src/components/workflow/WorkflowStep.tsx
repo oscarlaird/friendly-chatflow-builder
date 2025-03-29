@@ -38,7 +38,6 @@ interface WorkflowStepProps {
   step: any;
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
-  nestedLevel?: number;
   childSteps?: any[];
 }
 
@@ -46,13 +45,11 @@ export const WorkflowStep = ({
   step, 
   browserEvents = [], 
   autoOpen = false, 
-  nestedLevel = 0,
   childSteps = []
 }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isOutputOpen, setIsOutputOpen] = useState(false);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(false);
-  const [isControlValueOpen, setIsControlValueOpen] = useState(false);
   
   const stepType = step.type;
   const isActive = step.active || false;
@@ -96,7 +93,7 @@ export const WorkflowStep = ({
         return step.function_description;
       case 'for':
       case 'if':
-        return null; // We'll use control_description as the main title now
+        return null;
       case 'done':
         return 'All steps have been completed';
       default:
@@ -140,7 +137,6 @@ export const WorkflowStep = ({
           "relative mb-2 p-3",
           isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
           isDisabled && "opacity-60 bg-muted/20",
-          nestedLevel > 0 && "ml-6 border-l-4",
           stepType === 'for' ? "border-amber-500/30 bg-amber-50 dark:bg-amber-950/20" : 
                               "border-blue-500/30 bg-blue-50 dark:bg-blue-950/20"
         )}
@@ -209,17 +205,16 @@ export const WorkflowStep = ({
                     stepType === 'if' ? (step.control_value ? 'If True:' : 'If False:') : 
                     'Steps:'}
                 </div>
-                <div className="space-y-1 pl-2 border-l-2 border-muted/50 ml-1">
+                <div className="space-y-1">
                   {childSteps.map((childStep) => (
                     <WorkflowStep
-                      key={`${childStep.type}-${childStep.step_number}-${nestedLevel}`}
+                      key={`${childStep.type}-${childStep.step_number}`}
                       step={childStep}
                       browserEvents={browserEvents.filter(event => 
                         childStep.type === 'function' && 
                         event.function_name === childStep.function_name
                       )}
                       autoOpen={autoOpen}
-                      nestedLevel={nestedLevel + 1}
                       childSteps={childStep.childSteps || []}
                     />
                   ))}
@@ -265,8 +260,7 @@ export const WorkflowStep = ({
       className={cn(
         "relative mb-2 p-3",
         isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
-        isDisabled && "opacity-60 bg-muted/20",
-        nestedLevel > 0 && "ml-6 border-l-4"
+        isDisabled && "opacity-60 bg-muted/20"
       )}
     >
       <div className="flex items-start gap-3">

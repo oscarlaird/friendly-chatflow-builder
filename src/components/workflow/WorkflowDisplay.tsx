@@ -55,28 +55,36 @@ export const WorkflowDisplay = forwardRef<
     return browserEvents[step.function_name] || [];
   };
   
-  // Process steps to organize them hierarchically
+  // Process steps to organize them hierarchically and deduplicate steps
   const organizeStepsHierarchically = (stepsToOrganize: any[]): any[] => {
     if (!stepsToOrganize || !Array.isArray(stepsToOrganize) || stepsToOrganize.length === 0) {
       return [];
     }
     
+    // Track processed steps by their unique identifier to prevent duplicates
+    const processedStepIds = new Set();
     const topLevelSteps: any[] = [];
-    let currentControlStep: any = null;
-    let currentBranch: any[] = [];
     
     for (let i = 0; i < stepsToOrganize.length; i++) {
       const step = stepsToOrganize[i];
       
+      // Skip duplicate steps
+      const stepId = `${step.type}-${step.step_number}-${step.function_name || ''}`;
+      if (processedStepIds.has(stepId)) {
+        continue;
+      }
+      processedStepIds.add(stepId);
+      
       // Handle control flow steps (for/if)
       if (step.type === 'for' || step.type === 'if') {
         // Start a new control block
-        currentControlStep = { ...step, childSteps: [] };
-        topLevelSteps.push(currentControlStep);
+        const controlStep = { ...step, childSteps: [] };
+        topLevelSteps.push(controlStep);
         
-        // Find the end of the control block
+        // Find all steps within this control block
         let nestedLevel = 1;
         let j = i + 1;
+        const childSteps = [];
         
         while (j < stepsToOrganize.length && nestedLevel > 0) {
           const nextStep = stepsToOrganize[j];
@@ -99,30 +107,14 @@ export const WorkflowDisplay = forwardRef<
           
           // Add steps inside our control block to childSteps
           if (nestedLevel > 0) {
-            // Recursively organize nested blocks
-            if ((nextStep.type === 'for' || nextStep.type === 'if') && j + 1 < stepsToOrganize.length) {
-              // Find the nested block and organize it
-              const nestedBlock = findNestedBlock(stepsToOrganize, j);
-              if (nestedBlock) {
-                const organized = organizeStepsHierarchically(nestedBlock.steps);
-                if (organized.length > 0) {
-                  currentControlStep.childSteps.push({
-                    ...nextStep,
-                    childSteps: organized
-                  });
-                  // Skip the nested block in our iteration
-                  j = nestedBlock.endIndex;
-                  continue;
-                }
-              }
-            }
-            
-            // Regular step inside control block
-            currentControlStep.childSteps.push(nextStep);
+            childSteps.push(nextStep);
           }
           
           j++;
         }
+        
+        // Recursively organize child steps
+        controlStep.childSteps = organizeStepsHierarchically(childSteps);
       } 
       // Skip end markers as they're handled in the control block logic
       else if (step.type !== 'end_for' && step.type !== 'end_if') {
@@ -131,36 +123,6 @@ export const WorkflowDisplay = forwardRef<
     }
     
     return topLevelSteps;
-  };
-  
-  // Helper function to find a nested block
-  const findNestedBlock = (stepsArray: any[], startIndex: number): { steps: any[], endIndex: number } | null => {
-    if (startIndex >= stepsArray.length) return null;
-    
-    const startStep = stepsArray[startIndex];
-    if (startStep.type !== 'for' && startStep.type !== 'if') return null;
-    
-    const steps = [startStep];
-    let nestedLevel = 1;
-    let i = startIndex + 1;
-    
-    while (i < stepsArray.length && nestedLevel > 0) {
-      const step = stepsArray[i];
-      steps.push(step);
-      
-      if (step.type === 'for' || step.type === 'if') {
-        nestedLevel++;
-      } else if (step.type === 'end_for' || step.type === 'end_if') {
-        nestedLevel--;
-        if (nestedLevel === 0) {
-          return { steps, endIndex: i };
-        }
-      }
-      
-      i++;
-    }
-    
-    return null; // Block wasn't properly closed
   };
   
   // Organize steps hierarchically
