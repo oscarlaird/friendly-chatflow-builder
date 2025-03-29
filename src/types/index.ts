@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -21,6 +22,7 @@ export interface Message {
   uid: string;
   user_inputs?: any; // New field added for user inputs
   code_run_state?: 'stopped' | 'paused' | 'running' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed'; // Updated field for code run state
+  model_cost?: number; // Added model cost field
 }
 
 export interface Chat {
@@ -33,6 +35,7 @@ export interface Chat {
   script?: string;
   requires_code_rewrite?: boolean | null;
   code_approved?: boolean;
+  model_cost?: number; // Added model cost field
 }
 
 export interface CoderunEvent {
