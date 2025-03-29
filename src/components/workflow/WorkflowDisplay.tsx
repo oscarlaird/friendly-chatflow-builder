@@ -55,168 +55,102 @@ export const WorkflowDisplay = forwardRef<
     return browserEvents[step.function_name] || [];
   };
   
-  // Process steps to organize them hierarchically and deduplicate steps
+  // Improved process steps to organize them hierarchically and better deduplicate steps
   const organizeStepsHierarchically = (stepsToOrganize: any[]): any[] => {
     if (!stepsToOrganize || !Array.isArray(stepsToOrganize) || stepsToOrganize.length === 0) {
       return [];
     }
+
+    // Track processed steps globally to ensure we only show each step once
+    const processedStepsMap = new Map();
     
-    // Global step tracking to prevent any duplicates across all nesting levels
-    const globalProcessedSteps = new Map();
-    
-    // Function to check if we've seen this step globally
-    const hasProcessedGlobally = (step: any) => {
-      const stepKey = step.type === 'function' 
-        ? `function-${step.function_name}`
-        : `${step.type}-${step.step_number}`;
-      
-      return globalProcessedSteps.has(stepKey);
-    };
-    
-    // Function to mark a step as processed globally
-    const markProcessedGlobally = (step: any) => {
-      const stepKey = step.type === 'function' 
-        ? `function-${step.function_name}`
-        : `${step.type}-${step.step_number}`;
-      
-      globalProcessedSteps.set(stepKey, true);
-    };
-    
-    // Find all unique steps first (for display purposes)
-    const uniqueSteps: any[] = [];
-    
-    for (let i = 0; i < stepsToOrganize.length; i++) {
-      const step = stepsToOrganize[i];
-      
-      // Skip end markers
-      if (step.type === 'end_for' || step.type === 'end_if') {
-        continue;
+    // Helper function to create a unique key for a step
+    const getStepKey = (step: any) => {
+      if (step.type === 'function') {
+        return `function-${step.function_name}-${step.step_number}`;
       }
+      return `${step.type}-${step.step_number}`;
+    };
+    
+    // Process a sequence of steps, handling nested control structures
+    const processStepSequence = (sequence: any[], parentContext: string = 'root'): any[] => {
+      const result: any[] = [];
+      let i = 0;
       
-      // For control steps, we treat them specially
-      if (step.type === 'for' || step.type === 'if') {
-        // If we haven't processed this control step yet
-        if (!hasProcessedGlobally(step)) {
-          markProcessedGlobally(step);
-          
-          // Create a new control block
-          const controlStep = { ...step, childSteps: [] };
-          uniqueSteps.push(controlStep);
-          
-          // Find the matching end block
-          let nestedLevel = 1;
-          let j = i + 1;
-          const childSteps = [];
-          
-          while (j < stepsToOrganize.length && nestedLevel > 0) {
-            const nextStep = stepsToOrganize[j];
-            
-            // Increase nesting level for nested control blocks
-            if (nextStep.type === 'for' || nextStep.type === 'if') {
-              nestedLevel++;
-            }
-            
-            // Decrease nesting for end blocks
-            if (nextStep.type === 'end_for' || nextStep.type === 'end_if') {
-              nestedLevel--;
-              
-              // Skip the end marker itself
-              if (nestedLevel === 0) {
-                i = j; // Skip to after this block in the outer loop
-                break;
-              }
-            }
-            
-            // Add steps inside our control block to childSteps
-            if (nestedLevel > 0) {
-              childSteps.push(nextStep);
-            }
-            
-            j++;
-          }
-          
-          // Process child steps (each distinct step should only appear once)
-          const innerUniqueSteps = [];
-          const innerProcessed = new Map();
-          
-          for (const childStep of childSteps) {
-            // Skip end markers
-            if (childStep.type === 'end_for' || childStep.type === 'end_if') {
-              continue;
-            }
-            
-            // Only include each unique step once in this level
-            const childKey = childStep.type === 'function' 
-              ? `function-${childStep.function_name}`
-              : `${childStep.type}-${childStep.step_number}`;
-            
-            if (!innerProcessed.has(childKey)) {
-              innerProcessed.set(childKey, true);
-              
-              // For nested control blocks, process recursively
-              if (childStep.type === 'for' || childStep.type === 'if') {
-                // Find matching end block
-                const nestedIndex = childSteps.indexOf(childStep);
-                let nestedLevel = 1;
-                let k = nestedIndex + 1;
-                const nestedChildSteps = [];
-                
-                while (k < childSteps.length && nestedLevel > 0) {
-                  const nestedStep = childSteps[k];
-                  
-                  if (nestedStep.type === 'for' || nestedStep.type === 'if') {
-                    nestedLevel++;
-                  }
-                  
-                  if (nestedStep.type === 'end_for' || nestedStep.type === 'end_if') {
-                    nestedLevel--;
-                    if (nestedLevel === 0) {
-                      break;
-                    }
-                  }
-                  
-                  if (nestedLevel > 0) {
-                    nestedChildSteps.push(nestedStep);
-                  }
-                  
-                  k++;
-                }
-                
-                // Create nested control step with its own child steps
-                const nestedControlStep = {
-                  ...childStep,
-                  childSteps: organizeStepsHierarchically(nestedChildSteps)
-                };
-                
-                innerUniqueSteps.push(nestedControlStep);
-                
-                // Mark as processed globally
-                markProcessedGlobally(childStep);
-              } else {
-                // Regular function step
-                innerUniqueSteps.push(childStep);
-                
-                // Mark as processed globally
-                markProcessedGlobally(childStep);
-              }
-            }
-          }
-          
-          // Set the child steps for this control block
-          controlStep.childSteps = innerUniqueSteps;
+      while (i < sequence.length) {
+        const currentStep = sequence[i];
+        
+        // Skip end markers
+        if (currentStep.type === 'end_for' || currentStep.type === 'end_if') {
+          i++;
+          continue;
         }
-      } 
-      // Regular function steps or other non-control flow steps
-      else if (!hasProcessedGlobally(step)) {
-        markProcessedGlobally(step);
-        uniqueSteps.push(step);
+        
+        // Create a context-aware key to differentiate same steps in different contexts
+        const contextKey = `${parentContext}-${getStepKey(currentStep)}`;
+        
+        // If this is a control structure (for/if)
+        if (currentStep.type === 'for' || currentStep.type === 'if') {
+          // Only process if we haven't seen this control structure in this context
+          if (!processedStepsMap.has(contextKey)) {
+            processedStepsMap.set(contextKey, true);
+            
+            // Find the scope of this control structure
+            let nestLevel = 1;
+            let endIndex = i + 1;
+            const bodySteps = [];
+            
+            while (endIndex < sequence.length && nestLevel > 0) {
+              const step = sequence[endIndex];
+              
+              if (step.type === 'for' || step.type === 'if') {
+                nestLevel++;
+              } else if (step.type === 'end_for' || step.type === 'end_if') {
+                nestLevel--;
+                if (nestLevel === 0) break;
+              }
+              
+              if (nestLevel > 0) {
+                bodySteps.push(step);
+              }
+              
+              endIndex++;
+            }
+            
+            // Process the body of the control structure with a new context
+            const childContext = `${contextKey}-body`;
+            const processedBody = processStepSequence(bodySteps, childContext);
+            
+            // Add the control structure with its processed body
+            result.push({
+              ...currentStep,
+              childSteps: processedBody
+            });
+            
+            // Skip to after the end marker
+            i = endIndex + 1;
+          } else {
+            // We've already processed this control structure, skip it
+            i++;
+          }
+        } else {
+          // For normal steps, only include them if we haven't seen them in this context
+          if (!processedStepsMap.has(contextKey)) {
+            processedStepsMap.set(contextKey, true);
+            result.push(currentStep);
+          }
+          i++;
+        }
       }
-    }
+      
+      return result;
+    };
     
-    return uniqueSteps;
+    // Start processing from the top level
+    return processStepSequence(stepsToOrganize);
   };
   
-  // Organize steps hierarchically with deduplication
+  // Organize steps hierarchically with improved deduplication
   const organizedSteps = organizeStepsHierarchically(steps);
   
   return (
@@ -238,18 +172,17 @@ export const WorkflowDisplay = forwardRef<
       
       {/* Display workflow steps */}
       {organizedSteps?.length > 0 ? (
-        <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
-          <div className="space-y-0.5">
-            {organizedSteps.map((step) => (
-              <WorkflowStep
-                key={`${step.type}-${step.step_number}`}
-                step={step}
-                browserEvents={getBrowserEventsForStep(step)}
-                autoOpen={autoActivateSteps && step.active === true}
-                childSteps={step.childSteps || []}
-              />
-            ))}
-          </div>
+        <div className={compact ? "mb-3" : ""}>
+          {/* Removed space-y-0.5 class to eliminate vertical spacing */}
+          {organizedSteps.map((step) => (
+            <WorkflowStep
+              key={`${step.type}-${step.step_number}`}
+              step={step}
+              browserEvents={getBrowserEventsForStep(step)}
+              autoOpen={autoActivateSteps && step.active === true}
+              childSteps={step.childSteps || []}
+            />
+          ))}
         </div>
       ) : null}
     </div>

@@ -197,7 +197,7 @@ export const WorkflowStep = ({
               </div>
             )}
             
-            {/* Child steps always visible */}
+            {/* Child steps without indentation - modified to remove indentation */}
             {hasChildSteps && (
               <div className="pt-2 mt-2 border-t border-border/40">
                 <div className="text-xs font-medium mb-2">
@@ -205,20 +205,19 @@ export const WorkflowStep = ({
                     stepType === 'if' ? (step.control_value ? 'If True:' : 'If False:') : 
                     'Steps:'}
                 </div>
-                <div className="space-y-1">
-                  {childSteps.map((childStep) => (
-                    <WorkflowStep
-                      key={`${childStep.type}-${childStep.step_number}`}
-                      step={childStep}
-                      browserEvents={browserEvents.filter(event => 
-                        childStep.type === 'function' && 
-                        event.function_name === childStep.function_name
-                      )}
-                      autoOpen={autoOpen}
-                      childSteps={childStep.childSteps || []}
-                    />
-                  ))}
-                </div>
+                {/* Removed nesting div with space-y-1 class to eliminate indentation */}
+                {childSteps.map((childStep) => (
+                  <WorkflowStep
+                    key={`${childStep.type}-${childStep.step_number}`}
+                    step={childStep}
+                    browserEvents={browserEvents.filter(event => 
+                      childStep.type === 'function' && 
+                      event.function_name === childStep.function_name
+                    )}
+                    autoOpen={autoOpen}
+                    childSteps={childStep.childSteps || []}
+                  />
+                ))}
               </div>
             )}
             
