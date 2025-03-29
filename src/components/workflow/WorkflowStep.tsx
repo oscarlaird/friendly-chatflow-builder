@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -8,12 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { BrowserEvent } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface WorkflowStepProps {
-  step: any;
-  browserEvents?: BrowserEvent[];
-  autoOpen?: boolean;
-}
+import { Progress } from "@/components/ui/progress";
 
 // Get the appropriate icon for the step type
 const getStepIcon = (type: string) => {
@@ -39,6 +33,12 @@ const formatFunctionName = (name: string): string => {
     .join(' ');
 };
 
+interface WorkflowStepProps {
+  step: any;
+  browserEvents?: BrowserEvent[];
+  autoOpen?: boolean;
+}
+
 export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
@@ -50,6 +50,17 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
   const hasInput = step.input && Object.keys(step.input).length > 0;
   const hasOutput = step.output && Object.keys(step.output).length > 0;
   const hasBrowserEvents = browserEvents.length > 0;
+  
+  // Determine if step has progress info
+  const hasProgress = stepType === 'for' && 
+    typeof step.n_progress === 'number' && 
+    typeof step.n_total === 'number' &&
+    step.n_total > 0;
+  
+  // Calculate progress percentage
+  const progressValue = hasProgress 
+    ? Math.min(100, (step.n_progress / step.n_total) * 100) 
+    : 0;
   
   const getStepTitle = () => {
     switch (stepType) {
@@ -155,6 +166,17 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
           
           {getStepDescription() && (
             <p className="text-muted-foreground text-sm">{getStepDescription()}</p>
+          )}
+
+          {/* Add progress bar for "for" type steps */}
+          {hasProgress && (
+            <div className="mt-2 space-y-1">
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
+                <span>Progress</span>
+                <span>{step.n_progress} of {step.n_total}</span>
+              </div>
+              <Progress value={progressValue} className="h-2" />
+            </div>
           )}
           
           <div className="pt-1 space-y-1.5">
