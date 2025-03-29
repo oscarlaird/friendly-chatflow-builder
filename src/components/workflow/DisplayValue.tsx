@@ -15,6 +15,16 @@ const formatKeyName = (key: string): string => {
     .join(' ');
 };
 
+// Helper function to check if an array contains only primitive values
+const isArrayOfPrimitives = (arr: any[]): boolean => {
+  return arr.every(item => typeof item !== 'object' || item === null);
+};
+
+// Helper function to convert an array of primitives to a table-compatible format
+const convertArrayToTableData = (arr: any[]): Record<string, any>[] => {
+  return arr.map(item => ({ value: item }));
+};
+
 interface DisplayValueProps {
   value: any;
   className?: string;
@@ -76,8 +86,8 @@ export const DisplayValue = ({
       <span className={cn("text-muted-foreground italic text-sm", className)}>None</span>;
   }
   
-  // Array of objects - likely a table
-  if (Array.isArray(localValue) && localValue.length > 0 && typeof localValue[0] === 'object') {
+  // Array of objects - likely a table - don't convert, display as-is
+  if (Array.isArray(localValue) && localValue.length > 0 && !isArrayOfPrimitives(localValue)) {
     return (
       <DisplayTable 
         data={localValue} 
@@ -89,8 +99,28 @@ export const DisplayValue = ({
     );
   }
   
-  // Array of primitives
-  if (Array.isArray(localValue)) {
+  // Array of primitives - convert to a single-column table if appropriate
+  if (Array.isArray(localValue) && localValue.length > 0 && isArrayOfPrimitives(localValue)) {
+    // For small arrays of simple values, use the default array display
+    const shouldUseTable = localValue.length > 3;
+    
+    if (shouldUseTable) {
+      const tableData = convertArrayToTableData(localValue);
+      return (
+        <DisplayTable 
+          data={tableData} 
+          className={className} 
+          isEditable={isEditable}
+          onChange={isEditable ? (newData) => {
+            // Convert back from table format to array
+            handleValueChange(newData.map((item: any) => item.value));
+          } : undefined}
+          originalData={originalValue ? convertArrayToTableData(originalValue) : undefined}
+        />
+      );
+    }
+    
+    // For smaller arrays, use the simpler display
     return (
       <div className={cn("flex flex-col gap-1", className)}>
         {localValue.map((item, index) => (

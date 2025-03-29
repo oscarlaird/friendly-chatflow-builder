@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
 import { DisplayTable } from "./DisplayTable";
@@ -24,9 +23,14 @@ const formatKeyName = (key: string): string => {
     .join(' ');
 };
 
-// Helper function to convert an array to a table-compatible format
+// Helper function to convert an array of primitives to a table-compatible format
 const convertArrayToTableData = (arr: any[]): Record<string, any>[] => {
   return arr.map(item => ({ value: item }));
+};
+
+// Helper function to check if an array contains only primitive values
+const isArrayOfPrimitives = (arr: any[]): boolean => {
+  return arr.every(item => typeof item !== 'object' || item === null);
 };
 
 // Helper function to convert a dictionary to a table-compatible format
@@ -78,8 +82,8 @@ export const KeyValueDisplay = ({
     const singleKey = keys[0];
     const singleValue = data[singleKey];
     
-    // If the value is an array of objects, use DisplayTable
-    if (Array.isArray(singleValue) && singleValue.length > 0 && typeof singleValue[0] === 'object') {
+    // If the value is an array of objects, use DisplayTable directly without conversion
+    if (Array.isArray(singleValue) && singleValue.length > 0 && typeof singleValue[0] === 'object' && singleValue[0] !== null) {
       return (
         <Card>
           {title && (
@@ -117,7 +121,7 @@ export const KeyValueDisplay = ({
     }
     
     // If the value is an array of primitives, convert to table data
-    if (Array.isArray(singleValue) && singleValue.length > 0) {
+    if (Array.isArray(singleValue) && singleValue.length > 0 && isArrayOfPrimitives(singleValue)) {
       const tableData = convertArrayToTableData(singleValue);
       return (
         <Card>
@@ -259,30 +263,54 @@ export const KeyValueDisplay = ({
               (typeof value === 'object' && value !== null && Object.keys(value).length > 3) || 
               (Array.isArray(value) && value.length > 0);
             
-            // Special case for arrays - convert to table view
+            // Special case for arrays - check if it's an array of objects or primitives
             if (Array.isArray(value) && value.length > 0) {
-              const tableData = convertArrayToTableData(value);
-              return (
-                <div key={key} className={`${isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}`}>
-                  <label className="font-medium text-sm text-muted-foreground block">
-                    {formatKeyName(key)}:
-                  </label>
-                  <div className="ml-0 mt-1">
-                    <DisplayTable 
-                      data={tableData} 
-                      isEditable={isEditableMode}
-                      onChange={(newValue) => {
-                        if (onChange) {
-                          // Convert back from table format to array
-                          const newArray = newValue.map(item => item.value);
-                          handleValueChange(key, newArray);
-                        }
-                      }}
-                      originalData={tableData}
-                    />
+              if (isArrayOfPrimitives(value)) {
+                // For arrays of primitives, convert to table format
+                const tableData = convertArrayToTableData(value);
+                return (
+                  <div key={key} className={`${isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}`}>
+                    <label className="font-medium text-sm text-muted-foreground block">
+                      {formatKeyName(key)}:
+                    </label>
+                    <div className="ml-0 mt-1">
+                      <DisplayTable 
+                        data={tableData} 
+                        isEditable={isEditableMode}
+                        onChange={(newValue) => {
+                          if (onChange) {
+                            // Convert back from table format to array
+                            const newArray = newValue.map(item => item.value);
+                            handleValueChange(key, newArray);
+                          }
+                        }}
+                        originalData={tableData}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
+                );
+              } else {
+                // For arrays of objects, display as-is
+                return (
+                  <div key={key} className={`${isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}`}>
+                    <label className="font-medium text-sm text-muted-foreground block">
+                      {formatKeyName(key)}:
+                    </label>
+                    <div className="ml-0 mt-1">
+                      <DisplayTable 
+                        data={value} 
+                        isEditable={isEditableMode}
+                        onChange={(newValue) => {
+                          if (onChange) {
+                            handleValueChange(key, newValue);
+                          }
+                        }}
+                        originalData={value}
+                      />
+                    </div>
+                  </div>
+                );
+              }
             }
             
             // Special case for objects - convert to table view
