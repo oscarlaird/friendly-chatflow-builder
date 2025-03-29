@@ -292,14 +292,12 @@ export const Workflow = ({
     
     try {
       // Send an empty message instead of "Run workflow"
-      const data = await sendMessage("", "user", "code_run", userInputs);
-      console.log("Message sent:", data);
-      const messageId = data.id;
+      await sendMessage("", "user", "code_run", userInputs);
       window.postMessage({
-        type: 'CREATE_AGENT_RUN_WINDOW',
+        type: 'CREATE_RECORDING_WINDOW',
         payload: {
-          chatId: chatId,
-          roomId: messageId
+          chatId,
+          roomId: chatId
         }
       }, '*');
     } catch (error) {

@@ -297,13 +297,13 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   
   // Handle jump to window button click
   const handleJumpToWindow = () => {
-    window.postMessage({
-      type: 'JUMP_TO_AGENT_WINDOW',
-      payload: {
-        messageId: message.id
-      }
-    }, '*');
-    
+    window.postMessage(
+      {
+        type: 'jump',
+        payload: { messageId: message.id }
+      },
+      '*'
+    );
   };
   
   // Process workflow steps to include browser events
