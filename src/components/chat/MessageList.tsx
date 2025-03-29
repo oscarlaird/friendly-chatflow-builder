@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
@@ -7,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,6 +34,9 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
     }
   }, [message.content]);
   
+  // Calculate cost in cents (if model_cost exists)
+  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
+  
   return (
     <div
       className={`flex ${
@@ -51,6 +53,13 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
         <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
+        
+        {costInCents && costInCents !== "0.00" && (
+          <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1 text-xs text-muted-foreground">
+            <DollarSign className="h-3 w-3" />
+            <span>{costInCents}¢</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -239,6 +248,9 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
     event => event.message_id === message.id
   );
   
+  // Calculate cost in cents (if model_cost exists)
+  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
+  
   // Handle jump to window button click
   const handleJumpToWindow = () => {
     window.postMessage(
@@ -291,6 +303,13 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                 </Button>
               </CollapsibleTrigger>
               <h3 className="text-sm font-medium">Code Run</h3>
+              
+              {costInCents && costInCents !== "0.00" && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <DollarSign className="h-3 w-3" />
+                  <span>{costInCents}¢</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Only show Jump to Window button if code_run_state is not in a terminal state */}
@@ -333,6 +352,9 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
 };
 
 const ScreenRecordingBubble = ({ message }: { message: Message }) => {
+  // Calculate cost in cents (if model_cost exists)
+  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
+  
   // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
@@ -356,6 +378,13 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
           <div className="mt-2 border-t pt-2">
             <p className="text-sm font-medium mb-1">Screen Recording:</p>
             <p className="text-xs text-muted-foreground truncate">{message.screenrecording_url}</p>
+          </div>
+        )}
+        
+        {costInCents && costInCents !== "0.00" && (
+          <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1 text-xs text-muted-foreground">
+            <DollarSign className="h-3 w-3" />
+            <span>{costInCents}¢</span>
           </div>
         )}
       </Card>

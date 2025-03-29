@@ -70,6 +70,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_example: boolean | null
+          model_cost: number
           requires_browser: boolean
           requires_code_rewrite: boolean | null
           response_id: string | null
@@ -83,6 +84,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          model_cost?: number
           requires_browser?: boolean
           requires_code_rewrite?: boolean | null
           response_id?: string | null
@@ -96,6 +98,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_example?: boolean | null
+          model_cost?: number
           requires_browser?: boolean
           requires_code_rewrite?: boolean | null
           response_id?: string | null
@@ -178,6 +181,7 @@ export type Database = {
           created_at: string | null
           from_template: boolean | null
           id: string
+          model_cost: number | null
           response_id: string | null
           role: Database["public"]["Enums"]["role_type"]
           screenrecording_url: string | null
@@ -198,6 +202,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          model_cost?: number | null
           response_id?: string | null
           role: Database["public"]["Enums"]["role_type"]
           screenrecording_url?: string | null
@@ -218,6 +223,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          model_cost?: number | null
           response_id?: string | null
           role?: Database["public"]["Enums"]["role_type"]
           screenrecording_url?: string | null
@@ -240,6 +246,85 @@ export type Database = {
           },
         ]
       }
+      model_calls: {
+        Row: {
+          call_type: Database["public"]["Enums"]["model_use_type"]
+          chat_id: string
+          created_at: string
+          id: string
+          input_tokens: number
+          message_id: string
+          model_name: string
+          output_tokens: number
+          uid: string
+        }
+        Insert: {
+          call_type: Database["public"]["Enums"]["model_use_type"]
+          chat_id: string
+          created_at?: string
+          id?: string
+          input_tokens: number
+          message_id: string
+          model_name: string
+          output_tokens: number
+          uid?: string
+        }
+        Update: {
+          call_type?: Database["public"]["Enums"]["model_use_type"]
+          chat_id?: string
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          message_id?: string
+          model_name?: string
+          output_tokens?: number
+          uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_calls_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_calls_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_calls_model_name_fkey"
+            columns: ["model_name"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["name"]
+          },
+        ]
+      }
+      models: {
+        Row: {
+          input_cost_per_M: number
+          name: string
+          output_cost_per_M: number
+          provider: Database["public"]["Enums"]["model_provider"]
+        }
+        Insert: {
+          input_cost_per_M: number
+          name: string
+          output_cost_per_M: number
+          provider: Database["public"]["Enums"]["model_provider"]
+        }
+        Update: {
+          input_cost_per_M?: number
+          name?: string
+          output_cost_per_M?: number
+          provider?: Database["public"]["Enums"]["model_provider"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -257,6 +342,8 @@ export type Database = {
         | "waiting_for_user"
         | "window_closed"
       message_type: "text_message" | "code_run" | "screen_recording"
+      model_provider: "openai" | "anthropic"
+      model_use_type: "conversation" | "code" | "browser_use"
       role_type: "user" | "assistant"
     }
     CompositeTypes: {

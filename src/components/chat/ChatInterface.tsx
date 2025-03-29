@@ -6,9 +6,10 @@ import { MessageInput } from './MessageInput';
 import { Workflow } from '../workflow/Workflow';
 import { useChats } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, GitBranch } from 'lucide-react';
+import { MessageCircle, GitBranch, DollarSign } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSelectedChat } from '@/hooks/useChats';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -17,6 +18,7 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
   const { chats } = useChats();
+  const { selectedChat } = useSelectedChat(chatId || '');
   const [sending, setSending] = useState(false);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'workflow' : 'chat');
@@ -48,6 +50,17 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
+      <div className="flex items-center justify-between px-4 py-2 border-b">
+        <div className="flex items-center gap-2">
+          {selectedChat && selectedChat.model_cost > 0 && (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <DollarSign className="h-3.5 w-3.5" />
+              <span>Total Cost: ${selectedChat.model_cost.toFixed(4)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">
