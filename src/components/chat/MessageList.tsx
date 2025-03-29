@@ -6,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -364,6 +364,17 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
               )}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Display error badge if code_run_error is present */}
+              {message.code_run_error && (
+                <Badge 
+                  variant="destructive" 
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-500"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>{message.code_run_error}</span>
+                </Badge>
+              )}
+              
               {/* Only show Jump to Window button if code_run_state is not in a terminal state */}
               {message.code_run_state && !isTerminalState && (
                 <Button 
