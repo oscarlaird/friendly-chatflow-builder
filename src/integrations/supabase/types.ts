@@ -306,21 +306,21 @@ export type Database = {
       }
       models: {
         Row: {
-          input_cost_per_M: number
+          input_cost_per_m: number
           name: string
-          output_cost_per_M: number
+          output_cost_per_m: number
           provider: Database["public"]["Enums"]["model_provider"]
         }
         Insert: {
-          input_cost_per_M: number
+          input_cost_per_m: number
           name: string
-          output_cost_per_M: number
+          output_cost_per_m: number
           provider: Database["public"]["Enums"]["model_provider"]
         }
         Update: {
-          input_cost_per_M?: number
+          input_cost_per_m?: number
           name?: string
-          output_cost_per_M?: number
+          output_cost_per_m?: number
           provider?: Database["public"]["Enums"]["model_provider"]
         }
         Relationships: []

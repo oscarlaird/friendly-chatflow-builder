@@ -6,17 +6,13 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
-interface MessageListProps {
-  dataState: DataState;
-  loading: boolean;
-}
+import { formatDistanceToNow } from 'date-fns';
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
   // Add a ref to track content changes for highlighting
@@ -221,6 +217,38 @@ const CodeRunControls = ({ message }: { message: Message }) => {
   );
 };
 
+const ElapsedTimeDisplay = ({ createdAt }: { createdAt: string }) => {
+  const [elapsedTime, setElapsedTime] = useState<string>('');
+  
+  useEffect(() => {
+    // Update elapsed time on component mount
+    updateElapsedTime();
+    
+    // Set up interval to update elapsed time every second
+    const intervalId = setInterval(updateElapsedTime, 1000);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [createdAt]);
+  
+  const updateElapsedTime = () => {
+    try {
+      const elapsed = formatDistanceToNow(new Date(createdAt), { addSuffix: false });
+      setElapsedTime(elapsed);
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      setElapsedTime('');
+    }
+  };
+  
+  return (
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <Clock className="h-3 w-3" />
+      <span>Running for {elapsedTime}</span>
+    </div>
+  );
+};
+
 const CodeRunMessageBubble = ({ message, browserEvents }: { 
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
@@ -291,6 +319,9 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                           message.code_run_state === 'finished' || 
                           message.code_run_state === 'window_closed';
   
+  // Check if message is in running state
+  const isRunning = message.code_run_state === 'running';
+  
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={`w-full max-w-[95%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
@@ -303,6 +334,11 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
                 </Button>
               </CollapsibleTrigger>
               <h3 className="text-sm font-medium">Code Run</h3>
+              
+              {/* Show elapsed time if message is in running state */}
+              {isRunning && (
+                <ElapsedTimeDisplay createdAt={message.created_at} />
+              )}
               
               {costInCents && costInCents !== "0.00" && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
