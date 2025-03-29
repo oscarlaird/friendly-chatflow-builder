@@ -61,22 +61,27 @@ export const WorkflowDisplay = forwardRef<
       return [];
     }
     
-    // Track processed steps by their unique identifier to prevent duplicates
-    const processedStepIds = new Set();
+    // Use a map to track processed steps by their function name or control block type
+    // This ensures we only process each unique step once
+    const processedStepMap = new Map();
     const topLevelSteps: any[] = [];
     
     for (let i = 0; i < stepsToOrganize.length; i++) {
       const step = stepsToOrganize[i];
       
-      // Skip duplicate steps
-      const stepId = `${step.type}-${step.step_number}-${step.function_name || ''}`;
-      if (processedStepIds.has(stepId)) {
-        continue;
-      }
-      processedStepIds.add(stepId);
+      // Generate a unique ID for this step based on its characteristics
+      const stepKey = step.type === 'function' 
+        ? `function-${step.function_name}`
+        : `${step.type}-${step.step_number}`;
       
-      // Handle control flow steps (for/if)
+      // For control flow steps (for/if), handle them specially
       if (step.type === 'for' || step.type === 'if') {
+        // Skip if we've already processed an identical control block
+        if (processedStepMap.has(stepKey)) {
+          continue;
+        }
+        processedStepMap.set(stepKey, true);
+        
         // Start a new control block
         const controlStep = { ...step, childSteps: [] };
         topLevelSteps.push(controlStep);
@@ -113,19 +118,24 @@ export const WorkflowDisplay = forwardRef<
           j++;
         }
         
-        // Recursively organize child steps
+        // Recursively organize child steps with their own deduplication
         controlStep.childSteps = organizeStepsHierarchically(childSteps);
       } 
-      // Skip end markers as they're handled in the control block logic
+      // Function and other non-control flow steps
       else if (step.type !== 'end_for' && step.type !== 'end_if') {
-        topLevelSteps.push(step);
+        // Skip if we've already processed this type of step, unless it's a special step
+        // that should always be shown (like done)
+        if (step.type === 'done' || !processedStepMap.has(stepKey)) {
+          processedStepMap.set(stepKey, true);
+          topLevelSteps.push(step);
+        }
       }
     }
     
     return topLevelSteps;
   };
   
-  // Organize steps hierarchically
+  // Organize steps hierarchically with deduplication
   const organizedSteps = organizeStepsHierarchically(steps);
   
   return (
