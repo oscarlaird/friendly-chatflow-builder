@@ -24,6 +24,16 @@ const formatKeyName = (key: string): string => {
     .join(' ');
 };
 
+// Helper function to convert an array to a table-compatible format
+const convertArrayToTableData = (arr: any[]): Record<string, any>[] => {
+  return arr.map(item => ({ value: item }));
+};
+
+// Helper function to convert a dictionary to a table-compatible format
+const convertDictToTableData = (dict: Record<string, any>): Record<string, any>[] => {
+  return [dict];
+};
+
 export const KeyValueDisplay = ({ 
   data, 
   title, 
@@ -106,6 +116,87 @@ export const KeyValueDisplay = ({
       );
     }
     
+    // If the value is an array of primitives, convert to table data
+    if (Array.isArray(singleValue) && singleValue.length > 0) {
+      const tableData = convertArrayToTableData(singleValue);
+      return (
+        <Card>
+          {title && (
+            <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+              <span>{title}</span>
+              {isEditableMode && (
+                <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Reset</span>
+                </Button>
+              )}
+              {onRemove && (
+                <Button variant="ghost" size="sm" onClick={onRemove} className="h-6 px-2 text-muted-foreground hover:text-destructive">
+                  <span className="text-xs">Remove</span>
+                </Button>
+              )}
+            </div>
+          )}
+          <CardContent className="p-2">
+            <div className="w-full overflow-hidden">
+              <DisplayTable 
+                data={tableData} 
+                isEditable={isEditableMode}
+                onChange={(newValue) => {
+                  if (onChange) {
+                    // Convert back from table format to array
+                    const newArray = newValue.map(item => item.value);
+                    onChange({ [singleKey]: newArray });
+                  }
+                }}
+                originalData={tableData}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    // If the value is an object (not an array), convert to table data
+    if (typeof singleValue === 'object' && singleValue !== null && !Array.isArray(singleValue)) {
+      const tableData = convertDictToTableData(singleValue);
+      return (
+        <Card>
+          {title && (
+            <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
+              <span>{title}</span>
+              {isEditableMode && (
+                <Button variant="ghost" size="sm" onClick={handleReset} className="h-6 px-2">
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Reset</span>
+                </Button>
+              )}
+              {onRemove && (
+                <Button variant="ghost" size="sm" onClick={onRemove} className="h-6 px-2 text-muted-foreground hover:text-destructive">
+                  <span className="text-xs">Remove</span>
+                </Button>
+              )}
+            </div>
+          )}
+          <CardContent className="p-2">
+            <div className="w-full overflow-hidden">
+              <DisplayTable 
+                data={tableData} 
+                isEditable={isEditableMode}
+                onChange={(newValue) => {
+                  if (onChange) {
+                    // Only use the first row since this was a dictionary
+                    onChange({ [singleKey]: newValue[0] || {} });
+                  }
+                }}
+                originalData={tableData}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
     return (
       <Card>
         {title && (
@@ -168,6 +259,58 @@ export const KeyValueDisplay = ({
               (typeof value === 'object' && value !== null && Object.keys(value).length > 3) || 
               (Array.isArray(value) && value.length > 0);
             
+            // Special case for arrays - convert to table view
+            if (Array.isArray(value) && value.length > 0) {
+              const tableData = convertArrayToTableData(value);
+              return (
+                <div key={key} className={`${isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}`}>
+                  <label className="font-medium text-sm text-muted-foreground block">
+                    {formatKeyName(key)}:
+                  </label>
+                  <div className="ml-0 mt-1">
+                    <DisplayTable 
+                      data={tableData} 
+                      isEditable={isEditableMode}
+                      onChange={(newValue) => {
+                        if (onChange) {
+                          // Convert back from table format to array
+                          const newArray = newValue.map(item => item.value);
+                          handleValueChange(key, newArray);
+                        }
+                      }}
+                      originalData={tableData}
+                    />
+                  </div>
+                </div>
+              );
+            }
+            
+            // Special case for objects - convert to table view
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              const tableData = convertDictToTableData(value);
+              return (
+                <div key={key} className={`${isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}`}>
+                  <label className="font-medium text-sm text-muted-foreground block">
+                    {formatKeyName(key)}:
+                  </label>
+                  <div className="ml-0 mt-1">
+                    <DisplayTable 
+                      data={tableData} 
+                      isEditable={isEditableMode}
+                      onChange={(newValue) => {
+                        if (onChange) {
+                          // Only use the first row since this was a dictionary
+                          handleValueChange(key, newValue[0] || {});
+                        }
+                      }}
+                      originalData={tableData}
+                    />
+                  </div>
+                </div>
+              );
+            }
+            
+            // Default display for other types
             return (
               <div key={key} className={isComplexValue && useHorizontalLayout ? 'col-span-full mb-2' : ''}>
                 <label className="font-medium text-sm text-muted-foreground block">
