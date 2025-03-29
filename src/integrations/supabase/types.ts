@@ -72,6 +72,7 @@ export type Database = {
           is_example: boolean | null
           requires_browser: boolean
           requires_code_rewrite: boolean | null
+          response_id: string | null
           script: string | null
           steps: Json | null
           title: string
@@ -84,6 +85,7 @@ export type Database = {
           is_example?: boolean | null
           requires_browser?: boolean
           requires_code_rewrite?: boolean | null
+          response_id?: string | null
           script?: string | null
           steps?: Json | null
           title: string
@@ -96,6 +98,7 @@ export type Database = {
           is_example?: boolean | null
           requires_browser?: boolean
           requires_code_rewrite?: boolean | null
+          response_id?: string | null
           script?: string | null
           steps?: Json | null
           title?: string
@@ -175,6 +178,7 @@ export type Database = {
           created_at: string | null
           from_template: boolean | null
           id: string
+          response_id: string | null
           role: Database["public"]["Enums"]["role_type"]
           screenrecording_url: string | null
           script: string | null
@@ -194,6 +198,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          response_id?: string | null
           role: Database["public"]["Enums"]["role_type"]
           screenrecording_url?: string | null
           script?: string | null
@@ -213,6 +218,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          response_id?: string | null
           role?: Database["public"]["Enums"]["role_type"]
           screenrecording_url?: string | null
           script?: string | null
