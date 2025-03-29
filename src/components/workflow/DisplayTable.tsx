@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatText } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Minus, Check, X } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
@@ -189,7 +188,7 @@ export const DisplayTable: React.FC<DisplayTableProps> = ({
                 )}
                 {columns.map((column) => (
                   <TableHead key={column} className="whitespace-nowrap text-xs p-2">
-                    {column}
+                    {formatText(column)}
                   </TableHead>
                 ))}
               </TableRow>
