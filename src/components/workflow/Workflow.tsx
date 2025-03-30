@@ -68,7 +68,7 @@ export const Workflow = ({
   
   // Log when chatId changes to help debug
   useEffect(() => {
-    console.log('Workflow received chatId:', chatId);
+    console.log('Workflow component received chatId:', chatId);
   }, [chatId]);
   
   // Use our optimized hook to get selected chat and status
@@ -77,17 +77,20 @@ export const Workflow = ({
   // When selectedChat changes, log its properties
   useEffect(() => {
     if (selectedChat) {
-      console.log('Selected chat updated:', {
+      console.log('Workflow: Selected chat updated:', {
         id: selectedChat.id,
         requires_code_rewrite: selectedChat.requires_code_rewrite,
-        code_approved: selectedChat.code_approved
+        code_approved: selectedChat.code_approved,
+        codeRewritingStatus: codeRewritingStatus
       });
+    } else {
+      console.log('Workflow: Selected chat is null');
     }
-  }, [selectedChat]);
+  }, [selectedChat, codeRewritingStatus]);
 
   // Add additional logging when codeRewritingStatus changes
   useEffect(() => {
-    console.log('Workflow codeRewritingStatus changed to:', codeRewritingStatus);
+    console.log('Workflow: codeRewritingStatus changed to:', codeRewritingStatus);
   }, [codeRewritingStatus]);
   
   // Initialize with steps coming from props or selected chat

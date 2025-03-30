@@ -85,16 +85,17 @@ export const useChats = () => {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'chats' },
           (payload) => {
-            console.log('Chats realtime update:', payload);
+            console.log('Chats realtime update received:', payload);
             
             // Enhanced logging for code_rewrite fields
             if (payload.eventType === 'UPDATE') {
               const newChat = payload.new as Chat;
+              const oldChat = payload.old as Chat;
               console.log(`Chat ${newChat.id} updated with:`, {
                 requires_code_rewrite: newChat.requires_code_rewrite,
                 code_approved: newChat.code_approved,
-                previous_requires_code_rewrite: (payload.old as Chat).requires_code_rewrite,
-                previous_code_approved: (payload.old as Chat).code_approved
+                previous_requires_code_rewrite: oldChat.requires_code_rewrite,
+                previous_code_approved: oldChat.code_approved
               });
             }
             
@@ -221,7 +222,7 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
   if (!chat) return 'thinking';
   
   // Log the values for debugging
-  console.log(`Chat ${chat.id} rewriting status:`, { 
+  console.log(`getCodeRewritingStatus for chat ${chat.id}:`, { 
     requires_code_rewrite: chat.requires_code_rewrite, 
     code_approved: chat.code_approved 
   });
@@ -239,22 +240,35 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 // Simplified hook to subscribe to a specific chat's updates
 export const useSelectedChat = (chatId: string | null) => {
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const { chats } = useChats();
   
-  // Find the selected chat from the chats array
-  const selectedChat = chatId ? chats.find(chat => chat.id === chatId) || null : null;
-
-  // Update code rewriting status whenever the selected chat changes
+  // Update selectedChat whenever chats or chatId changes
   useEffect(() => {
-    if (!selectedChat) {
+    if (!chatId) {
+      setSelectedChat(null);
       setCodeRewritingStatus('thinking');
       return;
     }
     
-    const status = getCodeRewritingStatus(selectedChat);
-    console.log(`Updated status for chat ${selectedChat.id}:`, status);
-    setCodeRewritingStatus(status);
-  }, [selectedChat]);
+    const foundChat = chats.find(chat => chat.id === chatId);
+    console.log(`useSelectedChat: chatId=${chatId}, foundChat:`, foundChat ? {
+      id: foundChat.id,
+      requires_code_rewrite: foundChat.requires_code_rewrite,
+      code_approved: foundChat.code_approved
+    } : 'not found');
+    
+    setSelectedChat(foundChat || null);
+    
+    if (foundChat) {
+      const status = getCodeRewritingStatus(foundChat);
+      console.log(`Updated status for chat ${foundChat.id} to:`, status);
+      setCodeRewritingStatus(status);
+    } else {
+      console.log(`No chat found with id ${chatId}`);
+      setCodeRewritingStatus('thinking');
+    }
+  }, [chats, chatId]); // Depend on both chats array and chatId
 
   return {
     selectedChat,
