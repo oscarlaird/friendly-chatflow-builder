@@ -78,13 +78,13 @@ export const WorkflowStep = ({
   const getControlStyle = () => {
     if (stepType === 'for') {
       return cn(
-        hasChildren ? "rounded-t-md" : "",
+        hasChildren && "rounded-t-md",
         "border-purple-300"
       );
     }
     if (stepType === 'if') {
       return cn(
-        hasChildren ? "rounded-t-md" : "",
+        hasChildren && "rounded-t-md", 
         "border-blue-300"
       );
     }

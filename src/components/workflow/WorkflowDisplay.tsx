@@ -65,20 +65,11 @@ export const WorkflowDisplay = forwardRef<
     
     switch (type) {
       case 'for':
-        return {
-          className: `bg-purple-100/[${opacity}] rounded-md overflow-hidden`,
-          borderColor: 'border-purple-300'
-        };
+        return `bg-purple-100/[${opacity}]`;
       case 'if':
-        return {
-          className: `bg-blue-100/[${opacity}] rounded-md overflow-hidden`,
-          borderColor: 'border-blue-300'
-        };
+        return `bg-blue-100/[${opacity}]`;
       default:
-        return {
-          className: '',
-          borderColor: ''
-        };
+        return '';
     }
   };
   
@@ -87,10 +78,13 @@ export const WorkflowDisplay = forwardRef<
     const hasChildren = node.children && node.children.length > 0;
     const nestingLevel = node.step.nesting_level || 0;
     
-    const { className: blockClassName } = getControlBlockStyle(node.step.type, nestingLevel);
+    const blockStyle = getControlBlockStyle(node.step.type, nestingLevel);
     
     return (
-      <div key={`node-${node.step.step_number}`} className={cn("workflow-node mb-2", hasChildren && blockClassName)}>
+      <div 
+        key={`node-${node.step.step_number}`} 
+        className={cn("workflow-node mb-2", hasChildren && blockStyle, hasChildren && "rounded-md overflow-hidden")}
+      >
         <WorkflowStep
           step={node.step}
           browserEvents={getBrowserEventsForStep(node.step)}
@@ -99,7 +93,7 @@ export const WorkflowDisplay = forwardRef<
         />
         
         {hasChildren && (
-          <div className={cn("pl-4 pt-2 pb-2 pr-2")}>
+          <div className="p-2">
             {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
           </div>
         )}
