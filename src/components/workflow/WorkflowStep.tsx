@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -54,7 +55,6 @@ export const WorkflowStep = ({
   const stepType = step.type;
   const isActive = step.active || false;
   const isDisabled = step.disabled || false;
-  const nestingLevel = step.nesting_level || 0;
   
   const hasInput = step.input && Object.keys(step.input).length > 0;
   const hasOutput = step.output && Object.keys(step.output).length > 0;

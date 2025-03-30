@@ -60,14 +60,12 @@ export const WorkflowDisplay = forwardRef<
   };
   
   // Get appropriate background color for a control block
-  const getControlBlockStyle = (type: string, nestingLevel: number) => {
-    const opacity = Math.max(0.1, 0.3 - nestingLevel * 0.05); // Reduce opacity for deeper nesting
-    
+  const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return `bg-purple-100/[${opacity}]`;
+        return 'bg-purple-100/30';
       case 'if':
-        return `bg-blue-100/[${opacity}]`;
+        return 'bg-blue-100/30';
       default:
         return '';
     }
@@ -76,7 +74,6 @@ export const WorkflowDisplay = forwardRef<
   // Recursive component to render step nodes
   const renderStepNode = (node: StepNode, index: number) => {
     const hasChildren = node.children && node.children.length > 0;
-    const nestingLevel = node.step.nesting_level || 0;
     
     if (!hasChildren) {
       // For leaf nodes (no children), render a simple step
@@ -93,12 +90,12 @@ export const WorkflowDisplay = forwardRef<
     }
     
     // For parent nodes with children, render a container with the step and its children
-    const blockStyle = getControlBlockStyle(node.step.type, nestingLevel);
+    const blockStyle = getControlBlockStyle(node.step.type);
     
     return (
       <div 
         key={`node-${node.step.step_number}`} 
-        className={cn("workflow-node mb-2")}
+        className="workflow-node mb-2"
       >
         <div className={cn(blockStyle, "rounded-md overflow-hidden")}>
           <WorkflowStep
