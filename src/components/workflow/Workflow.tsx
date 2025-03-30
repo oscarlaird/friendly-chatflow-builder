@@ -1,11 +1,9 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMessages } from '@/hooks/useMessages';
-import { supabase } from '@/integrations/supabase/client';
 import { CodeRewritingStatus, Chat } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -63,7 +61,7 @@ export const Workflow = ({
   const workflowRef = useRef<{ getUserInputs: () => any }>(null);
   const { sendMessage } = useMessages(chatId || null);
   
-  // Use our optimized hook that avoids duplicate queries
+  // Use our optimized hook that manages real-time updates with a normalized data structure
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
   
   // Initialize with steps coming from props or selected chat
