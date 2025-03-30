@@ -4,6 +4,7 @@ import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
+import { cn } from "@/lib/utils";
 
 interface WorkflowDisplayProps {
   steps: any[];
@@ -58,12 +59,38 @@ export const WorkflowDisplay = forwardRef<
     return browserEvents[step.function_name] || [];
   };
   
+  // Get appropriate background color for a control block
+  const getControlBlockStyle = (type: string, nestingLevel: number) => {
+    const opacity = Math.max(0.1, 0.3 - nestingLevel * 0.05); // Reduce opacity for deeper nesting
+    
+    switch (type) {
+      case 'for':
+        return {
+          className: `bg-purple-100/[${opacity}] rounded-md overflow-hidden`,
+          borderColor: 'border-purple-300'
+        };
+      case 'if':
+        return {
+          className: `bg-blue-100/[${opacity}] rounded-md overflow-hidden`,
+          borderColor: 'border-blue-300'
+        };
+      default:
+        return {
+          className: '',
+          borderColor: ''
+        };
+    }
+  };
+  
   // Recursive component to render step nodes
   const renderStepNode = (node: StepNode, index: number) => {
     const hasChildren = node.children && node.children.length > 0;
+    const nestingLevel = node.step.nesting_level || 0;
+    
+    const { className: blockClassName } = getControlBlockStyle(node.step.type, nestingLevel);
     
     return (
-      <div key={`node-${node.step.step_number}`} className="workflow-node">
+      <div key={`node-${node.step.step_number}`} className={cn("workflow-node mb-2", hasChildren && blockClassName)}>
         <WorkflowStep
           step={node.step}
           browserEvents={getBrowserEventsForStep(node.step)}
@@ -72,26 +99,12 @@ export const WorkflowDisplay = forwardRef<
         />
         
         {hasChildren && (
-          <div 
-            className={`pl-6 mt-1 border-l-2 border-dashed ml-3.5 ${getControlBlockClass(node.step.type)}`}
-          >
+          <div className={cn("pl-4 pt-2 pb-2 pr-2")}>
             {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
           </div>
         )}
       </div>
     );
-  };
-  
-  // Helper function to get the appropriate control block class based on step type
-  const getControlBlockClass = (type: string) => {
-    switch (type) {
-      case 'for':
-        return 'border-purple-400 bg-purple-50/40 rounded-bl-lg pl-4';
-      case 'if':
-        return 'border-blue-400 bg-blue-50/40 rounded-bl-lg pl-4';
-      default:
-        return 'border-gray-300';
-    }
   };
   
   return (
@@ -113,10 +126,8 @@ export const WorkflowDisplay = forwardRef<
       
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
-          <div className="space-y-0.5">
-            {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
-          </div>
+        <div className="space-y-1">
+          {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
         </div>
       ) : null}
     </div>

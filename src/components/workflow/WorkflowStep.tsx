@@ -55,6 +55,7 @@ export const WorkflowStep = ({
   const stepType = step.type;
   const isActive = step.active || false;
   const isDisabled = step.disabled || false;
+  const nestingLevel = step.nesting_level || 0;
   
   const hasInput = step.input && Object.keys(step.input).length > 0;
   const hasOutput = step.output && Object.keys(step.output).length > 0;
@@ -73,11 +74,21 @@ export const WorkflowStep = ({
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
   
-  // Get appropriate control block background color
-  const getControlBackground = () => {
-    if (stepType === 'for') return 'bg-purple-50/30';
-    if (stepType === 'if') return 'bg-blue-50/30';
-    return '';
+  // Get style for control blocks
+  const getControlStyle = () => {
+    if (stepType === 'for') {
+      return cn(
+        hasChildren ? "rounded-t-md" : "",
+        "border-purple-300"
+      );
+    }
+    if (stepType === 'if') {
+      return cn(
+        hasChildren ? "rounded-t-md" : "",
+        "border-blue-300"
+      );
+    }
+    return "";
   };
   
   const getStepTitle = () => {
@@ -139,11 +150,10 @@ export const WorkflowStep = ({
   return (
     <Card 
       className={cn(
-        "relative mb-2 p-3",
+        "p-3",
         isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
         isDisabled && "opacity-60 bg-muted/20",
-        (hasChildren && ['for', 'if'].includes(stepType)) && getControlBackground(),
-        (hasChildren && ['for', 'if'].includes(stepType)) && "mb-0 rounded-b-none border-b-0"
+        getControlStyle()
       )}
     >
       <div className="flex items-start gap-3">
