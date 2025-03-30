@@ -78,25 +78,40 @@ export const WorkflowDisplay = forwardRef<
     const hasChildren = node.children && node.children.length > 0;
     const nestingLevel = node.step.nesting_level || 0;
     
+    if (!hasChildren) {
+      // For leaf nodes (no children), render a simple step
+      return (
+        <div key={`node-${node.step.step_number}`} className="workflow-node mb-2">
+          <WorkflowStep
+            step={node.step}
+            browserEvents={getBrowserEventsForStep(node.step)}
+            autoOpen={autoActivateSteps && node.step.active === true}
+            hasChildren={false}
+          />
+        </div>
+      );
+    }
+    
+    // For parent nodes with children, render a container with the step and its children
     const blockStyle = getControlBlockStyle(node.step.type, nestingLevel);
     
     return (
       <div 
         key={`node-${node.step.step_number}`} 
-        className={cn("workflow-node mb-2", hasChildren && blockStyle, hasChildren && "rounded-md overflow-hidden")}
+        className={cn("workflow-node mb-2")}
       >
-        <WorkflowStep
-          step={node.step}
-          browserEvents={getBrowserEventsForStep(node.step)}
-          autoOpen={autoActivateSteps && node.step.active === true}
-          hasChildren={hasChildren}
-        />
-        
-        {hasChildren && (
-          <div className="p-2">
+        <div className={cn(blockStyle, "rounded-md overflow-hidden")}>
+          <WorkflowStep
+            step={node.step}
+            browserEvents={getBrowserEventsForStep(node.step)}
+            autoOpen={autoActivateSteps && node.step.active === true}
+            hasChildren={true}
+          />
+          
+          <div className="p-3">
             {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
           </div>
-        )}
+        </div>
       </div>
     );
   };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -74,22 +73,19 @@ export const WorkflowStep = ({
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
   
-  // Get style for control blocks
-  const getControlStyle = () => {
-    if (stepType === 'for') {
-      return cn(
-        hasChildren && "rounded-t-md",
-        "border-purple-300"
-      );
-    }
-    if (stepType === 'if') {
-      return cn(
-        hasChildren && "rounded-t-md", 
-        "border-blue-300"
-      );
-    }
-    return "";
-  };
+  // Update card styling based on whether it's a parent with children
+  const cardStyle = cn(
+    "p-3",
+    isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
+    isDisabled && "opacity-60 bg-muted/20",
+    hasChildren && (
+      stepType === 'for' 
+        ? "rounded-t-md border-purple-300" 
+        : stepType === 'if' 
+          ? "rounded-t-md border-blue-300" 
+          : ""
+    )
+  );
   
   const getStepTitle = () => {
     switch (stepType) {
@@ -148,14 +144,7 @@ export const WorkflowStep = ({
   };
   
   return (
-    <Card 
-      className={cn(
-        "p-3",
-        isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
-        isDisabled && "opacity-60 bg-muted/20",
-        getControlStyle()
-      )}
-    >
+    <Card className={cardStyle}>
       <div className="flex items-start gap-3">
         <div className={cn(
           "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
@@ -231,7 +220,6 @@ export const WorkflowStep = ({
             </p>
           )}
 
-          {/* Add progress bar for "for" type steps */}
           {hasProgress && (
             <div className="mt-2 space-y-1">
               <div className="flex justify-between items-center text-xs text-muted-foreground">
