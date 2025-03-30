@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, CodeRewritingStatus } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -251,37 +250,102 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 export const useSelectedChat = (chatId: string | null) => {
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const { chats } = useChats();
+  const { user } = useAuth();
+  const channelRef = useRef<any>(null);
+  const lastChatIdRef = useRef<string | null>(null);
   
-  // Update selectedChat whenever chats or chatId changes
+  // Prevent unnecessary status updates if chat hasn't changed
+  const updateStatus = useCallback((newStatus: CodeRewritingStatus) => {
+    setCodeRewritingStatus(prev => {
+      if (prev === newStatus) return prev; // Don't update if unchanged
+      console.log(`Updating codeRewritingStatus from ${prev} to ${newStatus}`);
+      return newStatus;
+    });
+  }, []);
+  
+  // Update selectedChat whenever chatId changes
   useEffect(() => {
-    if (!chatId) {
+    if (!chatId || !user) {
       setSelectedChat(null);
       setCodeRewritingStatus('thinking');
       return;
     }
-    
-    const foundChat = chats.find(chat => chat.id === chatId);
-    console.log(`useSelectedChat: chatId=${chatId}, foundChat:`, foundChat ? {
-      id: foundChat.id,
-      requires_code_rewrite: foundChat.requires_code_rewrite,
-      code_approved: foundChat.code_approved
-    } : 'not found');
-    
-    setSelectedChat(foundChat || null);
-    
-    if (foundChat) {
-      const status = getCodeRewritingStatus(foundChat);
-      console.log(`Updated status for chat ${foundChat.id} to:`, status);
-      setCodeRewritingStatus(status);
-    } else {
-      console.log(`No chat found with id ${chatId}`);
-      setCodeRewritingStatus('thinking');
-    }
-  }, [chats, chatId]); // Depend on both chats array and chatId
 
-  return {
+    // Initial fetch from cache or database
+    const fetchSelectedChat = async () => {
+      try {
+        // First try to get from cache
+        const cachedChat = chatsCache.data.find(chat => chat.id === chatId);
+        
+        if (cachedChat) {
+          setSelectedChat(cachedChat);
+          const status = getCodeRewritingStatus(cachedChat);
+          setCodeRewritingStatus(status);
+          console.log(`useSelectedChat: Found cached chat ${chatId}, status: ${status}`);
+        } else {
+          // If not in cache, fetch from database
+          const { data, error } = await supabase
+            .from('chats')
+            .select('*')
+            .eq('id', chatId)
+            .single();
+
+          if (error) throw error;
+          
+          if (data) {
+            setSelectedChat(data);
+            const status = getCodeRewritingStatus(data);
+            setCodeRewritingStatus(status);
+            console.log(`useSelectedChat: Fetched chat ${chatId}, status: ${status}`);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error fetching selected chat:', error);
+        setSelectedChat(null);
+        setCodeRewritingStatus('thinking');
+      }
+    };
+
+    fetchSelectedChat();
+
+    // Set up a direct realtime subscription for this specific chat
+    const channelName = `selected-chat-${chatId}-${Date.now()}`;
+    
+    console.log(`Creating direct subscription for chat ${chatId}`);
+    
+    channelRef.current = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'chats',
+          filter: `id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log(`Direct update for selected chat ${chatId}:`, payload);
+          const updatedChat = payload.new as Chat;
+          setSelectedChat(updatedChat);
+          const status = getCodeRewritingStatus(updatedChat);
+          console.log(`Directly updating status for chat ${chatId} to:`, status);
+          setCodeRewritingStatus(status);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      // Clean up subscription
+      if (channelRef.current) {
+        console.log(`Removing direct subscription for chat ${chatId}`);
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [chatId, user]);
+
+  // Return memoized values to prevent unnecessary re-renders
+  return useMemo(() => ({
     selectedChat,
     codeRewritingStatus
-  };
+  }), [selectedChat, codeRewritingStatus]);
 };

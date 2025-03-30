@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
@@ -63,11 +62,11 @@ export const WorkflowDisplay = forwardRef<
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-purple-100/30';
+        return 'bg-purple-100/30 dark:bg-purple-900/30';
       case 'if':
-        return 'bg-blue-100/30';
+        return 'bg-blue-100/30 dark:bg-blue-900/30';
       default:
-        return '';
+        return 'bg-gray-50 dark:bg-gray-900/40';
     }
   };
   
@@ -97,7 +96,10 @@ export const WorkflowDisplay = forwardRef<
         key={`node-${node.step.step_number}`} 
         className="workflow-node mb-2"
       >
-        <div className={cn(blockStyle, "rounded-md overflow-hidden")}>
+        <div className={cn(
+          blockStyle, 
+          "rounded-md overflow-hidden border border-gray-200 dark:border-gray-800"
+        )}>
           <WorkflowStep
             step={node.step}
             browserEvents={getBrowserEventsForStep(node.step)}

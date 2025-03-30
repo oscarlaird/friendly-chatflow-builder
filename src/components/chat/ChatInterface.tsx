@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
@@ -10,6 +9,7 @@ import { MessageCircle, GitBranch, DollarSign } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSelectedChat } from '@/hooks/useChats';
+import { useWindowMessages } from '@/hooks/useWindowMessages';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -22,6 +22,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [sending, setSending] = useState(false);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'workflow' : 'chat');
+  
+  // Initialize the window message handler
+  useWindowMessages();
 
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);

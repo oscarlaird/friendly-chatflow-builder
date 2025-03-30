@@ -25,9 +25,15 @@ interface WorkflowProps {
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
+  const prevStatusRef = useRef<CodeRewritingStatus>(status);
   
-  // Add debug logging for the status
-  console.log('StatusBadge rendering with status:', status);
+  // Only log when status changes, not on every render
+  useEffect(() => {
+    if (prevStatusRef.current !== status) {
+      console.log('StatusBadge status changed to:', status);
+      prevStatusRef.current = status;
+    }
+  }, [status]);
 
   return (
     <div className="flex items-center gap-1">

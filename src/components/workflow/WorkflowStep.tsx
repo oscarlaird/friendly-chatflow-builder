@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -9,30 +8,8 @@ import { cn } from "@/lib/utils";
 import { BrowserEvent } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-
-// Get the appropriate icon for the step type
-const getStepIcon = (type: string) => {
-  switch (type) {
-    case 'function':
-      return <Component className="h-4 w-4" />;
-    case 'for':
-      return <ListOrdered className="h-4 w-4" />;
-    case 'if':
-      return <FileQuestion className="h-4 w-4" />;
-    case 'done':
-      return <SquareCheck className="h-4 w-4" />;
-    default:
-      return <Component className="h-4 w-4" />;
-  }
-};
-
-// Format function name for display
-const formatFunctionName = (name: string): string => {
-  return name
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
+import { getStepIcon } from "./utils/iconUtils";
+import { formatFunctionName } from "./utils/stringUtils";
 
 interface WorkflowStepProps {
   step: any;
@@ -61,6 +38,7 @@ export const WorkflowStep = ({
   const hasBrowserEvents = browserEvents.length > 0;
   const hasControlValue = stepType === 'for' && step.control_value !== undefined;
   const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
+  const hasBrowserAgentData = step.browser_agent_data && Object.keys(step.browser_agent_data).length > 0;
   
   // Determine if step has progress info
   const hasProgress = stepType === 'for' && 
@@ -115,18 +93,18 @@ export const WorkflowStep = ({
     }
   };
   
+  // Extract domain from URL for favicon
+  const getFaviconUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
+    } catch (e) {
+      return null;
+    }
+  };
+  
   // Browser event item component for function steps
   const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
-    // Extract domain from URL for favicon
-    const getFaviconUrl = (url: string) => {
-      try {
-        const urlObj = new URL(url);
-        return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=16`;
-      } catch (e) {
-        return null;
-      }
-    };
-
     const browserState = event?.data?.browser_state;
     const currentGoal = event?.data?.current_goal;
     const faviconUrl = browserState?.url ? getFaviconUrl(browserState.url) : null;
@@ -139,6 +117,44 @@ export const WorkflowStep = ({
           <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
         )}
         <span className="truncate">{currentGoal || 'Browser action'}</span>
+      </div>
+    );
+  };
+  
+  // Browser agent data display component
+  const BrowserAgentDataDisplay = () => {
+    if (!hasBrowserAgentData) return null;
+    
+    const { browser_state, memory_log, current_goal } = step.browser_agent_data;
+    const faviconUrl = browser_state?.url ? getFaviconUrl(browser_state.url) : null;
+    
+    return (
+      <div className="mt-3 border rounded-md overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+        <div className="flex items-center gap-2 p-2 border-b">
+          {faviconUrl ? (
+            <img src={faviconUrl} alt="site favicon" className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">
+              {browser_state?.title || browser_state?.url || 'Unknown Page'}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {browser_state?.url || ''}
+            </div>
+          </div>
+          {current_goal && (
+            <Badge variant="outline" className="ml-auto text-xs">
+              {current_goal}
+            </Badge>
+          )}
+        </div>
+        {memory_log && (
+          <div className="p-2 text-sm bg-slate-100/80 dark:bg-slate-800/80 text-muted-foreground">
+            <p className="whitespace-pre-wrap">{memory_log}</p>
+          </div>
+        )}
       </div>
     );
   };
@@ -230,20 +246,10 @@ export const WorkflowStep = ({
             </div>
           )}
           
-          {/* Display control_value for "for" steps */}
-          {hasControlValue && (
-            <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
-              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                Current Item
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-1.5">
-                <KeyValueDisplay data={step.control_value} compact={true} />
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+          {/* Display browser agent data if available */}
+          {hasBrowserAgentData && <BrowserAgentDataDisplay />}
           
-          <div className="pt-1 space-y-1.5">
+          <div className="space-y-1.5 mt-2">
             {hasInput && (
               <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
                 <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
@@ -252,6 +258,18 @@ export const WorkflowStep = ({
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-1.5">
                   <KeyValueDisplay data={step.input} compact={true} />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+            
+            {hasControlValue && (
+              <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
+                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  Loop Value
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-1.5">
+                  <KeyValueDisplay data={{ value: step.control_value }} compact={true} />
                 </CollapsibleContent>
               </Collapsible>
             )}
