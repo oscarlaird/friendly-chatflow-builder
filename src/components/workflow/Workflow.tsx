@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -26,6 +25,9 @@ interface WorkflowProps {
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
+  
+  // Add debug logging for the status
+  console.log('StatusBadge rendering with status:', status);
 
   return (
     <div className="flex items-center gap-1">
@@ -63,8 +65,24 @@ export const Workflow = ({
   const workflowRef = useRef<{ getUserInputs: () => any }>(null);
   const { sendMessage } = useMessages(chatId || null);
   
-  // Use our optimized hook that avoids duplicate queries
+  // Log when chatId changes to help debug
+  useEffect(() => {
+    console.log('Workflow received chatId:', chatId);
+  }, [chatId]);
+  
+  // Use our optimized hook to get selected chat and status
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
+  
+  // When selectedChat changes, log its properties
+  useEffect(() => {
+    if (selectedChat) {
+      console.log('Selected chat updated:', {
+        id: selectedChat.id,
+        requires_code_rewrite: selectedChat.requires_code_rewrite,
+        code_approved: selectedChat.code_approved
+      });
+    }
+  }, [selectedChat]);
   
   // Initialize with steps coming from props or selected chat
   useEffect(() => {

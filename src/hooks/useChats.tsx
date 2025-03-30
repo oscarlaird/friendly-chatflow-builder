@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, CodeRewritingStatus } from '@/types';
@@ -209,6 +208,12 @@ export const useChats = () => {
 export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingStatus => {
   if (!chat) return 'thinking';
   
+  // Log the values for debugging
+  console.log(`Chat ${chat.id} rewriting status:`, { 
+    requires_code_rewrite: chat.requires_code_rewrite, 
+    code_approved: chat.code_approved 
+  });
+  
   if (chat.requires_code_rewrite === null) {
     return 'thinking';
   } else if (chat.requires_code_rewrite === false) {
@@ -219,13 +224,12 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
   }
 };
 
-// Hook to subscribe to a specific chat's updates
+// Simplified hook to subscribe to a specific chat's updates
 export const useSelectedChat = (chatId: string | null) => {
-  const [loading, setLoading] = useState(false);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const { chats } = useChats();
   
-  // Find the selected chat from the chats array instead of making a new query
+  // Find the selected chat from the chats array
   const selectedChat = chatId ? chats.find(chat => chat.id === chatId) || null : null;
 
   // Update code rewriting status whenever the selected chat changes
@@ -235,13 +239,13 @@ export const useSelectedChat = (chatId: string | null) => {
       return;
     }
     
-    // Update code rewriting status based on the selected chat
-    setCodeRewritingStatus(getCodeRewritingStatus(selectedChat));
+    const status = getCodeRewritingStatus(selectedChat);
+    console.log(`Updated status for chat ${selectedChat.id}:`, status);
+    setCodeRewritingStatus(status);
   }, [selectedChat]);
 
   return {
     selectedChat,
-    loading,
     codeRewritingStatus
   };
 };
