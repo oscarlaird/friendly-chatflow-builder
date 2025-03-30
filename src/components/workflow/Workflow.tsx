@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -9,6 +10,7 @@ import { CodeRewritingStatus, Chat } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { nestSteps } from './utils/nestingUtils';
+import { useSelectedChat } from '@/hooks/useChats';
 
 interface WorkflowProps {
   initialSteps?: any[];
@@ -57,141 +59,43 @@ export const Workflow = ({
   const [isRunning, setIsRunning] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
-  const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
-  const [chatData, setChatData] = useState<Chat | null>(null);
   
   const workflowRef = useRef<{ getUserInputs: () => any }>(null);
   const { sendMessage } = useMessages(chatId || null);
-  const fetchingRef = useRef(false);
-  const subscriptionRef = useRef<any>(null);
   
-  // Initialize with steps coming from props
+  // Use our optimized hook that avoids duplicate queries
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
+  
+  // Initialize with steps coming from props or selected chat
   useEffect(() => {
-    const stepsToUse = propSteps?.length > 0 ? propSteps : initialSteps;
-    if (stepsToUse && stepsToUse.length > 0) {
-      setWorkflowSteps(stepsToUse);
-      
-      // Log the nested steps structure
-      const nestedSteps = nestSteps(stepsToUse);
-      console.log('Nested steps structure:', nestedSteps);
-      
-      // Auto-start if indicated
-      if (autoStart) {
-        startWorkflow();
-      }
+    // First priority: use prop steps if provided
+    if (propSteps?.length > 0) {
+      setWorkflowSteps(propSteps);
+    } 
+    // Second priority: use steps from the selected chat if available
+    else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
+      setWorkflowSteps(selectedChat.steps);
     }
-  }, [initialSteps, propSteps, autoStart]);
-  
-  // Initial data fetch and real-time subscription
-  useEffect(() => {
-    // Clean up previous subscription
-    if (subscriptionRef.current) {
-      supabase.removeChannel(subscriptionRef.current);
-      subscriptionRef.current = null;
+    // Third priority: use initialSteps if provided
+    else if (initialSteps?.length > 0) {
+      setWorkflowSteps(initialSteps);
+    } 
+    // Fallback: empty array
+    else {
+      setWorkflowSteps([]);
     }
     
-    if (!chatId) {
-      setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
-      setChatData(null);
-      setCodeRewritingStatus('thinking');
-      return;
+    // Log the nested steps structure when steps change
+    if (workflowSteps.length > 0) {
+      const nestedSteps = nestSteps(workflowSteps);
+      console.log('Nested steps structure:', nestedSteps);
     }
-
-    const fetchChatData = async () => {
-      if (fetchingRef.current) return;
-      
-      fetchingRef.current = true;
-      try {
-        const { data, error } = await supabase
-          .from('chats')
-          .select('*')
-          .eq('id', chatId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching chat data:', error);
-          return;
-        }
-
-        setChatData(data);
-
-        // Set steps from chat data if available and ensure it's an array
-        if (data.steps && Array.isArray(data.steps)) {
-          setWorkflowSteps(data.steps);
-        } else {
-          setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
-        }
-
-        // Set code rewriting status based on chat data
-        updateCodeRewritingStatus(data);
-      } catch (error) {
-        console.error('Error in initial data fetch:', error);
-      } finally {
-        fetchingRef.current = false;
-      }
-    };
-
-    fetchChatData();
-
-    // Set up real-time subscription with a unique channel name to prevent duplication
-    const channel = supabase
-      .channel(`workflow-chat-${chatId}-${Date.now()}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'chats',
-          filter: `id=eq.${chatId}`
-        },
-        (payload) => {
-          if (payload.eventType === 'DELETE') {
-            setChatData(null);
-            setCodeRewritingStatus('thinking');
-            setWorkflowSteps(propSteps?.length > 0 ? propSteps : (initialSteps || []));
-          } else {
-            // Handle chat insertion or update
-            const updatedChat = payload.new as Chat;
-            setChatData(updatedChat);
-            
-            // Update steps if available and ensure it's an array
-            if (updatedChat.steps && Array.isArray(updatedChat.steps)) {
-              setWorkflowSteps(updatedChat.steps);
-            }
-            
-            // Update status
-            updateCodeRewritingStatus(updatedChat);
-          }
-        }
-      )
-      .subscribe();
-
-    subscriptionRef.current = channel;
-
-    return () => {
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
-        subscriptionRef.current = null;
-      }
-    };
-  }, [chatId, propSteps, initialSteps]);
-
-  // Helper function to update code rewriting status
-  const updateCodeRewritingStatus = (chat: Chat | null) => {
-    if (!chat) {
-      setCodeRewritingStatus('thinking');
-      return;
+    
+    // Auto-start if indicated
+    if (autoStart && workflowSteps.length > 0 && !isRunning) {
+      startWorkflow();
     }
-
-    if (chat.requires_code_rewrite === null) {
-      setCodeRewritingStatus('thinking');
-    } else if (chat.requires_code_rewrite === false) {
-      setCodeRewritingStatus('done');
-    } else {
-      // requires_code_rewrite is true
-      setCodeRewritingStatus(chat.code_approved ? 'done' : 'rewriting_code');
-    }
-  };
+  }, [propSteps, selectedChat, initialSteps, autoStart]);
   
   const startWorkflow = () => {
     if (isRunning) return;

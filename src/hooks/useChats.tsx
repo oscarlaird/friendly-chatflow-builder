@@ -5,21 +5,46 @@ import { Chat, CodeRewritingStatus } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
+// Cache for chats data to prevent redundant fetches
+const chatsCache: {
+  data: Chat[];
+  lastFetched: number | null;
+} = {
+  data: [],
+  lastFetched: null
+};
+
+// Single global channel reference to avoid multiple subscriptions
+let globalChannelRef: any = null;
+let subscriberCount = 0;
+
 export const useChats = () => {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [chats, setChats] = useState<Chat[]>(chatsCache.data);
+  const [loading, setLoading] = useState(chatsCache.lastFetched === null);
   const { user } = useAuth();
-  const subscriptionRef = useRef<any>(null);
+  const channelRef = useRef<any>(null);
 
   // Fetch all chats for the user and set up realtime subscription
   useEffect(() => {
     if (!user) {
       setChats([]);
       setLoading(false);
+      chatsCache.data = [];
       return;
     }
     
     const fetchChats = async () => {
+      // Skip fetching if we have recent data (within last 30 seconds)
+      const shouldFetch = 
+        chatsCache.lastFetched === null || 
+        Date.now() - chatsCache.lastFetched > 30000;
+        
+      if (!shouldFetch && chatsCache.data.length > 0) {
+        setChats(chatsCache.data);
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -29,7 +54,9 @@ export const useChats = () => {
 
         if (error) throw error;
 
-        setChats(data || []);
+        chatsCache.data = data || [];
+        chatsCache.lastFetched = Date.now();
+        setChats(chatsCache.data);
       } catch (error: any) {
         toast({
           title: 'Error fetching chats',
@@ -44,38 +71,52 @@ export const useChats = () => {
     // Initial fetch
     fetchChats();
 
-    // Set up realtime subscription
-    const channel = supabase
-      .channel('chats-channel')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'chats' },
-        (payload) => {
-          console.log('Chats realtime update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setChats(prev => [payload.new as Chat, ...prev]);
-          } 
-          else if (payload.eventType === 'UPDATE') {
-            setChats(prev => 
-              prev.map(chat => 
-                chat.id === payload.new.id ? { ...chat, ...payload.new as Chat } : chat
-              )
-            );
-          } 
-          else if (payload.eventType === 'DELETE') {
-            setChats(prev => prev.filter(chat => chat.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
+    // Set up realtime subscription using a shared global channel
+    subscriberCount++;
     
-    subscriptionRef.current = channel;
+    if (!globalChannelRef) {
+      const channelName = `chats-global-channel-${Date.now()}`;
+      
+      console.log('Creating new global chats subscription channel');
+      
+      globalChannelRef = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'chats' },
+          (payload) => {
+            console.log('Chats realtime update:', payload);
+            
+            // Update local cache
+            if (payload.eventType === 'INSERT') {
+              chatsCache.data = [payload.new as Chat, ...chatsCache.data];
+            } 
+            else if (payload.eventType === 'UPDATE') {
+              chatsCache.data = chatsCache.data.map(chat => 
+                chat.id === payload.new.id ? { ...chat, ...payload.new as Chat } : chat
+              );
+            } 
+            else if (payload.eventType === 'DELETE') {
+              chatsCache.data = chatsCache.data.filter(chat => chat.id !== payload.old.id);
+            }
+            
+            // Update all subscribers
+            setChats([...chatsCache.data]);
+          }
+        )
+        .subscribe();
+    }
+    
+    channelRef.current = globalChannelRef;
 
     return () => {
-      // Clean up subscription
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
+      subscriberCount--;
+      
+      // Only remove the channel when the last subscriber unsubscribes
+      if (subscriberCount === 0 && globalChannelRef) {
+        console.log('Removing global chats subscription channel');
+        supabase.removeChannel(globalChannelRef);
+        globalChannelRef = null;
       }
     };
   }, [user]);
@@ -99,7 +140,7 @@ export const useChats = () => {
 
       if (error) throw error;
       
-      // No need to update state manually - the realtime subscription will handle it
+      // The realtime subscription will handle the state update
       return data;
     } catch (error: any) {
       toast({
@@ -123,7 +164,7 @@ export const useChats = () => {
 
       if (error) throw error;
       
-      // No need to update state manually - the realtime subscription will handle it
+      // The realtime subscription will handle the state update
     } catch (error: any) {
       toast({
         title: 'Error deleting chat',
@@ -145,7 +186,7 @@ export const useChats = () => {
 
       if (error) throw error;
       
-      // No need to update state manually - the realtime subscription will handle it
+      // The realtime subscription will handle the state update
     } catch (error: any) {
       toast({
         title: 'Error updating chat',
@@ -182,7 +223,6 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 export const useSelectedChat = (chatId: string | null) => {
   const [loading, setLoading] = useState(false);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
-  const { user } = useAuth();
   const { chats } = useChats();
   
   // Find the selected chat from the chats array instead of making a new query
@@ -196,14 +236,7 @@ export const useSelectedChat = (chatId: string | null) => {
     }
     
     // Update code rewriting status based on the selected chat
-    if (selectedChat.requires_code_rewrite === null) {
-      setCodeRewritingStatus('thinking');
-    } else if (selectedChat.requires_code_rewrite === false) {
-      setCodeRewritingStatus('done');
-    } else {
-      // requires_code_rewrite is true
-      setCodeRewritingStatus(selectedChat.code_approved ? 'done' : 'rewriting_code');
-    }
+    setCodeRewritingStatus(getCodeRewritingStatus(selectedChat));
   }, [selectedChat]);
 
   return {
