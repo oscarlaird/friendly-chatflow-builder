@@ -99,20 +99,30 @@ export const useChats = () => {
               });
             }
             
-            // Update local cache
+            // Create a new reference of the chats array to trigger re-renders
+            let updatedChats: Chat[] = [];
+            
+            // Update local cache based on event type
             if (payload.eventType === 'INSERT') {
-              chatsCache.data = [payload.new as Chat, ...chatsCache.data];
+              const newChat = payload.new as Chat;
+              updatedChats = [newChat, ...chatsCache.data];
+              chatsCache.data = updatedChats;
             } 
             else if (payload.eventType === 'UPDATE') {
-              chatsCache.data = chatsCache.data.map(chat => 
-                chat.id === payload.new.id ? { ...chat, ...payload.new as Chat } : chat
+              const updatedChat = payload.new as Chat;
+              updatedChats = chatsCache.data.map(chat => 
+                chat.id === updatedChat.id ? { ...updatedChat } : chat
               );
+              chatsCache.data = updatedChats;
             } 
             else if (payload.eventType === 'DELETE') {
-              chatsCache.data = chatsCache.data.filter(chat => chat.id !== payload.old.id);
+              updatedChats = chatsCache.data.filter(chat => chat.id !== payload.old.id);
+              chatsCache.data = updatedChats;
             }
             
-            // Update all subscribers
+            console.log('Updated chats cache:', chatsCache.data);
+            
+            // Update the state with a completely new array reference to ensure re-renders
             setChats([...chatsCache.data]);
           }
         )
