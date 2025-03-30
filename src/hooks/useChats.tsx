@@ -1,24 +1,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Chat, CodeRewritingStatus, Message, CodeRunEvent, BrowserEvent } from '@/types';
+import { Chat, CodeRewritingStatus } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
-// Global state cache to maintain consistency across components
-interface DataCache {
-  chats: Record<string, Chat>;
-  messages: Record<string, Message & { coderunEvents: string[] }>;
-  coderunEvents: Record<string, CodeRunEvent & { browserEvents: string[] }>;
-  browserEvents: Record<string, BrowserEvent>;
+// Cache for chats data to prevent redundant fetches
+const chatsCache: {
+  data: Chat[];
   lastFetched: number | null;
-}
-
-const dataCache: DataCache = {
-  chats: {},
-  messages: {},
-  coderunEvents: {},
-  browserEvents: {},
+} = {
+  data: [],
   lastFetched: null
 };
 
@@ -27,8 +19,8 @@ let globalChannelRef: any = null;
 let subscriberCount = 0;
 
 export const useChats = () => {
-  const [chats, setChats] = useState<Chat[]>(Object.values(dataCache.chats));
-  const [loading, setLoading] = useState(dataCache.lastFetched === null);
+  const [chats, setChats] = useState<Chat[]>(chatsCache.data);
+  const [loading, setLoading] = useState(chatsCache.lastFetched === null);
   const { user } = useAuth();
   const channelRef = useRef<any>(null);
 
@@ -37,22 +29,18 @@ export const useChats = () => {
     if (!user) {
       setChats([]);
       setLoading(false);
-      dataCache.chats = {};
-      dataCache.messages = {};
-      dataCache.coderunEvents = {};
-      dataCache.browserEvents = {};
-      dataCache.lastFetched = null;
+      chatsCache.data = [];
       return;
     }
     
     const fetchChats = async () => {
       // Skip fetching if we have recent data (within last 30 seconds)
       const shouldFetch = 
-        dataCache.lastFetched === null || 
-        Date.now() - dataCache.lastFetched > 30000;
+        chatsCache.lastFetched === null || 
+        Date.now() - chatsCache.lastFetched > 30000;
         
-      if (!shouldFetch && Object.keys(dataCache.chats).length > 0) {
-        setChats(Object.values(dataCache.chats));
+      if (!shouldFetch && chatsCache.data.length > 0) {
+        setChats(chatsCache.data);
         setLoading(false);
         return;
       }
@@ -66,15 +54,9 @@ export const useChats = () => {
 
         if (error) throw error;
 
-        // Update the normalized cache with the fresh data
-        const chatMap: Record<string, Chat> = {};
-        (data || []).forEach(chat => {
-          chatMap[chat.id] = chat;
-        });
-        
-        dataCache.chats = chatMap;
-        dataCache.lastFetched = Date.now();
-        setChats(Object.values(dataCache.chats));
+        chatsCache.data = data || [];
+        chatsCache.lastFetched = Date.now();
+        setChats(chatsCache.data);
       } catch (error: any) {
         toast({
           title: 'Error fetching chats',
@@ -93,9 +75,9 @@ export const useChats = () => {
     subscriberCount++;
     
     if (!globalChannelRef) {
-      const channelName = `global-realtime-channel-${Date.now()}`;
+      const channelName = `chats-global-channel-${Date.now()}`;
       
-      console.log('Creating new global realtime subscription channel');
+      console.log('Creating new global chats subscription channel');
       
       globalChannelRef = supabase
         .channel(channelName)
@@ -105,129 +87,21 @@ export const useChats = () => {
           (payload) => {
             console.log('Chats realtime update:', payload);
             
-            // Update normalized cache
+            // Update local cache
             if (payload.eventType === 'INSERT') {
-              dataCache.chats[payload.new.id] = payload.new as Chat;
+              chatsCache.data = [payload.new as Chat, ...chatsCache.data];
             } 
             else if (payload.eventType === 'UPDATE') {
-              dataCache.chats[payload.new.id] = { 
-                ...dataCache.chats[payload.new.id], 
-                ...payload.new as Chat 
-              };
+              chatsCache.data = chatsCache.data.map(chat => 
+                chat.id === payload.new.id ? { ...chat, ...payload.new as Chat } : chat
+              );
             } 
             else if (payload.eventType === 'DELETE') {
-              delete dataCache.chats[payload.old.id];
+              chatsCache.data = chatsCache.data.filter(chat => chat.id !== payload.old.id);
             }
             
             // Update all subscribers
-            setChats(Object.values(dataCache.chats));
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'messages' },
-          (payload) => {
-            console.log('Messages realtime update:', payload);
-            
-            // Update normalized cache for messages
-            if (payload.eventType === 'INSERT') {
-              const newMessage = payload.new as Message;
-              dataCache.messages[newMessage.id] = {
-                ...newMessage,
-                coderunEvents: []
-              };
-            } 
-            else if (payload.eventType === 'UPDATE') {
-              const updatedMessage = payload.new as Message;
-              dataCache.messages[updatedMessage.id] = { 
-                ...dataCache.messages[updatedMessage.id], 
-                ...updatedMessage,
-              };
-            } 
-            else if (payload.eventType === 'DELETE') {
-              delete dataCache.messages[payload.old.id];
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'coderun_events' },
-          (payload) => {
-            console.log('CodeRun events realtime update:', payload);
-            
-            // Update normalized cache for coderun events
-            if (payload.eventType === 'INSERT') {
-              const newEvent = payload.new as CodeRunEvent;
-              dataCache.coderunEvents[newEvent.id] = {
-                ...newEvent,
-                browserEvents: []
-              };
-              
-              // Update the parent message's coderunEvents array
-              if (newEvent.message_id && dataCache.messages[newEvent.message_id]) {
-                if (!dataCache.messages[newEvent.message_id].coderunEvents.includes(newEvent.id)) {
-                  dataCache.messages[newEvent.message_id].coderunEvents.push(newEvent.id);
-                }
-              }
-            } 
-            else if (payload.eventType === 'UPDATE') {
-              const updatedEvent = payload.new as CodeRunEvent;
-              dataCache.coderunEvents[updatedEvent.id] = { 
-                ...dataCache.coderunEvents[updatedEvent.id], 
-                ...updatedEvent 
-              };
-            } 
-            else if (payload.eventType === 'DELETE') {
-              // Remove this event from its parent message's coderunEvents array
-              const deletedEvent = payload.old as CodeRunEvent;
-              if (deletedEvent.message_id && dataCache.messages[deletedEvent.message_id]) {
-                dataCache.messages[deletedEvent.message_id].coderunEvents = 
-                  dataCache.messages[deletedEvent.message_id].coderunEvents.filter(
-                    id => id !== deletedEvent.id
-                  );
-              }
-              
-              delete dataCache.coderunEvents[payload.old.id];
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'browser_events' },
-          (payload) => {
-            console.log('Browser events realtime update:', payload);
-            
-            // Update normalized cache for browser events
-            if (payload.eventType === 'INSERT') {
-              const newEvent = payload.new as BrowserEvent;
-              dataCache.browserEvents[newEvent.id] = newEvent;
-              
-              // Update the parent coderun event's browserEvents array
-              if (newEvent.coderun_event_id && dataCache.coderunEvents[newEvent.coderun_event_id]) {
-                if (!dataCache.coderunEvents[newEvent.coderun_event_id].browserEvents.includes(newEvent.id)) {
-                  dataCache.coderunEvents[newEvent.coderun_event_id].browserEvents.push(newEvent.id);
-                }
-              }
-            } 
-            else if (payload.eventType === 'UPDATE') {
-              const updatedEvent = payload.new as BrowserEvent;
-              dataCache.browserEvents[updatedEvent.id] = { 
-                ...dataCache.browserEvents[updatedEvent.id], 
-                ...updatedEvent 
-              };
-            } 
-            else if (payload.eventType === 'DELETE') {
-              // Remove this event from its parent coderun event's browserEvents array
-              const deletedEvent = payload.old as BrowserEvent;
-              if (deletedEvent.coderun_event_id && dataCache.coderunEvents[deletedEvent.coderun_event_id]) {
-                dataCache.coderunEvents[deletedEvent.coderun_event_id].browserEvents = 
-                  dataCache.coderunEvents[deletedEvent.coderun_event_id].browserEvents.filter(
-                    id => id !== deletedEvent.id
-                  );
-              }
-              
-              delete dataCache.browserEvents[payload.old.id];
-            }
+            setChats([...chatsCache.data]);
           }
         )
         .subscribe();
@@ -240,7 +114,7 @@ export const useChats = () => {
       
       // Only remove the channel when the last subscriber unsubscribes
       if (subscriberCount === 0 && globalChannelRef) {
-        console.log('Removing global realtime subscription channel');
+        console.log('Removing global chats subscription channel');
         supabase.removeChannel(globalChannelRef);
         globalChannelRef = null;
       }
@@ -322,20 +196,12 @@ export const useChats = () => {
     }
   };
 
-  // Expose the data in the required format
   return {
     chats,
     loading,
     createChat,
     deleteChat,
     updateChatTitle,
-    // Expose the normalized data structure for components that need it
-    data: {
-      chats: dataCache.chats,
-      messages: dataCache.messages,
-      coderunEvents: dataCache.coderunEvents,
-      browserEvents: dataCache.browserEvents
-    }
   };
 };
 
@@ -357,10 +223,10 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
 export const useSelectedChat = (chatId: string | null) => {
   const [loading, setLoading] = useState(false);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
-  const { chats, data } = useChats();
+  const { chats } = useChats();
   
-  // Find the selected chat from the normalized data structure
-  const selectedChat = chatId ? data.chats[chatId] || null : null;
+  // Find the selected chat from the chats array instead of making a new query
+  const selectedChat = chatId ? chats.find(chat => chat.id === chatId) || null : null;
 
   // Update code rewriting status whenever the selected chat changes
   useEffect(() => {
@@ -373,31 +239,9 @@ export const useSelectedChat = (chatId: string | null) => {
     setCodeRewritingStatus(getCodeRewritingStatus(selectedChat));
   }, [selectedChat]);
 
-  // Get related messages for this chat
-  const getMessagesForChat = (chatId: string | null) => {
-    if (!chatId) return [];
-    
-    return Object.values(data.messages)
-      .filter(message => message.chat_id === chatId)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  };
-
-  // Get coderun events for a message
-  const getCodeRunEventsForMessage = (messageId: string) => {
-    return data.messages[messageId]?.coderunEvents.map(eventId => data.coderunEvents[eventId]) || [];
-  };
-
-  // Get browser events for a coderun event
-  const getBrowserEventsForCodeRun = (codeRunId: string) => {
-    return data.coderunEvents[codeRunId]?.browserEvents.map(eventId => data.browserEvents[eventId]) || [];
-  };
-
   return {
     selectedChat,
     loading,
-    codeRewritingStatus,
-    getMessagesForChat,
-    getCodeRunEventsForMessage,
-    getBrowserEventsForCodeRun
+    codeRewritingStatus
   };
 };
