@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, CodeRewritingStatus } from '@/types';
@@ -85,6 +86,17 @@ export const useChats = () => {
           { event: '*', schema: 'public', table: 'chats' },
           (payload) => {
             console.log('Chats realtime update:', payload);
+            
+            // Enhanced logging for code_rewrite fields
+            if (payload.eventType === 'UPDATE') {
+              const newChat = payload.new as Chat;
+              console.log(`Chat ${newChat.id} updated with:`, {
+                requires_code_rewrite: newChat.requires_code_rewrite,
+                code_approved: newChat.code_approved,
+                previous_requires_code_rewrite: (payload.old as Chat).requires_code_rewrite,
+                previous_code_approved: (payload.old as Chat).code_approved
+              });
+            }
             
             // Update local cache
             if (payload.eventType === 'INSERT') {

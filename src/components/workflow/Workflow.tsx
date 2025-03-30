@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -83,6 +84,11 @@ export const Workflow = ({
       });
     }
   }, [selectedChat]);
+
+  // Add additional logging when codeRewritingStatus changes
+  useEffect(() => {
+    console.log('Workflow codeRewritingStatus changed to:', codeRewritingStatus);
+  }, [codeRewritingStatus]);
   
   // Initialize with steps coming from props or selected chat
   useEffect(() => {
