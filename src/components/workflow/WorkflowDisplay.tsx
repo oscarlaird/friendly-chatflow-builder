@@ -3,6 +3,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
+import { nestSteps, StepNode } from "./utils/nestingUtils";
 
 interface WorkflowDisplayProps {
   steps: any[];
@@ -32,6 +33,9 @@ export const WorkflowDisplay = forwardRef<
   // Local state for user inputs
   const [inputValues, setInputValues] = useState<any>(userInputStep?.output || {});
   
+  // Create nested steps structure
+  const nestedSteps = nestSteps(steps);
+  
   // Update local inputs when userInputs change
   useEffect(() => {
     const newInputs = userInputStep?.output || {};
@@ -51,8 +55,43 @@ export const WorkflowDisplay = forwardRef<
   // Get browser events for a specific step
   const getBrowserEventsForStep = (step: any) => {
     if (step.type !== 'function' || !step.function_name) return [];
-    
     return browserEvents[step.function_name] || [];
+  };
+  
+  // Recursive component to render step nodes
+  const renderStepNode = (node: StepNode, index: number) => {
+    const hasChildren = node.children && node.children.length > 0;
+    
+    return (
+      <div key={`node-${node.step.step_number}`} className="workflow-node">
+        <WorkflowStep
+          step={node.step}
+          browserEvents={getBrowserEventsForStep(node.step)}
+          autoOpen={autoActivateSteps && node.step.active === true}
+          hasChildren={hasChildren}
+        />
+        
+        {hasChildren && (
+          <div 
+            className={`pl-6 mt-1 border-l-2 border-dashed ml-3.5 ${getControlBlockClass(node.step.type)}`}
+          >
+            {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // Helper function to get the appropriate control block class based on step type
+  const getControlBlockClass = (type: string) => {
+    switch (type) {
+      case 'for':
+        return 'border-purple-400 bg-purple-50/40 rounded-bl-lg pl-4';
+      case 'if':
+        return 'border-blue-400 bg-blue-50/40 rounded-bl-lg pl-4';
+      default:
+        return 'border-gray-300';
+    }
   };
   
   return (
@@ -72,18 +111,11 @@ export const WorkflowDisplay = forwardRef<
         </div>
       )}
       
-      {/* Display workflow steps - removed the "Workflow Steps" heading */}
-      {steps?.length > 0 ? (
+      {/* Display workflow steps using the nested structure */}
+      {nestedSteps?.length > 0 ? (
         <div className={compact ? "space-y-0.5 mb-3" : "space-y-1"}>
           <div className="space-y-0.5">
-            {steps.map((step) => (
-              <WorkflowStep
-                key={`${step.type}-${step.step_number}`}
-                step={step}
-                browserEvents={getBrowserEventsForStep(step)}
-                autoOpen={autoActivateSteps && step.active === true}
-              />
-            ))}
+            {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </div>
         </div>
       ) : null}

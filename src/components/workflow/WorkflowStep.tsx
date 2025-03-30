@@ -38,9 +38,15 @@ interface WorkflowStepProps {
   step: any;
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
+  hasChildren?: boolean;
 }
 
-export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: WorkflowStepProps) => {
+export const WorkflowStep = ({ 
+  step, 
+  browserEvents = [], 
+  autoOpen = false,
+  hasChildren = false
+}: WorkflowStepProps) => {
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
@@ -66,6 +72,13 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
   const progressValue = hasProgress 
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
+  
+  // Get appropriate control block background color
+  const getControlBackground = () => {
+    if (stepType === 'for') return 'bg-purple-50/30';
+    if (stepType === 'if') return 'bg-blue-50/30';
+    return '';
+  };
   
   const getStepTitle = () => {
     switch (stepType) {
@@ -128,7 +141,9 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
       className={cn(
         "relative mb-2 p-3",
         isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
-        isDisabled && "opacity-60 bg-muted/20"
+        isDisabled && "opacity-60 bg-muted/20",
+        (hasChildren && ['for', 'if'].includes(stepType)) && getControlBackground(),
+        (hasChildren && ['for', 'if'].includes(stepType)) && "mb-0 rounded-b-none border-b-0"
       )}
     >
       <div className="flex items-start gap-3">
@@ -190,7 +205,11 @@ export const WorkflowStep = ({ step, browserEvents = [], autoOpen = false }: Wor
               </Badge>
             )}
             
-            {/* Removed the disabled badge as requested */}
+            {hasChildren && ['for', 'if'].includes(stepType) && (
+              <Badge variant="outline" className="text-xs font-normal">
+                {step.child_count} {step.child_count === 1 ? 'step' : 'steps'}
+              </Badge>
+            )}
           </div>
           
           {getStepDescription() && (
