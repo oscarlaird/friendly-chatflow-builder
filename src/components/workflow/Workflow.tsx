@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CodeRewritingStatus, Chat } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { nestSteps } from './utils/nestingUtils';
 
 interface WorkflowProps {
   initialSteps?: any[];
@@ -69,6 +70,10 @@ export const Workflow = ({
     const stepsToUse = propSteps?.length > 0 ? propSteps : initialSteps;
     if (stepsToUse && stepsToUse.length > 0) {
       setWorkflowSteps(stepsToUse);
+      
+      // Log the nested steps structure
+      const nestedSteps = nestSteps(stepsToUse);
+      console.log('Nested steps structure:', nestedSteps);
       
       // Auto-start if indicated
       if (autoStart) {
