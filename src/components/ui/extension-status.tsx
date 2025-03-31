@@ -1,4 +1,3 @@
-
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useExtensionStatus } from '@/hooks/useExtensionStatus';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -9,8 +8,19 @@ export function ExtensionStatus() {
   
   const handleClick = () => {
     if (!isExtensionInstalled) {
-      // Replace with actual Chrome Web Store URL when available
-      window.open('https://chrome.google.com/webstore/detail/your-extension-id', '_blank');
+      // Open the Chrome Web Store in a new tab
+      let ext_install_instructions_google_doc = "https://docs.google.com/document/d/1bsP5nc0KAeq-IRD2v9RoYBVWd-hz2NtbbBRNUPbn4l4/edit?tab=t.0";
+      // window.open('https://chrome.google.com/webstore/detail/your-extension-id', '_blank');
+      window.open(ext_install_instructions_google_doc, '_blank');
+      
+      // Also download the extension.zip file
+      const downloadLink = document.createElement('a');
+      downloadLink.href = '/extension.zip';
+      downloadLink.download = 'extension.zip';
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
   };
 
