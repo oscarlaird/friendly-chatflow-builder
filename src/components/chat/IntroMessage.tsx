@@ -27,7 +27,7 @@ export const IntroMessage = () => {
             <AvatarImage src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=150&q=80" alt="Robot Avatar" />
             <AvatarFallback className="text-primary font-semibold">M</AvatarFallback>
           </Avatar>
-          <p className="text-xl font-semibold text-primary">I am Marco, your AI underling</p>
+          <p className="text-xl font-semibold text-primary">I am Macro, your AI assistant</p>
         </div>
         
         <p className="text-lg mb-5">You can teach me to do your job</p>
