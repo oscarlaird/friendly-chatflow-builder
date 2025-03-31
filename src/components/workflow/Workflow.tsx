@@ -170,6 +170,7 @@ export const Workflow = ({
                 browserEvents={browserEvents}
                 compact={compact}
                 userInputs={userInputs}
+                setUserInputs={setUserInputs}
       
               />
             )}

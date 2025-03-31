@@ -19,6 +19,7 @@ interface WorkflowStepProps {
   hasChildren?: boolean;
   isUserInputStep?: boolean;
   userInputs?: Record<string, any>;
+  setUserInputs?: (userInputs: Record<string, any>) => void;
   }
 
 export const WorkflowStep = ({ 
@@ -28,6 +29,7 @@ export const WorkflowStep = ({
   hasChildren = false,
   isUserInputStep = false,
   userInputs,
+  setUserInputs,
 }: WorkflowStepProps) => {
   // Use the store
 
@@ -167,13 +169,6 @@ export const WorkflowStep = ({
         )}
       </div>
     );
-  };
-  
-  // Handler for updating user inputs
-  const handleUserInputChange = (values: Record<string, any>) => {
-    if (isUserInputStep) {
-      updateInputValues(values);
-    }
   };
   
   return (
@@ -337,9 +332,9 @@ export const WorkflowStep = ({
                 <CollapsibleContent className="pt-1.5">
                   <KeyValueDisplay 
                     data={userInputs} 
+                    setUserInputs={setUserInputs}
                     compact={true}
                     isEditable={true}
-                    onChange={isUserInputStep ? handleUserInputChange : undefined}
                   />
                 </CollapsibleContent>
               </Collapsible>

@@ -10,6 +10,7 @@ interface WorkflowDisplayProps {
   className?: string;
   compact?: boolean;
   userInputs?: Record<string, any>;
+  setUserInputs?: (userInputs: Record<string, any>) => void;
 }
 
 export const WorkflowDisplay = ({ 
@@ -18,6 +19,7 @@ export const WorkflowDisplay = ({
   className, 
   compact = false, 
   userInputs,
+  setUserInputs,
 }: WorkflowDisplayProps) => {
 
   useEffect(() => {
@@ -60,7 +62,8 @@ export const WorkflowDisplay = ({
             autoOpen={node.step.active === true}
             hasChildren={false}
             isUserInputStep={isUserInputStep}
-            userInputs={userInputs} 
+            userInputs={isUserInputStep ? userInputs : undefined}
+            setUserInputs={isUserInputStep ? setUserInputs : undefined}
           />
         </div>
       );
@@ -84,7 +87,8 @@ export const WorkflowDisplay = ({
             autoOpen={node.step.active === true}
             hasChildren={true}
             isUserInputStep={isUserInputStep}
-            userInputs={userInputs} 
+            userInputs={isUserInputStep ? userInputs : undefined}
+            setUserInputs={isUserInputStep ? setUserInputs : undefined}
           />
           
           <div className="p-3">
