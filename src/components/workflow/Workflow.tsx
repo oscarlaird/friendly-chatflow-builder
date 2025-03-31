@@ -4,28 +4,25 @@ import { WorkflowDisplay } from './WorkflowDisplay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMessages } from '@/hooks/useMessages';
-import { supabase } from '@/integrations/supabase/client';
 import { CodeRewritingStatus, Chat } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { nestSteps } from './utils/nestingUtils';
 import { useSelectedChat } from '@/hooks/useChats';
+import { useUserInputStore } from '@/stores/useUserInputStore';
 
 interface WorkflowProps {
   initialSteps?: any[];
   steps?: any[];
   chatId?: string;
-  onStepsChange?: (steps: any[]) => void;
-  autoStart?: boolean;
-  allowRestart?: boolean;
   compact?: boolean;
   className?: string;
-  input_editable?: boolean;
 }
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
   const prevStatusRef = useRef<CodeRewritingStatus>(status);
+
   
   // Only log when status changes, not on every render
   useEffect(() => {
@@ -55,20 +52,20 @@ export const Workflow = ({
   initialSteps, 
   steps: propSteps = [],
   chatId,
-  onStepsChange, 
-  autoStart = false,
-  allowRestart = false,
   compact = false,
   className = '',
-  input_editable = false,
 }: WorkflowProps) => {
+
+  useEffect(() => {
+    console.log('RENDER - Workflow component rendered');
+  });
   // Use either initialSteps or steps prop, prioritizing steps if both are provided
   const [workflowSteps, setWorkflowSteps] = useState<any[]>(propSteps?.length > 0 ? propSteps : (initialSteps || []));
-  const [isRunning, setIsRunning] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
   
-  const workflowRef = useRef<{ getUserInputs: () => any }>(null);
+  // Use the simplified store
+  const { inputs, setInputValues, updateInputValues } = useUserInputStore();
+  
   const { sendMessage } = useMessages(chatId || null);
   
   // Log when chatId changes to help debug
@@ -100,140 +97,43 @@ export const Workflow = ({
   
   // Initialize with steps coming from props or selected chat
   useEffect(() => {
+    let stepsToUse: any[] = [];
+    
     // First priority: use prop steps if provided
     if (propSteps?.length > 0) {
-      setWorkflowSteps(propSteps);
+      stepsToUse = propSteps;
     } 
     // Second priority: use steps from the selected chat if available
     else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
-      setWorkflowSteps(selectedChat.steps);
+      stepsToUse = selectedChat.steps;
     }
     // Third priority: use initialSteps if provided
     else if (initialSteps?.length > 0) {
-      setWorkflowSteps(initialSteps);
-    } 
-    // Fallback: empty array
-    else {
-      setWorkflowSteps([]);
+      stepsToUse = initialSteps;
     }
     
-    // Log the nested steps structure when steps change
-    if (workflowSteps.length > 0) {
-      const nestedSteps = nestSteps(workflowSteps);
-      console.log('Nested steps structure:', nestedSteps);
-    }
+    setWorkflowSteps(stepsToUse);
     
-    // Auto-start if indicated
-    if (autoStart && workflowSteps.length > 0 && !isRunning) {
-      startWorkflow();
-    }
-  }, [propSteps, selectedChat, initialSteps, autoStart]);
-  
-  const startWorkflow = () => {
-    if (isRunning) return;
-    
-    setIsRunning(true);
-    setCurrentStepIndex(0);
-    
-    // Reset active state on all steps
-    const updatedSteps = workflowSteps.map(step => ({ ...step, active: false }));
-    setWorkflowSteps(updatedSteps);
-    setBrowserEvents({});
-  };
-  
-  const stopWorkflow = () => {
-    setIsRunning(false);
-    setCurrentStepIndex(-1);
-    
-    // Remove active state from all steps
-    const updatedSteps = workflowSteps.map(step => ({ ...step, active: false }));
-    setWorkflowSteps(updatedSteps);
-    
-    if (onStepsChange) {
-      onStepsChange(updatedSteps);
-    }
-  };
-  
-  // Progress workflow, showing one step every interval
-  useEffect(() => {
-    let timeoutId: any;
-    
-    if (isRunning && currentStepIndex >= 0) {
-      if (currentStepIndex < workflowSteps.length) {
-        // Update the next step to be active
-        const updatedSteps = [...workflowSteps];
-        updatedSteps[currentStepIndex] = { 
-          ...updatedSteps[currentStepIndex], 
-          active: true 
-        };
-        setWorkflowSteps(updatedSteps);
-        
-        if (onStepsChange) {
-          onStepsChange(updatedSteps);
+    // Initialize user input values from steps if applicable
+    if (stepsToUse.length > 0) {
+      const userInputStep = stepsToUse.find(step => step.type === 'user_input');
+      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+        // Only set initial values if we don't have any
+        if (Object.keys(inputs).length === 0) {
+          setInputValues(userInputStep.output);
         }
-        
-        // If this is a function step that needs browser, simulate browser events
-        const currentStep = updatedSteps[currentStepIndex];
-        if (currentStep.type === 'function' && currentStep.browser_required) {
-          simulateBrowserEvents(currentStep.function_name);
-        }
-        
-        // Progress to next step after a delay
-        timeoutId = setTimeout(() => {
-          setCurrentStepIndex(prev => prev + 1);
-        }, 1000);
-      } else {
-        // Workflow complete
-        setIsRunning(false);
-        setCurrentStepIndex(-1);
       }
     }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isRunning, currentStepIndex, workflowSteps, onStepsChange]);
+  }, [propSteps, selectedChat, initialSteps, setInputValues, inputs]);
   
-  // Simulate browser events for a function
-  const simulateBrowserEvents = (functionName: string) => {
-    if (!functionName) return;
-    
-    // Example browser event
-    const newEvent = {
-      id: `event-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      coderun_event_id: 'example-coderun-id',
-      function_name: functionName,
-      data: {
-        current_goal: `Simulating browser action for ${functionName}`,
-        browser_state: {
-          url: 'https://example.com'
-        }
-      },
-      message_id: chatId || '',
-      chat_id: chatId || '',
-      uid: ''
-    };
-    
-    // Add this event to the browser events for this function
-    setBrowserEvents(prev => {
-      const functionEvents = [...(prev[functionName] || []), newEvent];
-      return {
-        ...prev,
-        [functionName]: functionEvents
-      };
-    });
-  };
-
   const handleRunWorkflow = async () => {
     if (!chatId) return;
     
-    // Get current user inputs directly from the WorkflowDisplay component
-    const userInputs = workflowRef.current?.getUserInputs() || {};
-    
     try {
+      // Get user inputs from store
       // Send an empty message instead of "Run workflow"
-      const data = await sendMessage("", "user", "code_run", userInputs);
+      const data = await sendMessage("", "user", "code_run", inputs);
+      
       console.log("Message sent:", data);
       const messageId = data.id;
       window.postMessage({
@@ -249,7 +149,7 @@ export const Workflow = ({
   };
   
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       <div className="p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0">
         <h2 className="text-lg font-semibold">Workflow</h2>
         <div className="flex items-center gap-2">
@@ -274,12 +174,9 @@ export const Workflow = ({
               </div>
             ) : (
               <WorkflowDisplay 
-                ref={workflowRef}
                 steps={workflowSteps} 
                 browserEvents={browserEvents}
                 compact={compact}
-                input_editable={input_editable}
-                autoActivateSteps={isRunning}
               />
             )}
           </div>

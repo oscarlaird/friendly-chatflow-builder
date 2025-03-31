@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
 import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X } from "lucide-react";
@@ -10,20 +10,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { getStepIcon } from "./utils/iconUtils";
 import { formatFunctionName } from "./utils/stringUtils";
+import { useUserInputStore } from "@/stores/useUserInputStore";
+import { useParams } from "react-router-dom";
 
 interface WorkflowStepProps {
   step: any;
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
   hasChildren?: boolean;
+  isUserInputStep?: boolean;
 }
 
 export const WorkflowStep = ({ 
   step, 
   browserEvents = [], 
   autoOpen = false,
-  hasChildren = false
+  hasChildren = false,
+  isUserInputStep = false,
 }: WorkflowStepProps) => {
+  // Use the store
+  const updateInputValues = useUserInputStore(state => state.updateInputValues);
+  
+  useEffect(() => {
+    console.log('RENDER - WorkflowStep component rendered');
+  });
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
@@ -157,6 +167,13 @@ export const WorkflowStep = ({
         )}
       </div>
     );
+  };
+  
+  // Handler for updating user inputs
+  const handleUserInputChange = (values: Record<string, any>) => {
+    if (isUserInputStep) {
+      updateInputValues(values);
+    }
   };
   
   return (
@@ -298,10 +315,15 @@ export const WorkflowStep = ({
               <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
                 <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                   {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Output
+                  {isUserInputStep ? "Input Values" : "Output"}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-1.5">
-                  <KeyValueDisplay data={step.output} compact={true} />
+                  <KeyValueDisplay 
+                    data={step.output} 
+                    compact={true}
+                    isEditable={isUserInputStep}
+                    onChange={isUserInputStep ? handleUserInputChange : undefined}
+                  />
                 </CollapsibleContent>
               </Collapsible>
             )}

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, MessageSquare, Trash2, Edit, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -108,29 +107,37 @@ export const ChatList = ({ selectedChatId, onSelectChat }: ChatListProps) => {
                   <SidebarMenuButton 
                     onClick={() => onSelectChat(chat.id)}
                     isActive={selectedChatId === chat.id}
+                    className="py-4 h-auto flex-col items-start"
                   >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{chat.title}</span>
-                    <div className="ml-auto flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditChat(chat.id, chat.title);
-                        }}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleDeleteChat(e, chat.id)}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                    <div className="flex w-full items-center mb-2">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      <span className="truncate text-sm font-medium flex-1">{chat.title}</span>
+                      
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditChat(chat.id, chat.title);
+                          }}
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleDeleteChat(e, chat.id)}
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="pl-7 w-full">
+                      <span className="text-xs text-gray-400 block">ID: {chat.id}</span>
                     </div>
                   </SidebarMenuButton>
                 )}

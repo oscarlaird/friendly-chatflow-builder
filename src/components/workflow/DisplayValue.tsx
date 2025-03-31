@@ -1,136 +1,146 @@
-
-import { ReactNode, useState, useEffect } from 'react';
-import { DisplayTable } from './DisplayTable';
-import { Check, X, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-
-// Helper function to format key names
-const formatKeyName = (key: string): string => {
-  return key
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-// Helper function to check if an array contains only primitive values
-const isArrayOfPrimitives = (arr: any[]): boolean => {
-  return arr.every(item => typeof item !== 'object' || item === null);
-};
-
-// Helper function to convert an array of primitives to a table-compatible format
-const convertArrayToTableData = (arr: any[]): Record<string, any>[] => {
-  return arr.map(item => ({ value: item }));
-};
+import { ReactNode } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, X, Minus, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DisplayValueProps {
   value: any;
   className?: string;
   isEditable?: boolean;
-  onChange?: (value: any) => void;
-  path?: string;
-  originalValue?: any;
+  onValueChange?: (newValue: any) => void;
   compact?: boolean;
 }
 
-export const DisplayValue = ({ 
-  value, 
-  className, 
-  isEditable = false, 
-  onChange, 
-  path = '', 
-  originalValue,
+// Helper functions
+const isArrayOfPrimitives = (arr: any[]): boolean => {
+  return arr.every(item => typeof item !== 'object' || item === null);
+};
+
+const formatKeyName = (key: string): string => {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined) return 'None';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+};
+
+// PURE component - no internal state!
+export const DisplayValue = ({
+  value,
+  className,
+  isEditable = false,
+  onValueChange,
   compact = false
 }: DisplayValueProps): ReactNode => {
-  const [localValue, setLocalValue] = useState<any>(value);
+  // Handle primitive input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (onValueChange) {
+      onValueChange(e.target.value);
+    }
+  };
   
-  // Update local value when the prop changes
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  const handleValueChange = (newValue: any) => {
-    setLocalValue(newValue);
-    if (onChange) onChange(newValue);
-  };
-
-  const handleObjectValueChange = (key: string, newValue: any) => {
-    if (typeof localValue === 'object' && localValue !== null) {
-      const updatedValue = { ...localValue, [key]: newValue };
-      setLocalValue(updatedValue);
-      if (onChange) onChange(updatedValue);
+  // Type conversion helper
+  const convertValue = (inputValue: string, originalType: string): any => {
+    if (originalType === 'number') {
+      const num = parseFloat(inputValue);
+      return isNaN(num) ? inputValue : num;
     }
+    return inputValue;
   };
-
-  const handleArrayItemChange = (index: number, newValue: any) => {
-    if (Array.isArray(localValue)) {
-      const updatedArray = [...localValue];
-      updatedArray[index] = newValue;
-      setLocalValue(updatedArray);
-      if (onChange) onChange(updatedArray);
-    }
-  };
-
+  
   // Handle null/undefined values
-  if (localValue === null || localValue === undefined) {
+  if (value === null || value === undefined) {
     return isEditable ? 
       <Input 
         className={cn("h-8 text-sm", className)} 
         value="" 
-        onChange={(e) => handleValueChange(e.target.value)} 
+        onChange={handleInputChange} 
         placeholder="Enter value" 
-        size={20}
       /> : 
       <span className={cn("text-muted-foreground italic text-sm", className)}>None</span>;
   }
   
-  // Array of objects - likely a table - don't convert, display as-is
-  if (Array.isArray(localValue) && localValue.length > 0 && !isArrayOfPrimitives(localValue)) {
-    return (
-      <DisplayTable 
-        data={localValue} 
-        className={className} 
-        isEditable={isEditable}
-        onChange={isEditable ? handleValueChange : undefined}
-        originalData={originalValue}
-      />
-    );
+  // Primitive values
+  if (typeof value !== 'object' || value === null) {
+    if (isEditable) {
+      // Boolean values use a select
+      if (typeof value === 'boolean') {
+        return (
+          <Select 
+            value={value ? "true" : "false"}
+            onValueChange={(val) => onValueChange && onValueChange(val === "true")}
+          >
+            <SelectTrigger className={cn("h-8 text-sm", className)}>
+              <SelectValue placeholder="Select value" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">True</SelectItem>
+              <SelectItem value="false">False</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      } 
+      // Multiline strings use a textarea
+      else if (typeof value === 'string' && value.includes('\n')) {
+        return (
+          <Textarea 
+            className={cn("text-sm", className)} 
+            value={value}
+            rows={3}
+            onChange={handleInputChange}
+          />
+        );
+      } 
+      // Numbers and strings use a simple input
+      else {
+        return (
+          <Input 
+            className={cn("h-8 text-sm", className)} 
+            value={String(value)} 
+            onChange={(e) => {
+              if (onValueChange) {
+                // Convert type for numbers
+                if (typeof value === 'number') {
+                  const num = parseFloat(e.target.value);
+                  onValueChange(isNaN(num) ? e.target.value : num);
+                } else {
+                  onValueChange(e.target.value);
+                }
+              }
+            }}
+          />
+        );
+      }
+    } 
+    // Display-only for primitives
+    else {
+      if (typeof value === 'boolean') {
+        return value ? 
+          <Check className="h-4 w-4 text-green-500" /> : 
+          <X className="h-4 w-4 text-red-500" />;
+      }
+      return <span className={cn("text-sm", className)}>{String(value)}</span>;
+    }
   }
   
-  // Array of primitives - convert to a single-column table if appropriate
-  if (Array.isArray(localValue) && localValue.length > 0 && isArrayOfPrimitives(localValue)) {
-    // For small arrays of simple values, use the default array display
-    const shouldUseTable = localValue.length > 3;
-    
-    if (shouldUseTable) {
-      const tableData = convertArrayToTableData(localValue);
-      return (
-        <DisplayTable 
-          data={tableData} 
-          className={className} 
-          isEditable={isEditable}
-          onChange={isEditable ? (newData) => {
-            // Convert back from table format to array
-            handleValueChange(newData.map((item: any) => item.value));
-          } : undefined}
-          originalData={originalValue ? convertArrayToTableData(originalValue) : undefined}
-        />
-      );
-    }
-    
-    // For smaller arrays, use the simpler display
+  // For array of primitives
+  if (Array.isArray(value) && isArrayOfPrimitives(value)) {
     return (
       <div className={cn("flex flex-col gap-1", className)}>
-        {localValue.map((item, index) => (
+        {value.map((item, index) => (
           <div key={index} className="flex items-center gap-1.5">
             {isEditable && (
               <button 
                 onClick={() => {
-                  const newArray = [...localValue];
-                  newArray.splice(index, 1);
-                  handleValueChange(newArray);
+                  if (onValueChange) {
+                    const newArray = [...value];
+                    newArray.splice(index, 1);
+                    onValueChange(newArray);
+                  }
                 }}
                 className="text-muted-foreground hover:text-destructive"
               >
@@ -141,74 +151,46 @@ export const DisplayValue = ({
               <DisplayValue 
                 value={item} 
                 isEditable={isEditable}
-                onChange={(newValue) => handleArrayItemChange(index, newValue)}
-                path={`${path}[${index}]`}
-                originalValue={originalValue?.[index]}
-                compact={compact}
+                onValueChange={isEditable ? 
+                  (newVal) => {
+                    if (onValueChange) {
+                      const newArray = [...value];
+                      newArray[index] = newVal;
+                      onValueChange(newArray);
+                    }
+                  } : undefined
+                }
               />
             </div>
           </div>
         ))}
         {isEditable && (
           <button
-            className="text-xs text-muted-foreground hover:text-primary mt-1"
+            className="text-xs text-muted-foreground hover:text-primary mt-1 flex items-center"
             onClick={() => {
-              const newArray = [...localValue];
-              newArray.push(typeof localValue[0] === 'string' ? '' : 
-                           typeof localValue[0] === 'number' ? 0 :
-                           typeof localValue[0] === 'boolean' ? false : null);
-              handleValueChange(newArray);
+              if (onValueChange) {
+                // Add default value based on array type
+                const defaultValue = value.length > 0 ?
+                  (typeof value[0] === 'string' ? '' : 
+                   typeof value[0] === 'number' ? 0 :
+                   typeof value[0] === 'boolean' ? false : null) : '';
+                
+                onValueChange([...value, defaultValue]);
+              }
             }}
           >
-            + Add item
+            <Plus className="h-3 w-3 mr-1" /> Add item
           </button>
         )}
       </div>
     );
   }
   
-  // Boolean values
-  if (typeof localValue === 'boolean') {
-    return isEditable ? (
-      <Checkbox 
-        checked={localValue} 
-        onCheckedChange={handleValueChange}
-        className={className}
-      />
-    ) : (
-      localValue ? 
-        <Check className={cn("h-4 w-4 text-green-500", className)} /> : 
-        <X className={cn("h-4 w-4 text-red-500", className)} />
-    );
-  }
-  
-  // Object values (not arrays)
-  if (typeof localValue === 'object') {
-    const entries = Object.entries(localValue);
-    const useHorizontalLayout = compact && entries.length <= 3 && 
-                               !entries.some(([_, val]) => 
-                                 typeof val === 'object' && val !== null && 
-                                 !(Array.isArray(val) && val.length === 0));
+  // For nested objects with key-value pairs
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    const entries = Object.entries(value);
     
-    return useHorizontalLayout ? (
-      // Horizontal layout for simple objects with few entries
-      <div className={cn("flex flex-wrap gap-3", className)}>
-        {entries.map(([key, val]) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">{formatKeyName(key)}:</span>
-            <DisplayValue 
-              value={val} 
-              isEditable={isEditable}
-              onChange={(newValue) => handleObjectValueChange(key, newValue)}
-              path={`${path}.${key}`}
-              originalValue={originalValue?.[key]}
-              compact={true}
-            />
-          </div>
-        ))}
-      </div>
-    ) : (
-      // Vertical layout for complex objects
+    return (
       <div className={cn("flex flex-col gap-1", className)}>
         {entries.map(([key, val]) => (
           <div key={key} className="grid grid-cols-[30%_70%] items-start gap-1">
@@ -216,10 +198,14 @@ export const DisplayValue = ({
             <DisplayValue 
               value={val} 
               isEditable={isEditable}
-              onChange={(newValue) => handleObjectValueChange(key, newValue)}
-              path={`${path}.${key}`}
-              originalValue={originalValue?.[key]}
-              compact={compact}
+              onValueChange={isEditable ? 
+                (newVal) => {
+                  if (onValueChange) {
+                    const newObj = { ...value, [key]: newVal };
+                    onValueChange(newObj);
+                  }
+                } : undefined
+              }
             />
           </div>
         ))}
@@ -227,33 +213,12 @@ export const DisplayValue = ({
     );
   }
   
-  // Strings (multiline)
-  if (typeof localValue === 'string' && localValue.includes('\n') && isEditable) {
-    return (
-      <Textarea 
-        className={cn("text-sm", className)} 
-        value={localValue}
-        onChange={(e) => handleValueChange(e.target.value)}
-        rows={3}
-      />
-    );
+  // For arrays of objects, handle it differently (tables)
+  // We don't render tables here, the parent KeyValueDisplay handles that case
+  if (Array.isArray(value) && value.length > 0 && !isArrayOfPrimitives(value)) {
+    return <span className="text-sm italic">Complex data (see table)</span>;
   }
   
-  // Default case: strings, numbers, etc.
-  return isEditable ? (
-    <Input 
-      className={cn("h-8 text-sm", className)} 
-      value={String(localValue)}
-      type={typeof localValue === 'number' ? 'number' : 'text'}
-      onChange={(e) => {
-        const newValue = typeof localValue === 'number' 
-          ? parseFloat(e.target.value) 
-          : e.target.value;
-        handleValueChange(newValue);
-      }}
-      size={20}
-    />
-  ) : (
-    <span className={cn("text-sm", className)}>{String(localValue)}</span>
-  );
+  // Fallback for any other types
+  return <span className={cn("text-sm", className)}>{formatValue(value)}</span>;
 };

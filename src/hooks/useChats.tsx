@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Chat, CodeRewritingStatus } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { useToast } from '@/components/ui/use-toast';
 
 // Cache for chats data to prevent redundant fetches
 const chatsCache: {
@@ -18,10 +21,12 @@ let globalChannelRef: any = null;
 let subscriberCount = 0;
 
 export const useChats = () => {
-  const [chats, setChats] = useState<Chat[]>(chatsCache.data);
-  const [loading, setLoading] = useState(chatsCache.lastFetched === null);
   const { user } = useAuth();
-  const channelRef = useRef<any>(null);
+  const { toast } = useToast();
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const navigate = useNavigate();
 
   // Fetch all chats for the user and set up realtime subscription
   useEffect(() => {
@@ -106,6 +111,16 @@ export const useChats = () => {
               const newChat = payload.new as Chat;
               updatedChats = [newChat, ...chatsCache.data];
               chatsCache.data = updatedChats;
+              
+              // Just navigate without setting localStorage
+              navigate(`/?chatId=${newChat.id}`, { replace: true });
+              
+              // Show toast notification
+              toast({
+                title: 'Chat Created',
+                description: `"${newChat.title}" has been created successfully`,
+                duration: 2000, // 3 seconds
+              });
             } 
             else if (payload.eventType === 'UPDATE') {
               const updatedChat = payload.new as Chat;
@@ -140,7 +155,7 @@ export const useChats = () => {
         globalChannelRef = null;
       }
     };
-  }, [user]);
+  }, [user, navigate]);
 
   // Create a new chat
   const createChat = async (title: string) => {
@@ -161,7 +176,8 @@ export const useChats = () => {
 
       if (error) throw error;
       
-      // The realtime subscription will handle the state update
+      // Don't update local state - let the realtime subscription handle it
+      // Just return the data from the API call
       return data;
     } catch (error: any) {
       toast({

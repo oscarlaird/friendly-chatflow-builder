@@ -1,233 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { cn, formatText } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Minus, Check, X } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Check, X } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface DisplayTableProps {
   data: Record<string, any>[];
-  title?: string;
-  onRemove?: () => void;
   className?: string;
   maxRows?: number;
   isEditable?: boolean;
-  onChange?: (value: any) => void;
-  originalData?: Record<string, any>[];
+  onTableChange?: (newData: Record<string, any>[]) => void;
 }
 
-/**
- * Format a value for display, handling objects, arrays, and other types
- */
-const formatValue = (value: any): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  if (typeof value === 'object') {
-    try {
-      // For arrays and objects, stringify with indentation
-      return JSON.stringify(value, null, 2);
-    } catch (error) {
-      return String(value);
-    }
-  }
-  
-  // Don't convert booleans to strings here
-  if (typeof value === 'boolean') {
-    return value.toString();
-  }
-  
+// Helper function to format cell values
+const formatCellValue = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 };
 
-/**
- * Component to display tabular data with a header row and optional title
- */
-export const DisplayTable: React.FC<DisplayTableProps> = ({
+// PURE component - only state is for UI (showing full table)
+export const DisplayTable = ({
   data,
-  title,
-  onRemove,
   className,
   maxRows = 10,
   isEditable = false,
-  onChange,
-  originalData,
-}) => {
+  onTableChange
+}: DisplayTableProps) => {
+  // UI-only state, not data state
   const [showFullTable, setShowFullTable] = useState(false);
-  const [displayData, setDisplayData] = useState<Record<string, any>[]>([]);
-  const [editableData, setEditableData] = useState<Record<string, any>[]>([]);
   
-  useEffect(() => {
-    // If data has more rows than maxRows and we're not showing the full table,
-    // only display the first maxRows rows
-    if (data.length > maxRows && !showFullTable) {
-      setDisplayData(data.slice(0, maxRows));
-    } else {
-      setDisplayData(data);
-    }
+  // Calculate what data to show based on maxRows
+  const visibleData = !showFullTable && data.length > maxRows 
+    ? data.slice(0, maxRows)
+    : data;
+  
+  // Handle cell value changes
+  const handleCellChange = (rowIndex: number, column: string, inputValue: string) => {
+    if (!onTableChange) return;
     
-    // Initialize editable data
-    setEditableData(JSON.parse(JSON.stringify(data)));
-  }, [data, maxRows, showFullTable]);
-  
-  // Handle cell value change in editable mode
-  const handleCellValueChange = (rowIndex: number, column: string, value: string) => {
-    const newData = [...editableData];
+    // Create a new copy of the data
+    const newData = JSON.parse(JSON.stringify(data));
     
     try {
-      // Try to parse as JSON if it looks like an object or array
-      if ((value.startsWith('{') && value.endsWith('}')) || 
-          (value.startsWith('[') && value.endsWith(']'))) {
-        newData[rowIndex][column] = JSON.parse(value);
-      } else if (value === 'true') {
+      // Type conversion for values
+      if (inputValue === 'true') {
         newData[rowIndex][column] = true;
-      } else if (value === 'false') {
+      } else if (inputValue === 'false') {
         newData[rowIndex][column] = false;
-      } else if (!isNaN(Number(value)) && value.trim() !== '') {
-        newData[rowIndex][column] = Number(value);
+      } else if (!isNaN(Number(inputValue)) && inputValue.trim() !== '') {
+        newData[rowIndex][column] = Number(inputValue);
+      } else if ((inputValue.startsWith('{') && inputValue.endsWith('}')) || 
+                (inputValue.startsWith('[') && inputValue.endsWith(']'))) {
+        newData[rowIndex][column] = JSON.parse(inputValue);
       } else {
-        newData[rowIndex][column] = value;
+        newData[rowIndex][column] = inputValue;
       }
     } catch (e) {
-      // If parsing fails, just use the string value
-      newData[rowIndex][column] = value;
+      // If parsing fails, use the raw string
+      newData[rowIndex][column] = inputValue;
     }
     
-    setEditableData(newData);
-    
-    // Notify parent of the change
-    if (onChange) {
-      onChange(newData);
-    }
-  };
-
-  // Handle row removal
-  const handleRemoveRow = (rowIndex: number) => {
-    const newData = [...editableData];
-    newData.splice(rowIndex, 1);
-    setEditableData(newData);
-    
-    if (onChange) {
-      onChange(newData);
-    }
+    // Notify parent of change
+    onTableChange(newData);
   };
   
-  if (!data || !data.length) {
-    return null;
-  }
+  // Guard clauses for empty data
+  if (!data || data.length === 0) return null;
+  if (Object.keys(data[0]).length === 0) return null;
   
-  // For empty data arrays or data with empty objects, don't render
-  if (data.length === 0 || Object.keys(data[0]).length === 0) {
-    return null;
-  }
-  
-  const hasMoreRows = data.length > maxRows;
   const columns = Object.keys(data[0]);
+  const hasMoreRows = data.length > maxRows;
   
-  // Use the editable data when in editable mode, otherwise use the display data
-  const tableData = isEditable ? editableData : displayData;
-
-  // Render cell content based on value type
-  const renderCellContent = (value: any) => {
-    if (typeof value === 'boolean') {
-      return value ? 
-        <Check className="h-4 w-4 text-green-500" /> : 
-        <X className="h-4 w-4 text-red-500" />;
-    }
-    
-    return (
-      <pre className="whitespace-pre-wrap overflow-auto text-xs max-h-40">
-        {formatValue(value)}
-      </pre>
-    );
-  };
-
   return (
-    <div className={cn("overflow-hidden max-h-80 max-w-full border rounded-md", className)}>
-      {/* Title bar with optional title and remove button */}
-      <div className="flex items-center justify-between p-1.5 bg-muted border-b">
-        <div className="flex items-center space-x-1">
-          {onRemove && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onRemove}
-              className="h-5 w-5 text-muted-foreground hover:text-destructive"
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-          )}
-          {title && <h3 className="text-xs font-medium">{title}</h3>}
-        </div>
-        
-        <div className="flex items-center gap-1">
-          {/* Show more/less toggle button */}
-          {hasMoreRows && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFullTable(!showFullTable)}
-              className="h-5 text-xs"
-            >
-              {showFullTable ? 'Show Less' : `Show All (${data.length})`}
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {/* Table with horizontal scrolling */}
-      <ScrollArea className="max-h-[calc(80vh-40px)]">
-        <div className="overflow-x-auto max-w-full">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
-              <TableRow>
-                {isEditable && (
-                  <TableHead className="w-8 p-0"></TableHead>
-                )}
-                {columns.map((column) => (
-                  <TableHead key={column} className="whitespace-nowrap text-xs p-2">
-                    {formatText(column)}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tableData.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {isEditable && (
-                    <TableCell className="p-0 w-8">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveRow(rowIndex)}
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                    </TableCell>
+    <div className={cn("w-full overflow-x-auto", className)}>
+      <Table className="w-full border text-sm">
+        <TableHeader>
+          <TableRow>
+            {columns.map(column => (
+              <TableHead key={column} className="font-medium text-xs px-2 py-1.5">
+                {column}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {visibleData.map((row, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columns.map(column => (
+                <TableCell key={`${rowIndex}-${column}`} className="px-2 py-1">
+                  {isEditable ? (
+                    // Editable cell
+                    <Input
+                      className="h-7 text-xs w-full"
+                      value={
+                        typeof row[column] === 'object' && row[column] !== null
+                          ? JSON.stringify(row[column])
+                          : String(row[column] ?? '')
+                      }
+                      onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
+                    />
+                  ) : (
+                    // Display cell
+                    typeof row[column] === 'boolean' ? (
+                      row[column] ? 
+                        <Check className="h-4 w-4 text-green-500" /> : 
+                        <X className="h-4 w-4 text-red-500" />
+                    ) : (
+                      <div className="whitespace-pre-wrap text-sm break-words max-w-[300px]">
+                        {formatCellValue(row[column])}
+                      </div>
+                    )
                   )}
-                  {columns.map((column) => (
-                    <TableCell key={`${rowIndex}-${column}`} className="align-top p-1.5">
-                      {isEditable ? (
-                        <Input
-                          value={formatValue(row[column])}
-                          onChange={(e) => handleCellValueChange(rowIndex, column, e.target.value)}
-                          className="w-full font-mono text-xs"
-                          size={15}
-                        />
-                      ) : (
-                        renderCellContent(row[column])
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                </TableCell>
               ))}
-            </TableBody>
-          </Table>
-        </div>
-      </ScrollArea>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      
+      {hasMoreRows && (
+        <Button
+          variant="link"
+          className="text-xs mt-1 h-6 p-0"
+          onClick={() => setShowFullTable(!showFullTable)}
+        >
+          {showFullTable ? "Show less" : `Show all (${data.length} rows)`}
+        </Button>
+      )}
     </div>
   );
 };

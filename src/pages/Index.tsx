@@ -23,8 +23,6 @@ const SidebarIcon = () => {
   return open ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />;
 };
 
-const SELECTED_CHAT_STORAGE_KEY = 'selected_chat_id';
-
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -33,17 +31,16 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const chatIdFromUrl = searchParams.get('chatId');
   
-  // Function to update both state and URL
+  // Function to update both state and URL without localStorage
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
-    localStorage.setItem(SELECTED_CHAT_STORAGE_KEY, chatId); // Store in localStorage instead of cookies
     navigate(`/?chatId=${chatId}`, { replace: true });
   };
   
-  // Handle initial load - prioritize URL param, then localStorage
+  // Handle initial load - only use URL param, remove localStorage logic
   useEffect(() => {
     if (!chatsLoading && chats.length > 0) {
-      // Check URL parameter first
+      // Check URL parameter
       if (chatIdFromUrl) {
         // Verify the chat exists before selecting it
         const chatExists = chats.some(chat => chat.id === chatIdFromUrl);
@@ -53,18 +50,7 @@ const Index = () => {
         }
       }
       
-      // If no URL param or invalid, try localStorage
-      const savedChatId = localStorage.getItem(SELECTED_CHAT_STORAGE_KEY);
-      if (savedChatId) {
-        const chatExists = chats.some(chat => chat.id === savedChatId);
-        if (chatExists) {
-          setSelectedChatId(savedChatId);
-          navigate(`/?chatId=${savedChatId}`, { replace: true });
-          return;
-        }
-      }
-      
-      // If no valid localStorage, select most recent chat
+      // If no valid URL param, select most recent chat
       const sortedChats = [...chats].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
