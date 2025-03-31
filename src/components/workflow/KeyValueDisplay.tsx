@@ -29,47 +29,39 @@ export const KeyValueDisplay = ({
   onRemove,
   compact = false
 }: KeyValueDisplayProps) => {
+
   useEffect(() => {
     console.log('RENDER - KeyValueDisplay component rendered');
+    if(isEditable) {
+      console.log('data', data);
+    }
   });
   // This is our SINGLE source of truth - only state in the system
-  const [editedData, setEditedData] = useState<Record<string, any>>({});
-  const isMobile = useIsMobile();
-  
-  // Initialize/reset edited data when the input data changes
-  useEffect(() => {
-    setEditedData(JSON.parse(JSON.stringify(data || {})));
-  }, [data]);
-  
+
   // Handler for all value changes from any child component
   const handleValueChange = (key: string, value: any) => {
-    const newData = { ...editedData, [key]: value };
-    setEditedData(newData);
-    
-    if (onChange) {
-      onChange(newData);
-    }
+    data[key] = value;
+    console.log('data changed', data);
   };
   
   // Reset handler
   const handleReset = () => {
     const resetData = JSON.parse(JSON.stringify(data || {}));
-    setEditedData(resetData);
     if (onChange) {
       onChange(resetData);
     }
   };
   
   // Guard clause for empty data
-  if (!editedData || Object.keys(editedData).length === 0) {
+  if (!data || Object.keys(data).length === 0) {
     return null;
   }
   
   // Special case for single values that are arrays of objects (render as table)
-  const keys = Object.keys(editedData);
+  const keys = Object.keys(data);
   if (keys.length === 1) {
     const singleKey = keys[0];
-    const singleValue = editedData[singleKey];
+    const singleValue = data[singleKey];
     
     if (Array.isArray(singleValue) && singleValue.length > 0 && 
         typeof singleValue[0] === 'object' && singleValue[0] !== null) {
@@ -129,7 +121,7 @@ export const KeyValueDisplay = ({
       )}
       <CardContent className={compact ? "p-2" : "p-3"}>
         <div className="space-y-3">
-          {Object.entries(editedData).map(([key, value]) => (
+          {Object.entries(data).map(([key, value]) => (
             <div key={key}>
               <label className="font-medium text-sm text-muted-foreground block mb-1">
                 {formatKeyName(key)}:

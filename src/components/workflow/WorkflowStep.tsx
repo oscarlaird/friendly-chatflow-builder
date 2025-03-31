@@ -10,7 +10,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { getStepIcon } from "./utils/iconUtils";
 import { formatFunctionName } from "./utils/stringUtils";
-import { useUserInputStore } from "@/stores/useUserInputStore";
 import { useParams } from "react-router-dom";
 
 interface WorkflowStepProps {
@@ -19,7 +18,8 @@ interface WorkflowStepProps {
   autoOpen?: boolean;
   hasChildren?: boolean;
   isUserInputStep?: boolean;
-}
+  userInputs?: Record<string, any>;
+  }
 
 export const WorkflowStep = ({ 
   step, 
@@ -27,10 +27,10 @@ export const WorkflowStep = ({
   autoOpen = false,
   hasChildren = false,
   isUserInputStep = false,
+  userInputs,
 }: WorkflowStepProps) => {
   // Use the store
-  const updateInputValues = useUserInputStore(state => state.updateInputValues);
-  
+
   useEffect(() => {
     console.log('RENDER - WorkflowStep component rendered');
   });
@@ -43,8 +43,8 @@ export const WorkflowStep = ({
   const isActive = step.active || false;
   const isDisabled = step.disabled || false;
   
-  const hasInput = step.input && Object.keys(step.input).length > 0;
-  const hasOutput = step.output && Object.keys(step.output).length > 0;
+  const hasInput = step.input && Object.keys(step.input).length > 0 && !isUserInputStep;
+  const hasOutput = step.output && Object.keys(step.output).length > 0 && !isUserInputStep;
   const hasBrowserEvents = browserEvents.length > 0;
   const hasControlValue = stepType === 'for' && step.control_value !== undefined;
   const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
@@ -315,13 +315,30 @@ export const WorkflowStep = ({
               <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
                 <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                   {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  {isUserInputStep ? "Input Values" : "Output"}
+                  Output
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-1.5">
                   <KeyValueDisplay 
                     data={step.output} 
                     compact={true}
                     isEditable={isUserInputStep}
+                  
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+{isUserInputStep && (
+              <Collapsible >
+                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  Input Values
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-1.5">
+                  <KeyValueDisplay 
+                    data={userInputs} 
+                    compact={true}
+                    isEditable={true}
                     onChange={isUserInputStep ? handleUserInputChange : undefined}
                   />
                 </CollapsibleContent>

@@ -9,10 +9,9 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { nestSteps } from './utils/nestingUtils';
 import { useSelectedChat } from '@/hooks/useChats';
-import { useUserInputStore } from '@/stores/useUserInputStore';
+
 
 interface WorkflowProps {
-  initialSteps?: any[];
   steps?: any[];
   chatId?: string;
   compact?: boolean;
@@ -49,8 +48,8 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
 };
 
 export const Workflow = ({ 
-  initialSteps, 
-  steps: propSteps = [],
+ 
+  steps= [],
   chatId,
   compact = false,
   className = '',
@@ -60,12 +59,11 @@ export const Workflow = ({
     console.log('RENDER - Workflow component rendered');
   });
   // Use either initialSteps or steps prop, prioritizing steps if both are provided
-  const [workflowSteps, setWorkflowSteps] = useState<any[]>(propSteps?.length > 0 ? propSteps : (initialSteps || []));
+  const [workflowSteps, setWorkflowSteps] = useState<any[]>(steps);
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
   
-  // Use the simplified store
-  const { inputs, setInputValues, updateInputValues } = useUserInputStore();
-  
+ 
+  const [userInputs, setUserInputs] = useState<Record<string, any>>({});
   const { sendMessage } = useMessages(chatId || null);
   
   // Log when chatId changes to help debug
@@ -99,19 +97,12 @@ export const Workflow = ({
   useEffect(() => {
     let stepsToUse: any[] = [];
     
-    // First priority: use prop steps if provided
-    if (propSteps?.length > 0) {
-      stepsToUse = propSteps;
-    } 
+
     // Second priority: use steps from the selected chat if available
-    else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
+    if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
       stepsToUse = selectedChat.steps;
     }
-    // Third priority: use initialSteps if provided
-    else if (initialSteps?.length > 0) {
-      stepsToUse = initialSteps;
-    }
-    
+      
     setWorkflowSteps(stepsToUse);
     
     // Initialize user input values from steps if applicable
@@ -119,20 +110,21 @@ export const Workflow = ({
       const userInputStep = stepsToUse.find(step => step.type === 'user_input');
       if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
         // Only set initial values if we don't have any
-        if (Object.keys(inputs).length === 0) {
-          setInputValues(userInputStep.output);
+        if (Object.keys(userInputs).length === 0) {
+          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
         }
       }
     }
-  }, [propSteps, selectedChat, initialSteps, setInputValues, inputs]);
+  }, [selectedChat]);
   
   const handleRunWorkflow = async () => {
+    console.log('handleRunWorkflow - userInputs', userInputs);
     if (!chatId) return;
     
     try {
       // Get user inputs from store
       // Send an empty message instead of "Run workflow"
-      const data = await sendMessage("", "user", "code_run", inputs);
+      const data = await sendMessage("", "user", "code_run", userInputs);
       
       console.log("Message sent:", data);
       const messageId = data.id;
@@ -177,6 +169,8 @@ export const Workflow = ({
                 steps={workflowSteps} 
                 browserEvents={browserEvents}
                 compact={compact}
+                userInputs={userInputs}
+      
               />
             )}
           </div>

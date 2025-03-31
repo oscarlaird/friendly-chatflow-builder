@@ -9,6 +9,7 @@ interface WorkflowDisplayProps {
   browserEvents?: Record<string, BrowserEvent[]>;
   className?: string;
   compact?: boolean;
+  userInputs?: Record<string, any>;
 }
 
 export const WorkflowDisplay = ({ 
@@ -16,6 +17,7 @@ export const WorkflowDisplay = ({
   browserEvents = {}, 
   className, 
   compact = false, 
+  userInputs,
 }: WorkflowDisplayProps) => {
 
   useEffect(() => {
@@ -58,6 +60,7 @@ export const WorkflowDisplay = ({
             autoOpen={node.step.active === true}
             hasChildren={false}
             isUserInputStep={isUserInputStep}
+            userInputs={userInputs} 
           />
         </div>
       );
@@ -81,6 +84,7 @@ export const WorkflowDisplay = ({
             autoOpen={node.step.active === true}
             hasChildren={true}
             isUserInputStep={isUserInputStep}
+            userInputs={userInputs} 
           />
           
           <div className="p-3">
