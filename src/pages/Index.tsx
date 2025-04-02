@@ -56,7 +56,7 @@ const Index = () => {
       );
       handleSelectChat(sortedChats[0].id);
     }
-  }, [chats, chatsLoading, chatIdFromUrl, navigate]);
+  }, [chats, chatsLoading]);
 
   if (loading) {
     return (
