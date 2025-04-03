@@ -119,12 +119,12 @@ export const Workflow = ({
       const userInputStep = stepsToUse.find(step => step.type === 'user_input');
       if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
         // Only set initial values if we don't have any
-        if (Object.keys(userInputs).length === 0) {
-          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
-        }
+        setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
+        
       }
     }
-  }, [selectedChat, steps, initialSteps]);
+   
+  }, [selectedChat]);
   
   const handleRunWorkflow = async () => {
     console.log('handleRunWorkflow - userInputs', userInputs);
