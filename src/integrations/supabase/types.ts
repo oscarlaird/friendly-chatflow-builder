@@ -329,6 +329,7 @@ export type Database = {
           access_token: string | null
           auth_code: string | null
           created_at: string
+          error: string | null
           expires_at: string | null
           id: number
           provider: string | null
@@ -342,6 +343,7 @@ export type Database = {
           access_token?: string | null
           auth_code?: string | null
           created_at?: string
+          error?: string | null
           expires_at?: string | null
           id?: number
           provider?: string | null
@@ -355,6 +357,7 @@ export type Database = {
           access_token?: string | null
           auth_code?: string | null
           created_at?: string
+          error?: string | null
           expires_at?: string | null
           id?: number
           provider?: string | null

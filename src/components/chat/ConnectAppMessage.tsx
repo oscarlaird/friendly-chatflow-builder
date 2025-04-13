@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 
 // Define available apps and their configurations
 const APP_CONFIG = {
@@ -17,18 +18,21 @@ const APP_CONFIG = {
     icon: FileSpreadsheet,
     scope: 'https://www.googleapis.com/auth/spreadsheets',
     color: 'bg-green-600 hover:bg-green-700',
+    disabledColor: 'bg-green-600/50',
   },
   gmail: {
     name: 'Gmail',
     icon: Mail,
     scope: 'https://www.googleapis.com/auth/gmail.modify',
     color: 'bg-red-600 hover:bg-red-700',
+    disabledColor: 'bg-red-600/50',
   },
   outlook: {
     name: 'Outlook',
     icon: Mail,
     scope: 'offline_access mail.read mail.send',
     color: 'bg-blue-600 hover:bg-blue-700',
+    disabledColor: 'bg-blue-600/50',
   },
 };
 
@@ -43,73 +47,10 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [connectingApp, setConnectingApp] = useState<string | null>(null);
-  const [connectedApps, setConnectedApps] = useState<Record<string, boolean>>({});
+  const { isAppConnected, loading: connectionsLoading } = useOAuthConnections();
   
   // Parse apps from the message
   const apps = message.apps ? message.apps.split(',').map(app => app.trim()) : [];
-  
-  // Check if specific apps are already connected
-  const checkAppConnection = async (appName: string) => {
-    if (!user) return false;
-    
-    try {
-      const { data, error } = await supabase
-        .from('oauth_sessions')
-        .select('*')
-        .eq('uid', user.id)
-        .eq('provider', appName)
-        .eq('status', 'active')
-        .maybeSingle();
-        
-      if (error) throw error;
-      
-      return !!data;
-    } catch (error) {
-      console.error(`Error checking ${appName} connection:`, error);
-      return false;
-    }
-  };
-  
-  // Check connection status for all apps when component mounts or user changes
-  useEffect(() => {
-    if (!user) return;
-    
-    const checkAllApps = async () => {
-      const connectionStatus: Record<string, boolean> = {};
-      
-      for (const app of apps) {
-        connectionStatus[app] = await checkAppConnection(app);
-      }
-      
-      setConnectedApps(connectionStatus);
-    };
-    
-    checkAllApps();
-    
-    // Add event listener for OAuth success message
-    const handleOAuthMessage = (event: MessageEvent) => {
-      if (
-        event.origin === window.location.origin && 
-        event.data && 
-        event.data.type === 'OAUTH_SUCCESS' && 
-        event.data.provider
-      ) {
-        // Update the connection status when OAuth succeeds
-        setConnectedApps(prev => ({
-          ...prev,
-          [event.data.provider]: true
-        }));
-        setConnectingApp(null);
-        
-        const appName = APP_CONFIG[event.data.provider as keyof typeof APP_CONFIG]?.name || event.data.provider;
-        toast.success(`${appName} connected successfully`);
-      }
-    };
-    
-    window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
-    
-  }, [user, apps]);
   
   // Handle OAuth flow initiation
   const handleConnectApp = (appName: string) => {
@@ -190,6 +131,40 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
     }
   };
   
+  // Add event listener for OAuth success message from the popup window
+  useEffect(() => {
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (
+        event.origin === window.location.origin && 
+        event.data && 
+        event.data.type === 'OAUTH_SUCCESS' && 
+        event.data.provider
+      ) {
+        // Reset connecting state
+        setConnectingApp(null);
+        
+        const appName = APP_CONFIG[event.data.provider as keyof typeof APP_CONFIG]?.name || event.data.provider;
+        toast.success(`${appName} connected successfully`);
+      }
+    };
+    
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+  
+  if (connectionsLoading) {
+    return (
+      <div className="flex justify-center mb-4 w-full">
+        <Card className="w-full max-w-[95%] p-4">
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading connection status...</span>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className="w-full max-w-[95%] p-4">
@@ -206,12 +181,12 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
               
               const AppIcon = app.icon;
               const isConnecting = connectingApp === appName;
-              const isConnected = connectedApps[appName];
+              const isConnected = isAppConnected(appName);
               
               return (
                 <Button
                   key={appName}
-                  className={`${app.color} gap-2`}
+                  className={isConnected ? app.disabledColor : app.color + " gap-2"}
                   disabled={isConnecting || isConnected}
                   onClick={() => handleConnectApp(appName)}
                 >

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +17,7 @@ import { useChats } from '@/hooks/useChats';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ExtensionStatus } from '@/components/ui/extension-status';
 import { UserProfile } from '@/components/ui/user-profile';
+import { ConnectedApps } from '@/components/ui/ConnectedApps';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -100,6 +102,7 @@ const Index = () => {
               {selectedChatId ? 'Chat' : 'Select or create a chat'}
             </h2>
             <div className="flex items-center space-x-3">
+              <ConnectedApps />
               <ExtensionStatus />
               <ThemeToggle />
               <UserProfile />
