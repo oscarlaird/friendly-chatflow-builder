@@ -10,9 +10,13 @@ export const AuthCallback = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing authentication...');
   const [appName, setAppName] = useState('');
+  const [processingComplete, setProcessingComplete] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
+    // Only run this effect once
+    if (processingComplete) return;
+    
     const processOAuthCallback = async () => {
       try {
         console.log("AuthCallback: Starting OAuth callback processing...");
@@ -58,6 +62,7 @@ export const AuthCallback = () => {
           setTimeout(() => {
             navigate('/auth', { replace: true });
           }, 3000);
+          setProcessingComplete(true);
           return;
         }
         
@@ -86,20 +91,33 @@ export const AuthCallback = () => {
         
         console.log("AuthCallback: Storing auth code for user:", currentUser.id);
         
-        // Store the auth code in Supabase
-        const { error } = await supabase
+        // Check if this code has already been stored for this user and provider
+        const { data: existingSession } = await supabase
           .from('oauth_sessions')
-          .insert({
-            uid: currentUser.id,
-            auth_code: code,
-            status: 'pending',
-            provider: provider,
-            scopes: scopes
-          });
-        
-        if (error) {
-          console.error("AuthCallback: Database error:", error);
-          throw error;
+          .select('*')
+          .eq('uid', currentUser.id)
+          .eq('provider', provider)
+          .eq('auth_code', code)
+          .maybeSingle();
+          
+        if (existingSession) {
+          console.log("AuthCallback: This auth code is already stored, skipping insertion");
+        } else {
+          // Store the auth code in Supabase
+          const { error } = await supabase
+            .from('oauth_sessions')
+            .insert({
+              uid: currentUser.id,
+              auth_code: code,
+              status: 'pending',
+              provider: provider,
+              scopes: scopes
+            });
+          
+          if (error) {
+            console.error("AuthCallback: Database error:", error);
+            throw error;
+          }
         }
         
         // Everything went well
@@ -119,10 +137,12 @@ export const AuthCallback = () => {
         setStatus('error');
         setMessage(error.message || 'Failed to complete authentication');
       }
+      
+      setProcessingComplete(true);
     };
     
     processOAuthCallback();
-  }, [user, navigate]);
+  }, [user, navigate, processingComplete]);
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
