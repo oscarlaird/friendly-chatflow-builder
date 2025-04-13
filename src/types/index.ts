@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email?: string;
@@ -10,7 +9,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   created_at: string;
-  type: 'text_message' | 'code_run' | 'screen_recording';
+  type: 'text_message' | 'code_run' | 'screen_recording' | 'connect_app';
   coderunEvents: string[];
   // Additional fields from Supabase schema
   code_output?: any;
@@ -24,6 +23,7 @@ export interface Message {
   code_run_state?: 'stopped' | 'paused' | 'running' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed'; // Updated field for code run state
   model_cost?: number; // Added model cost field
   code_run_error?: string; // Added code run error field
+  apps?: string; // Added apps field for connect_app message type
 }
 
 export interface Chat {
@@ -83,6 +83,23 @@ export interface DataState {
   browserEvents: {
     [eventId: string]: BrowserEvent;
   };
+}
+
+export interface WorkflowProps {
+  steps?: any[];
+  initialSteps?: any[]; // Added initialSteps to the interface
+  chatId?: string;
+  compact?: boolean;
+  className?: string;
+}
+
+export interface WorkflowDisplayProps {
+  steps: any[];
+  browserEvents?: Record<string, any[]>;
+  compact?: boolean;
+  userInputs?: Record<string, any>;
+  setUserInputs?: (inputs: Record<string, any>) => void;
+  autoActivateSteps?: boolean;
 }
 
 export type CodeRewritingStatus = 'thinking' | 'rewriting_code' | 'done';

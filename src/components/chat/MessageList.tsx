@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ConnectAppMessage } from './ConnectAppMessage';
 import { formatDistanceToNow } from 'date-fns';
 
 // Define the interface for MessageList props
@@ -502,6 +503,8 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
         );
       case 'screen_recording':
         return <ScreenRecordingBubble key={message.id} message={message} />;
+      case 'connect_app':
+        return <ConnectAppMessage key={message.id} message={message} />;
       default:
         return <TextMessageBubble key={message.id} message={message} />;
     }
