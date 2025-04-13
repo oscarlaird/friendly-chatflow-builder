@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel, 
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
-import { Chrome, Mail, FileSpreadsheet, Link2 } from 'lucide-react';
+import { Chrome, Mail, FileSpreadsheet, Link2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // App configuration with proper icons
@@ -35,8 +35,18 @@ const APP_CONFIG = {
 export function ConnectedApps() {
   const { connectedApps, loading } = useOAuthConnections();
   
+  // Log the connected apps for debugging
+  useEffect(() => {
+    console.log('ConnectedApps component - connected apps:', connectedApps);
+  }, [connectedApps]);
+  
   if (loading) {
-    return null;
+    return (
+      <Button variant="ghost" size="sm" className="flex items-center gap-2 h-auto py-1 px-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-sm whitespace-nowrap">Loading apps...</span>
+      </Button>
+    );
   }
   
   if (connectedApps.length === 0) {
@@ -59,7 +69,10 @@ export function ConnectedApps() {
         <DropdownMenuSeparator />
         {connectedApps.map((app) => {
           const appConfig = APP_CONFIG[app.provider as keyof typeof APP_CONFIG];
-          if (!appConfig) return null;
+          if (!appConfig) {
+            console.log('No config found for app provider:', app.provider);
+            return null;
+          }
           
           const AppIcon = appConfig.icon;
           

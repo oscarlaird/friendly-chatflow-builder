@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export type ConnectedApp = {
   provider: string;
@@ -36,6 +37,7 @@ export function useOAuthConnections() {
           return;
         }
 
+        console.log('Initial OAuth connections fetch:', data);
         setConnectedApps(data || []);
       } finally {
         setLoading(false);
@@ -61,10 +63,20 @@ export function useOAuthConnections() {
           // Handle different change types
           if (payload.eventType === 'INSERT') {
             setConnectedApps(prev => [...prev, payload.new as ConnectedApp]);
+            
+            if (payload.new.status === 'connected') {
+              toast.success(`${payload.new.provider} connected successfully`);
+            }
           } else if (payload.eventType === 'UPDATE') {
             setConnectedApps(prev => 
               prev.map(app => app.id === payload.new.id ? payload.new as ConnectedApp : app)
             );
+            
+            // Show toast when an app becomes connected
+            if (payload.new.status === 'connected' && payload.old.status !== 'connected') {
+              const appName = payload.new.provider.replace('_', ' ');
+              toast.success(`${appName} connected successfully`);
+            }
           } else if (payload.eventType === 'DELETE') {
             setConnectedApps(prev => 
               prev.filter(app => app.id !== payload.old.id)
@@ -81,12 +93,12 @@ export function useOAuthConnections() {
 
   const isAppConnected = (appName: string) => {
     return connectedApps.some(app => 
-      app.provider === appName && app.status === 'active'
+      app.provider === appName && app.status === 'connected'
     );
   };
 
   return {
-    connectedApps: connectedApps.filter(app => app.status === 'active'),
+    connectedApps: connectedApps.filter(app => app.status === 'connected'),
     isAppConnected,
     loading
   };

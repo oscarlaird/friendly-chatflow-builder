@@ -52,6 +52,16 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
   // Parse apps from the message
   const apps = message.apps ? message.apps.split(',').map(app => app.trim()) : [];
   
+  // Log connection status for debugging
+  useEffect(() => {
+    if (!connectionsLoading && apps.length > 0) {
+      console.log('ConnectAppMessage - Apps connection status:');
+      apps.forEach(app => {
+        console.log(`${app}: ${isAppConnected(app) ? 'Connected' : 'Not connected'}`);
+      });
+    }
+  }, [connectionsLoading, isAppConnected, apps]);
+
   // Handle OAuth flow initiation
   const handleConnectApp = (appName: string) => {
     if (!user) {
@@ -59,6 +69,13 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
         description: 'Please sign in to connect applications',
       });
       navigate('/auth');
+      return;
+    }
+    
+    // Check if the app is already connected
+    if (isAppConnected(appName)) {
+      const appConfig = APP_CONFIG[appName as keyof typeof APP_CONFIG];
+      toast.info(`${appConfig?.name || appName} is already connected`);
       return;
     }
     
@@ -182,6 +199,8 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
               const AppIcon = app.icon;
               const isConnecting = connectingApp === appName;
               const isConnected = isAppConnected(appName);
+              
+              console.log(`Rendering button for ${appName}, connected: ${isConnected}`);
               
               return (
                 <Button
