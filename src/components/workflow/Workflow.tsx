@@ -98,17 +98,8 @@ export const Workflow = ({
   // Initialize with steps coming from props or selected chat
   useEffect(() => {
     let stepsToUse: any[] = [];
-    
-    // First priority: use explicitly passed steps
-    if (steps && steps.length > 0) {
-      stepsToUse = steps;
-    }
-    // Second priority: use initialSteps
-    else if (initialSteps && initialSteps.length > 0) {
-      stepsToUse = initialSteps;
-    }
-    // Third priority: use steps from the selected chat if available
-    else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
+
+    if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
       stepsToUse = selectedChat.steps;
     }
       

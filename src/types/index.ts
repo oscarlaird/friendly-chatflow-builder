@@ -34,6 +34,7 @@ export interface Chat {
   is_example?: boolean;
   steps?: any;
   script?: string;
+  response_id?: string;
   requires_code_rewrite?: boolean | null;
   code_approved?: boolean;
   model_cost?: number; // Added model cost field
