@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Check, XCircle, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const AuthCallback = () => {
   const { user } = useAuth();
@@ -12,18 +12,23 @@ export const AuthCallback = () => {
   const [appName, setAppName] = useState('');
   const [processingComplete, setProcessingComplete] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    // Only run this effect once
+    // Use a flag to ensure this callback only processes once
     if (processingComplete) return;
     
-    const processOAuthCallback = async () => {
+    // Set a flag to track if this callback has been processed
+    const processOAuthCallbackOnce = async () => {
+      // Set processing complete immediately to prevent duplicate processing
+      setProcessingComplete(true);
+      
       try {
         console.log("AuthCallback: Starting OAuth callback processing...");
         console.log("AuthCallback: Current user state:", user);
         
-        // Get the code from the URL
-        const urlParams = new URLSearchParams(window.location.search);
+        // Get the code from the URL - use URLSearchParams with location.search
+        const urlParams = new URLSearchParams(location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         
@@ -62,7 +67,6 @@ export const AuthCallback = () => {
           setTimeout(() => {
             navigate('/auth', { replace: true });
           }, 3000);
-          setProcessingComplete(true);
           return;
         }
         
@@ -89,10 +93,10 @@ export const AuthCallback = () => {
         
         setAppName(displayName);
         
-        console.log("AuthCallback: Storing auth code for user:", currentUser.id);
+        console.log("AuthCallback: Checking for existing sessions for user:", currentUser.id);
         
         // Check if this code has already been stored for this user and provider
-        const { data: existingSession } = await supabase
+        const { data: existingSession, error: checkError } = await supabase
           .from('oauth_sessions')
           .select('*')
           .eq('uid', currentUser.id)
@@ -100,11 +104,16 @@ export const AuthCallback = () => {
           .eq('auth_code', code)
           .maybeSingle();
           
+        if (checkError) {
+          console.error("AuthCallback: Error checking for existing sessions:", checkError);
+        }
+        
         if (existingSession) {
           console.log("AuthCallback: This auth code is already stored, skipping insertion");
         } else {
+          console.log("AuthCallback: Inserting new auth code");
           // Store the auth code in Supabase
-          const { error } = await supabase
+          const { error: insertError } = await supabase
             .from('oauth_sessions')
             .insert({
               uid: currentUser.id,
@@ -114,9 +123,9 @@ export const AuthCallback = () => {
               scopes: scopes
             });
           
-          if (error) {
-            console.error("AuthCallback: Database error:", error);
-            throw error;
+          if (insertError) {
+            console.error("AuthCallback: Database error:", insertError);
+            throw insertError;
           }
         }
         
@@ -137,12 +146,12 @@ export const AuthCallback = () => {
         setStatus('error');
         setMessage(error.message || 'Failed to complete authentication');
       }
-      
-      setProcessingComplete(true);
     };
     
-    processOAuthCallback();
-  }, [user, navigate, processingComplete]);
+    // Execute immediately but only once
+    processOAuthCallbackOnce();
+    
+  }, [user, navigate, processingComplete, location.search]);
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
