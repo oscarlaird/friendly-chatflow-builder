@@ -1,6 +1,5 @@
-
-import { useState } from 'react';
-import { Google, Mail, FileSpreadsheet, Check, Loader2, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Chrome, Mail, FileSpreadsheet, Check, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
