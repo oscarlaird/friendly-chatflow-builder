@@ -8,6 +8,7 @@ export type ConnectedApp = {
   provider: string;
   status: string;
   id: number;
+  scopes?: string[];
 };
 
 export function useOAuthConnections() {
@@ -29,7 +30,7 @@ export function useOAuthConnections() {
       try {
         const { data, error } = await supabase
           .from('oauth_sessions')
-          .select('id, provider, status')
+          .select('id, provider, status, scopes')
           .eq('uid', user.id);
 
         if (error) {

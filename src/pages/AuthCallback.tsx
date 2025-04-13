@@ -78,17 +78,17 @@ export const AuthCallback = () => {
         
         // Set provider-specific app name for display
         let displayName = 'App';
-        let scopes = '';
+        let scopes: string[] = [];
         
         if (provider === 'google_sheets') {
           displayName = 'Google Sheets';
-          scopes = 'https://www.googleapis.com/auth/spreadsheets';
+          scopes = ['https://www.googleapis.com/auth/spreadsheets'];
         } else if (provider === 'gmail') {
           displayName = 'Gmail';
-          scopes = 'https://www.googleapis.com/auth/gmail.modify';
+          scopes = ['https://www.googleapis.com/auth/gmail.modify'];
         } else if (provider === 'outlook') {
           displayName = 'Outlook';
-          scopes = 'offline_access mail.read mail.send';
+          scopes = ['offline_access', 'mail.read', 'mail.send'];
         }
         
         setAppName(displayName);

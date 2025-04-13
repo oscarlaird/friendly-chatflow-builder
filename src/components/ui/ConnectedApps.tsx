@@ -80,6 +80,11 @@ export function ConnectedApps() {
             <DropdownMenuItem key={app.id} className={appConfig.color + " rounded-md mb-1"}>
               <AppIcon className="mr-2 h-4 w-4" />
               <span>{appConfig.name}</span>
+              {app.scopes && app.scopes.length > 0 && (
+                <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]" title={app.scopes.join(', ')}>
+                  {app.scopes.length > 1 ? `${app.scopes.length} scopes` : app.scopes[0].split('/').pop()}
+                </span>
+              )}
             </DropdownMenuItem>
           );
         })}

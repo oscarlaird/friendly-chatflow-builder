@@ -16,21 +16,21 @@ const APP_CONFIG = {
   google_sheets: {
     name: 'Google Sheets',
     icon: FileSpreadsheet,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     color: 'bg-green-600 hover:bg-green-700',
     disabledColor: 'bg-green-600/50',
   },
   gmail: {
     name: 'Gmail',
     icon: Mail,
-    scope: 'https://www.googleapis.com/auth/gmail.modify',
+    scopes: ['https://www.googleapis.com/auth/gmail.modify'],
     color: 'bg-red-600 hover:bg-red-700',
     disabledColor: 'bg-red-600/50',
   },
   outlook: {
     name: 'Outlook',
     icon: Mail,
-    scope: 'offline_access mail.read mail.send',
+    scopes: ['offline_access', 'mail.read', 'mail.send'],
     color: 'bg-blue-600 hover:bg-blue-700',
     disabledColor: 'bg-blue-600/50',
   },
@@ -103,7 +103,7 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
         authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + 
           `client_id=${GOOGLE_CLIENT_ID}&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `scope=${encodeURIComponent(app.scope)}&` +
+          `scope=${encodeURIComponent(app.scopes.join(' '))}&` +
           `state=${state}&` +
           'response_type=code&' +
           'access_type=offline&' +
@@ -114,7 +114,7 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
         authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?' +
           `client_id=YOUR_MICROSOFT_CLIENT_ID&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `scope=${encodeURIComponent(app.scope)}&` +
+          `scope=${encodeURIComponent(app.scopes.join(' '))}&` +
           `state=${state}&` +
           'response_type=code';
       } else {

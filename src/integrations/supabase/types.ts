@@ -59,6 +59,7 @@ export type Database = {
       }
       chats: {
         Row: {
+          apps: string | null
           code_approved: boolean | null
           created_at: string | null
           id: string
@@ -73,6 +74,7 @@ export type Database = {
           uid: string
         }
         Insert: {
+          apps?: string | null
           code_approved?: boolean | null
           created_at?: string | null
           id?: string
@@ -87,6 +89,7 @@ export type Database = {
           uid: string
         }
         Update: {
+          apps?: string | null
           code_approved?: boolean | null
           created_at?: string | null
           id?: string
@@ -329,12 +332,13 @@ export type Database = {
           access_token: string | null
           auth_code: string | null
           created_at: string
+          creds: Json | null
           error: string | null
           expires_at: string | null
           id: number
           provider: string | null
           refresh_token: string | null
-          scopes: string | null
+          scopes: string[] | null
           status: string | null
           uid: string | null
           updated_at: string | null
@@ -343,12 +347,13 @@ export type Database = {
           access_token?: string | null
           auth_code?: string | null
           created_at?: string
+          creds?: Json | null
           error?: string | null
           expires_at?: string | null
           id?: number
           provider?: string | null
           refresh_token?: string | null
-          scopes?: string | null
+          scopes?: string[] | null
           status?: string | null
           uid?: string | null
           updated_at?: string | null
@@ -357,12 +362,13 @@ export type Database = {
           access_token?: string | null
           auth_code?: string | null
           created_at?: string
+          creds?: Json | null
           error?: string | null
           expires_at?: string | null
           id?: number
           provider?: string | null
           refresh_token?: string | null
-          scopes?: string | null
+          scopes?: string[] | null
           status?: string | null
           uid?: string | null
           updated_at?: string | null
