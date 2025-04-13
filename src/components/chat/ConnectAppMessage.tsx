@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Chrome, Mail, FileSpreadsheet, Check, Loader2, ExternalLink } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Chrome, Mail, FileSpreadsheet, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Message } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Define available apps and their configurations
 const APP_CONFIG = {
@@ -39,6 +41,7 @@ interface ConnectAppMessageProps {
 
 export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [connectingApp, setConnectingApp] = useState<string | null>(null);
   const [connectedApps, setConnectedApps] = useState<Record<string, boolean>>({});
   
@@ -67,8 +70,8 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
     }
   };
   
-  // Check connection status for all apps when component mounts
-  useState(() => {
+  // Check connection status for all apps when component mounts or user changes
+  useEffect(() => {
     if (!user) return;
     
     const checkAllApps = async () => {
@@ -82,16 +85,39 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
     };
     
     checkAllApps();
-  });
+    
+    // Add event listener for OAuth success message
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (
+        event.origin === window.location.origin && 
+        event.data && 
+        event.data.type === 'OAUTH_SUCCESS' && 
+        event.data.provider
+      ) {
+        // Update the connection status when OAuth succeeds
+        setConnectedApps(prev => ({
+          ...prev,
+          [event.data.provider]: true
+        }));
+        setConnectingApp(null);
+        
+        const appName = APP_CONFIG[event.data.provider as keyof typeof APP_CONFIG]?.name || event.data.provider;
+        toast.success(`${appName} connected successfully`);
+      }
+    };
+    
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+    
+  }, [user, apps]);
   
   // Handle OAuth flow initiation
   const handleConnectApp = (appName: string) => {
     if (!user) {
-      toast({
-        title: 'Authentication required',
+      toast.error('Authentication required', {
         description: 'Please sign in to connect applications',
-        variant: 'destructive',
       });
+      navigate('/auth');
       return;
     }
     
@@ -138,29 +164,27 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
       }
       
       // Open the OAuth URL in a new window
-      window.open(authUrl, 'oauth_window', 'width=800,height=600');
+      const authWindow = window.open(authUrl, 'oauth_window', 'width=800,height=600');
       
-      const checkAuthStatus = async () => {
-        const result = await checkAppConnection(appName);
-        if (result) {
-          setConnectedApps(prev => ({ ...prev, [appName]: true }));
-          toast({
-            title: 'Connection successful',
-            description: `Your ${app.name} account has been connected`,
+      // Check if the window was blocked by a popup blocker
+      if (!authWindow) {
+        throw new Error('Popup was blocked. Please allow popups for this site.');
+      }
+      
+      // Start a timeout to clear the connecting state if the user takes too long
+      setTimeout(() => {
+        if (connectingApp === appName) {
+          setConnectingApp(null);
+          toast.error('Connection timed out', {
+            description: 'Please try again',
           });
         }
-        setConnectingApp(null);
-      };
-      
-      // Check for connection status after a short delay (user might have completed the flow)
-      setTimeout(checkAuthStatus, 10000);
+      }, 120000); // 2 minute timeout
       
     } catch (error: any) {
       console.error('Error initiating OAuth flow:', error);
-      toast({
-        title: 'Connection error',
+      toast.error('Connection error', {
         description: error.message || 'Failed to start connection process',
-        variant: 'destructive',
       });
       setConnectingApp(null);
     }

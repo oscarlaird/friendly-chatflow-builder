@@ -3,16 +3,21 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Check, XCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthCallback = () => {
   const { user } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing authentication...');
   const [appName, setAppName] = useState('');
+  const navigate = useNavigate();
   
   useEffect(() => {
     const processOAuthCallback = async () => {
       try {
+        console.log("AuthCallback: Starting OAuth callback processing...");
+        console.log("AuthCallback: Current user state:", user);
+        
         // Get the code from the URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -21,6 +26,14 @@ export const AuthCallback = () => {
         // Verify the state matches what we sent
         const savedState = localStorage.getItem('oauth_state');
         const provider = localStorage.getItem('oauth_provider');
+        
+        console.log("AuthCallback: Code received:", code ? "Yes" : "No");
+        console.log("AuthCallback: State comparison:", { 
+          received: state, 
+          saved: savedState,
+          match: state === savedState 
+        });
+        console.log("AuthCallback: Provider:", provider);
         
         if (!code) {
           throw new Error('No authorization code received');
@@ -34,13 +47,25 @@ export const AuthCallback = () => {
           throw new Error('No provider information found');
         }
         
+        // Check if the user is authenticated
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (!sessionData.session) {
+          console.error("AuthCallback: User is not authenticated");
+          // Instead of throwing an error, redirect to auth page
+          setStatus('error');
+          setMessage('Please log in before connecting external apps');
+          setTimeout(() => {
+            navigate('/auth', { replace: true });
+          }, 3000);
+          return;
+        }
+        
+        const currentUser = sessionData.session.user;
+        
         // Clean up localStorage
         localStorage.removeItem('oauth_state');
         localStorage.removeItem('oauth_provider');
-        
-        if (!user) {
-          throw new Error('User not authenticated');
-        }
         
         // Set provider-specific app name for display
         let displayName = 'App';
@@ -59,22 +84,35 @@ export const AuthCallback = () => {
         
         setAppName(displayName);
         
+        console.log("AuthCallback: Storing auth code for user:", currentUser.id);
+        
         // Store the auth code in Supabase
         const { error } = await supabase
           .from('oauth_sessions')
           .insert({
-            uid: user.id,
+            uid: currentUser.id,
             auth_code: code,
             status: 'pending',
             provider: provider,
             scopes: scopes
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error("AuthCallback: Database error:", error);
+          throw error;
+        }
         
         // Everything went well
         setStatus('success');
         setMessage(`${displayName} has been successfully connected!`);
+        
+        // Notify the opener window that connection was successful
+        if (window.opener) {
+          window.opener.postMessage({ 
+            type: 'OAUTH_SUCCESS', 
+            provider: provider 
+          }, window.location.origin);
+        }
         
       } catch (error: any) {
         console.error('OAuth callback error:', error);
@@ -84,7 +122,7 @@ export const AuthCallback = () => {
     };
     
     processOAuthCallback();
-  }, [user]);
+  }, [user, navigate]);
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -114,7 +152,9 @@ export const AuthCallback = () => {
         
         {status !== 'loading' && (
           <p className="text-sm">
-            You can close this window and return to the application.
+            {status === 'error' && message.includes('log in') 
+              ? 'Redirecting to login page...'
+              : 'You can close this window and return to the application.'}
             {status === 'success' && ` Your ${appName} is now connected.`}
           </p>
         )}
