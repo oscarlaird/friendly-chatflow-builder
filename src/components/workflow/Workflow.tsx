@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Link } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -14,6 +15,7 @@ import { ConnectionModal } from './ConnectionModal';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 import { Icons } from '@/components/ui/icons';
 import { OAuthIcon } from '@/components/ui/oauth-icons';
+import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 
 
 interface WorkflowProps {
