@@ -14,8 +14,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { FileSpreadsheet, Mail, Link2, Loader2, Plus } from 'lucide-react';
 
+// Updated app configuration with proper interface definition
+interface AppConfig {
+  name: string;
+  icon: React.ForwardRefExoticComponent<any>;
+  color: string;
+  available: boolean;
+  comingSoon?: boolean;
+}
+
 // App configuration with proper icons and connection details
-const AVAILABLE_APPS = {
+const AVAILABLE_APPS: Record<string, AppConfig> = {
   google_sheets: {
     name: 'Google Sheets',
     icon: FileSpreadsheet,
