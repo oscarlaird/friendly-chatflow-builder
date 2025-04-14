@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -38,6 +39,7 @@ export interface Chat {
   requires_code_rewrite?: boolean | null;
   code_approved?: boolean;
   model_cost?: number; // Added model cost field
+  apps?: string[]; // Added apps property to match Supabase schema
 }
 
 export interface CoderunEvent {
