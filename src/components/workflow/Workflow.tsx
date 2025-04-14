@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Link } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -14,6 +13,7 @@ import { useRequiredApps } from '@/hooks/useRequiredApps';
 import { ConnectionModal } from './ConnectionModal';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 import { Icons } from '@/components/ui/icons';
+import { OAuthIcon } from '@/components/ui/oauth-icons';
 
 
 interface WorkflowProps {
@@ -55,28 +55,23 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
 
 // Helper component to render app icons
 const AppIntegrationIcons = ({ apps }: { apps: string[] }) => {
-  if (!apps || apps.length === 0) return null;
+  const { isAppConnected } = useOAuthConnections();
   
-  // Map app names to icon components
-  const iconMap = {
-    google_sheets: Icons.fileSpreadsheet,
-    gmail: Icons.mail,
-    outlook: Icons.mail,
-    google_drive: Icons.folderClosed,
-    salesforce: Icons.database,
-    zapier: Icons.plugZap,
-    dropbox: Icons.cloudStorage,
-  };
+  if (!apps || apps.length === 0) return null;
   
   return (
     <div className="flex items-center gap-1.5 ml-2">
       {apps.map(app => {
-        const AppIcon = iconMap[app as keyof typeof iconMap] || Icons.link;
+        const isConnected = isAppConnected(app);
         const appName = APP_CONFIG[app as keyof typeof APP_CONFIG]?.name || app;
         
         return (
           <Badge key={app} variant="outline" className="px-1.5 flex items-center gap-1">
-            <AppIcon className="h-3 w-3" />
+            <OAuthIcon 
+              provider={app as any}
+              size={14}
+              isConnected={isConnected}
+            />
             <span className="text-xs">{appName}</span>
           </Badge>
         );
