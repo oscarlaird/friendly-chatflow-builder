@@ -8,6 +8,7 @@ import { Icons } from '@/components/ui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 
 export function ConnectedAppsSettings() {
   const { connectedApps, loading: connectionsLoading } = useOAuthConnections();
@@ -50,6 +51,7 @@ export function ConnectedAppsSettings() {
         ) : (
           <div className="space-y-4">
             {['google_sheets', 'gmail', 'outlook'].map((appId) => {
+              const provider = appId as OAuthProviderType;
               const isConnected = connectedApps.some(app => app.provider === appId);
               const AppIcon = Icons[appId === 'google_sheets' ? 'fileSpreadsheet' : 
                              appId === 'gmail' ? 'mail' : 'mail'];
@@ -62,7 +64,11 @@ export function ConnectedAppsSettings() {
                   className="flex items-center justify-between p-4 rounded-lg border"
                 >
                   <div className="flex items-center gap-3">
-                    <AppIcon className="h-5 w-5" />
+                    <OAuthIcon 
+                      provider={provider}
+                      isConnected={isConnected}
+                      className="mr-2"
+                    />
                     <span className="font-medium">{appName}</span>
                   </div>
                   

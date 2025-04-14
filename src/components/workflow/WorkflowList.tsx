@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Icons } from '@/components/ui/icons';
 import { Badge } from '@/components/ui/badge';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
-import { OAuthIcon } from '@/components/ui/oauth-icons';
+import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 
 export function WorkflowList() {
   const [chats, setChats] = useState<any[]>([]);
@@ -117,17 +117,25 @@ export function WorkflowList() {
     
     return (
       <div className="flex items-center gap-1 mt-2">
-        {apps.map(app => (
-          <Badge key={app} variant="outline" className="px-1.5 py-0.5">
-            <OAuthIcon 
-              provider={app as keyof typeof OAuthIcons}
-              isConnected={true}
-              size={12}
-              className="mr-1"
-            />
-            <span className="text-xs">{APP_CONFIG[app as keyof typeof APP_CONFIG]?.name || app}</span>
-          </Badge>
-        ))}
+        {apps.map(app => {
+          // Check if the app is a valid OAuth provider type
+          const isValidProvider = app === 'google_sheets' || app === 'gmail' || app === 'outlook';
+          if (!isValidProvider) return null;
+
+          const providerApp = app as OAuthProviderType;
+          
+          return (
+            <Badge key={app} variant="outline" className="px-1.5 py-0.5">
+              <OAuthIcon 
+                provider={providerApp}
+                isConnected={true}
+                size={12}
+                className="mr-1"
+              />
+              <span className="text-xs">{APP_CONFIG[app as keyof typeof APP_CONFIG]?.name || app}</span>
+            </Badge>
+          );
+        })}
       </div>
     );
   };

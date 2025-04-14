@@ -13,12 +13,12 @@ import {
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { Link2, Loader2, Plus } from 'lucide-react';
-import { OAuthIcon } from '@/components/ui/oauth-icons';
+import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 
 // Updated app configuration with proper interface definition
 interface AppConfig {
   name: string;
-  provider: string;
+  provider: OAuthProviderType;
   color: string;
   available: boolean;
   comingSoon?: boolean;
@@ -92,7 +92,7 @@ export function ConnectedApps() {
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
                   <OAuthIcon 
-                    provider={appConfig.provider as keyof typeof OAuthIcons} 
+                    provider={appConfig.provider} 
                     isConnected={isConnected}
                     size={16}
                     className="mr-2"
