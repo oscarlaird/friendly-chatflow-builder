@@ -104,9 +104,9 @@ export function WorkflowList() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-2">
-            {/* We could show workflow description or status here */}
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {chat.description || "No description"}
+              {/* Since description doesn't exist on Chat type, we'll use a placeholder instead */}
+              Workflow information
             </p>
           </CardContent>
           <CardFooter className="flex justify-between">

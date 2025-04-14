@@ -5,7 +5,7 @@ import {
   Link, 
   FolderClosed, 
   Database, 
-  CloudStorage,
+  Cloud,
   PlugZap
 } from 'lucide-react';
 
@@ -15,6 +15,6 @@ export const Icons = {
   link: Link,
   folderClosed: FolderClosed,
   database: Database,
-  cloudStorage: CloudStorage,
+  cloudStorage: Cloud, // Changed from CloudStorage to Cloud
   plugZap: PlugZap
 };
