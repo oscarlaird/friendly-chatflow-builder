@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface MessageInputProps {
-  onSendMessage: (content: string, type?: 'text_message' | 'code_run', userInputs?: any) => Promise<void>;
+  onSendMessage: (content: string, role?: 'user' | 'assistant', type?: 'text_message' | 'code_run' | 'screen_recording', userInputs?: any) => Promise<any>;
   disabled?: boolean;
 }
 
@@ -52,7 +52,7 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
     setIsSubmitting(true);
     
     try {
-      await onSendMessage(message, type);
+      await onSendMessage(message, 'user', type);
       setMessage('');
       
       // Scroll to bottom after sending a message
