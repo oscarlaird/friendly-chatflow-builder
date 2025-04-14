@@ -464,11 +464,13 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
 export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const { messages, browserEvents } = dataState;
   const prevMessageCountRef = useRef(Object.keys(messages).length);
   const prevMessagesRef = useRef<string[]>([]);
+  const wasScrollingRef = useRef(false);
   
-  // Force scroll to bottom whenever messages change
+  // Enhanced auto-scroll logic with multiple approaches
   useEffect(() => {
     const currentMessageCount = Object.keys(messages).length;
     const currentMessageIds = Object.keys(messages);
@@ -479,24 +481,39 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
     
     // Always scroll to bottom when messages are added
     if (hasMoreMessages || hasNewMessages) {
-      // Use a slightly longer delay to ensure DOM has fully updated
-      setTimeout(() => {
+      console.log('New messages detected, scrolling to bottom...');
+      
+      // Multiple scroll attempts with increasing delays for reliability
+      const scrollToBottom = () => {
+        console.log('Attempting to scroll to bottom...');
+        
+        // Primary approach: Use scrollIntoView
         if (scrollRef.current) {
-          // Use scrollIntoView with block: "end" to ensure it's visible at the bottom
           scrollRef.current.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'end'
           });
-          
-          // Additional fallback scrolling for the scroll area container
-          if (scrollAreaRef.current) {
-            const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-            if (scrollContainer) {
-              scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            }
-          }
+          console.log('ScrollIntoView executed');
         }
-      }, 200);  // Increased delay for more reliable scrolling
+        
+        // Secondary approach: Find and scroll the viewport directly
+        if (scrollAreaRef.current && !viewportRef.current) {
+          viewportRef.current = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        }
+        
+        if (viewportRef.current) {
+          viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
+          console.log('Viewport scrolled directly:', viewportRef.current.scrollHeight);
+        }
+      };
+      
+      // Attempt scrolling multiple times with increasing delays
+      scrollToBottom(); // Immediate attempt
+      
+      // Set of delayed attempts to ensure scrolling happens after DOM updates
+      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 300);
+      setTimeout(scrollToBottom, 500);
     }
     
     // Update refs for next check
@@ -529,6 +546,21 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
         return <TextMessageBubble key={message.id} message={message} />;
     }
   };
+  
+  // Force scroll on component mount
+  useEffect(() => {
+    const scrollToBottom = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ block: 'end' });
+        console.log('Initial scroll executed');
+      }
+    };
+    
+    // Multiple attempts on initial load
+    scrollToBottom();
+    setTimeout(scrollToBottom, 200);
+    setTimeout(scrollToBottom, 500);
+  }, []);
 
   return (
     <ScrollArea 
@@ -552,7 +584,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
                 {messageList.map(renderMessage)}
               </div>
             )}
-            <div ref={scrollRef} id="message-end" />
+            <div ref={scrollRef} id="message-end" style={{ marginBottom: '20px' }} />
           </div>
         </div>
       )}
