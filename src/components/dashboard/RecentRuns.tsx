@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +36,13 @@ export const RecentRuns = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Fixed useEffect instead of useState
+  useEffect(() => {
+    if (user) {
+      fetchRuns(currentPage);
+    }
+  }, [currentPage, user]);
 
   const fetchRuns = async (page: number) => {
     if (!user) return;
@@ -82,11 +89,6 @@ export const RecentRuns = () => {
       setLoading(false);
     }
   };
-
-  // Fetch runs when page changes
-  useState(() => {
-    fetchRuns(currentPage);
-  }, [currentPage, user]);
 
   const totalPages = Math.ceil(totalRuns / RUNS_PER_PAGE);
 
@@ -195,6 +197,7 @@ export const RecentRuns = () => {
             </>
           )}
         </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );
