@@ -26,6 +26,10 @@ export function AppConnectButton({
     google_sheets: Icons.fileSpreadsheet,
     gmail: Icons.mail,
     outlook: Icons.mail,
+    google_drive: Icons.folderClosed,
+    salesforce: Icons.database,
+    zapier: Icons.plugZap,
+    dropbox: Icons.cloudStorage,
   };
 
   const AppIcon = iconMap[appName as keyof typeof iconMap] || Icons.link;
