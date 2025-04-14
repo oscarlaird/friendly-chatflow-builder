@@ -130,73 +130,74 @@ export const RecentRuns = () => {
       </CardHeader>
       <CardContent>
         <Collapsible open={expanded} onOpenChange={setExpanded}>
-          {loading ? (
-            <div className="flex justify-center py-4">
-              <p className="text-sm text-muted-foreground">Loading runs...</p>
-            </div>
-          ) : runs.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              No runs found. Start by creating a workflow!
-            </div>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {runs.slice(0, expanded ? undefined : 5).map((run) => (
-                  <div 
-                    key={run.id} 
-                    className="flex items-center justify-between py-2 border-b last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <StatusIcon state={run.code_run_state} />
-                      <div>
-                        <div className="font-medium">{run.chat_title || 'Untitled Workflow'}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
-                        </div>
-                        <div className={`text-xs ${getStateColor(run.code_run_state)}`}>
-                          {run.code_run_state ? run.code_run_state.replace(/_/g, ' ') : 'Unknown state'}
+          <CollapsibleContent>
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <p className="text-sm text-muted-foreground">Loading runs...</p>
+              </div>
+            ) : runs.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                No runs found. Start by creating a workflow!
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {runs.slice(0, expanded ? undefined : 5).map((run) => (
+                    <div 
+                      key={run.id} 
+                      className="flex items-center justify-between py-2 border-b last:border-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <StatusIcon state={run.code_run_state} />
+                        <div>
+                          <div className="font-medium">{run.chat_title || 'Untitled Workflow'}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
+                          </div>
+                          <div className={`text-xs ${getStateColor(run.code_run_state)}`}>
+                            {run.code_run_state ? run.code_run_state.replace(/_/g, ' ') : 'Unknown state'}
+                          </div>
                         </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/workflow/${run.chat_id}`)}
+                      >
+                        View Details
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/workflow/${run.chat_id}`)}
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {expanded && totalPages > 1 && (
-                <div className="mt-4 flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          disabled={currentPage === 1}
-                        />
-                      </PaginationItem>
-                      <PaginationItem>
-                        <span className="text-sm">
-                          Page {currentPage} of {totalPages}
-                        </span>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                          disabled={currentPage === totalPages}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </CollapsibleContent>
+
+                {expanded && totalPages > 1 && (
+                  <div className="mt-4 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <span className="text-sm">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </CollapsibleContent>
         </Collapsible>
       </CardContent>
     </Card>
