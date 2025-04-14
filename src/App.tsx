@@ -22,14 +22,14 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Routes>
+            <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
             <Route path="/" element={<Dashboard />} />
             <Route path="/workflows" element={<Workflows />} />
             <Route path="/workflow/:id" element={<WorkflowEditor />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
             <Route path="/auth-callback" element={<AuthCallback />} />
-            <Route path="/old-home" element={<Index />} /> {/* Keep old home page for reference */}
+            <Route path="/old-home" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="top-right" />
