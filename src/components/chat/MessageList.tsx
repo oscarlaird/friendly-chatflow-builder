@@ -468,7 +468,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const prevMessageCountRef = useRef(Object.keys(messages).length);
   const prevMessagesRef = useRef<string[]>([]);
   
-  // Improved auto-scroll logic
+  // Force scroll to bottom whenever messages change
   useEffect(() => {
     const currentMessageCount = Object.keys(messages).length;
     const currentMessageIds = Object.keys(messages);
@@ -477,14 +477,26 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
     const hasNewMessages = currentMessageIds.some(id => !prevMessagesRef.current.includes(id));
     const hasMoreMessages = currentMessageCount > prevMessageCountRef.current;
     
-    // Always scroll to bottom when messages are added or there are new messages
+    // Always scroll to bottom when messages are added
     if (hasMoreMessages || hasNewMessages) {
-      // Add a small delay to ensure the DOM has updated
+      // Use a slightly longer delay to ensure DOM has fully updated
       setTimeout(() => {
         if (scrollRef.current) {
-          scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+          // Use scrollIntoView with block: "end" to ensure it's visible at the bottom
+          scrollRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end'
+          });
+          
+          // Additional fallback scrolling for the scroll area container
+          if (scrollAreaRef.current) {
+            const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (scrollContainer) {
+              scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            }
+          }
         }
-      }, 100);
+      }, 200);  // Increased delay for more reliable scrolling
     }
     
     // Update refs for next check
@@ -540,7 +552,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
                 {messageList.map(renderMessage)}
               </div>
             )}
-            <div ref={scrollRef} />
+            <div ref={scrollRef} id="message-end" />
           </div>
         </div>
       )}
