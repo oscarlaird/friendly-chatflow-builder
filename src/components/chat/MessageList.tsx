@@ -463,144 +463,27 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
 
 export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const viewportRef = useRef<HTMLDivElement | null>(null);
   const { messages, browserEvents } = dataState;
   const prevMessageCountRef = useRef(Object.keys(messages).length);
   const prevMessagesRef = useRef<string[]>([]);
-  const [messageListHeight, setMessageListHeight] = useState<number>(0);
   
-  // Helper function for scrolling to bottom that we can reuse
-  const scrollToBottom = (immediate = false) => {
-    console.log('Executing scroll to bottom...');
-    
-    // Primary approach: Use scrollIntoView
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ 
-        behavior: immediate ? 'auto' : 'smooth', 
-        block: 'end'
-      });
-      console.log('ScrollIntoView executed');
-    }
-    
-    // Secondary approach: Find and scroll the viewport directly
-    if (scrollAreaRef.current && !viewportRef.current) {
-      viewportRef.current = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-    }
-    
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
-      console.log('Viewport scrolled directly:', viewportRef.current.scrollHeight);
-    }
-    
-    // Tertiary approach: Find any scroll container
-    const scrollContainers = document.querySelectorAll('.overflow-auto, .overflow-y-auto, [data-radix-scroll-area-viewport]');
-    scrollContainers.forEach(container => {
-      (container as HTMLElement).scrollTop = (container as HTMLElement).scrollHeight;
-    });
-  };
-  
-  // Enhanced auto-scroll logic with multiple approaches and MutationObserver
+  // Auto-scroll to bottom when new messages are added, but not when existing messages are updated
   useEffect(() => {
     const currentMessageCount = Object.keys(messages).length;
     const currentMessageIds = Object.keys(messages);
     
-    // Check if there are new messages or more messages
+    // Check if there are new messages added (not just updates)
     const hasNewMessages = currentMessageIds.some(id => !prevMessagesRef.current.includes(id));
-    const hasMoreMessages = currentMessageCount > prevMessageCountRef.current;
     
-    if (hasMoreMessages || hasNewMessages) {
-      console.log('New messages detected, scrolling to bottom...');
-      
-      // Immediate scroll attempt
-      scrollToBottom(true);
-      
-      // Multiple delayed scroll attempts to ensure it happens after DOM updates
-      const timeouts = [
-        setTimeout(() => scrollToBottom(true), 50),
-        setTimeout(() => scrollToBottom(false), 100),
-        setTimeout(() => scrollToBottom(true), 300),
-        setTimeout(() => scrollToBottom(true), 500),
-        setTimeout(() => scrollToBottom(true), 800)
-      ];
-      
-      return () => {
-        timeouts.forEach(timeout => clearTimeout(timeout));
-      };
+    // Only auto-scroll if new messages were added, not when existing ones are updated
+    if ((currentMessageCount > prevMessageCountRef.current || hasNewMessages) && scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
     
-    // Update refs for next check
     prevMessageCountRef.current = currentMessageCount;
-    prevMessagesRef.current = [...currentMessageIds];
+    prevMessagesRef.current = currentMessageIds;
   }, [messages]);
-  
-  // Set up MutationObserver to detect DOM changes and trigger scrolling
-  useEffect(() => {
-    // Create a mutation observer to watch for changes to the message list
-    const observer = new MutationObserver((mutations) => {
-      let shouldScroll = false;
-      
-      // Check if any mutations added nodes that might affect scroll
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          shouldScroll = true;
-        }
-      });
-      
-      if (shouldScroll) {
-        scrollToBottom(true);
-      }
-    });
-    
-    // Start observing with configuration
-    const messageListContainer = document.querySelector('.message-list-container');
-    if (messageListContainer) {
-      observer.observe(messageListContainer, { 
-        childList: true,
-        subtree: true,
-        characterData: true
-      });
-    }
-    
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-  
-  // Calculate message list container height on window resize
-  useEffect(() => {
-    const updateHeight = () => {
-      if (scrollAreaRef.current) {
-        setMessageListHeight(scrollAreaRef.current.clientHeight);
-      }
-    };
-    
-    // Initial calculation
-    updateHeight();
-    
-    // Listen for resize events
-    window.addEventListener('resize', updateHeight);
-    
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, []);
-  
-  // Force scroll on component mount with multiple attempts
-  useEffect(() => {
-    const initialScrollTimeouts = [
-      setTimeout(() => scrollToBottom(true), 0),
-      setTimeout(() => scrollToBottom(true), 100),
-      setTimeout(() => scrollToBottom(true), 300),
-      setTimeout(() => scrollToBottom(true), 600),
-      setTimeout(() => scrollToBottom(true), 1000)
-    ];
-    
-    return () => {
-      initialScrollTimeouts.forEach(timeout => clearTimeout(timeout));
-    };
-  }, []);
-  
+
   // Sort messages by created_at once instead of re-sorting on every render
   const messageList = Object.values(messages).sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -626,33 +509,15 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
         return <TextMessageBubble key={message.id} message={message} />;
     }
   };
-  
-  // Force scroll on component mount
-  useEffect(() => {
-    const scrollToBottom = () => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ block: 'end' });
-        console.log('Initial scroll executed');
-      }
-    };
-    
-    // Multiple attempts on initial load
-    scrollToBottom();
-    setTimeout(scrollToBottom, 200);
-    setTimeout(scrollToBottom, 500);
-  }, []);
 
   return (
-    <ScrollArea 
-      className="h-full px-2 py-6" 
-      ref={scrollAreaRef}
-    >
+    <ScrollArea className="h-full px-2 py-6">
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
-        <div className="flex flex-col items-center w-full message-list-container">
+        <div className="flex flex-col items-center w-full">
           <div className="w-full max-w-full">
             <IntroMessage />
             {messageList.length === 0 ? (
@@ -661,19 +526,10 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
               </div>
             ) : (
               <div className="flex flex-col items-stretch w-full">
-                {messageList.map(message => renderMessage(message))}
+                {messageList.map(renderMessage)}
               </div>
             )}
-            <div 
-              ref={scrollRef} 
-              id="message-end" 
-              style={{ 
-                marginBottom: '40px', 
-                paddingBottom: '20px',
-                minHeight: '10px'
-              }} 
-              aria-hidden="true"
-            />
+            <div ref={scrollRef} />
           </div>
         </div>
       )}

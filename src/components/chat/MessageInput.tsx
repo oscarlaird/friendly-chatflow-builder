@@ -1,11 +1,10 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface MessageInputProps {
-  onSendMessage: (content: string, role?: 'user' | 'assistant', type?: 'text_message' | 'code_run' | 'screen_recording', userInputs?: any) => Promise<any>;
+  onSendMessage: (content: string, type?: 'text_message' | 'code_run', userInputs?: any) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -21,29 +20,6 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
     }
   }, []);
 
-  const scrollToBottom = () => {
-    // Try to find the message-end element and scroll to it
-    const messageEnd = document.getElementById('message-end');
-    if (messageEnd) {
-      messageEnd.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      
-      // Attempt additional scrolls with delays to ensure it works
-      setTimeout(() => {
-        messageEnd.scrollIntoView({ behavior: 'auto', block: 'end' });
-      }, 100);
-      
-      setTimeout(() => {
-        messageEnd.scrollIntoView({ behavior: 'auto', block: 'end' });
-      }, 300);
-    }
-    
-    // Fallback: directly scroll the message container
-    const viewport = document.querySelector('[data-radix-scroll-area-viewport]');
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent, type: 'text_message' | 'code_run' = 'text_message') => {
     e.preventDefault();
     
@@ -52,11 +28,8 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
     setIsSubmitting(true);
     
     try {
-      await onSendMessage(message, 'user', type);
+      await onSendMessage(message, type);
       setMessage('');
-      
-      // Scroll to bottom after sending a message
-      scrollToBottom();
     } finally {
       setIsSubmitting(false);
       
@@ -64,9 +37,6 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
-      
-      // One final scroll attempt after a delay
-      setTimeout(scrollToBottom, 500);
     }
   };
 
