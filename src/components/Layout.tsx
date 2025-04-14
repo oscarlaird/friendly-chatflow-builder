@@ -103,7 +103,7 @@ export function Layout({ children }: LayoutProps) {
         >
           <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center justify-between">
-              <h1 className="text-lg font-bold">Macro AI</h1>
+              <h1 className="text-lg font-bold">Mill AI</h1>
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="md:hidden">
                 <X className="h-4 w-4" />
               </Button>
