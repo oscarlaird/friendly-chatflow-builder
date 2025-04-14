@@ -56,7 +56,7 @@ export function ConnectedApps() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-2 h-auto py-1 px-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 h-auto py-1 px-3">
           <Link2 className="h-4 w-4" />
           <span className="text-sm whitespace-nowrap">Connected Apps</span>
           <Badge variant="secondary" className="ml-1 text-xs py-0">

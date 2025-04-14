@@ -3,11 +3,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chat } from '@/types';
 import { Card } from '@/components/ui/card';
-import { GitBranch, Clock, Calendar, Trash2, Edit, Check, X } from 'lucide-react';
+import { GitBranch, Clock, Trash2, Edit, Check, X, MoreHorizontal, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useChats } from '@/hooks/useChats';
 import { format } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WorkflowListProps {
   workflows: Chat[];
@@ -28,6 +34,12 @@ export const WorkflowList = ({ workflows }: WorkflowListProps) => {
     navigate(`/workflow/${id}`);
   };
 
+  const handleRunWorkflow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // For now, just navigate to the workflow
+    navigate(`/workflow/${id}`);
+  };
+
   const handleEditWorkflow = (id: string, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingId(id);
@@ -36,7 +48,9 @@ export const WorkflowList = ({ workflows }: WorkflowListProps) => {
 
   const handleSaveTitle = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await updateChatTitle(id, editTitle);
+    if (editTitle.trim()) {
+      await updateChatTitle(id, editTitle);
+    }
     setEditingId(null);
   };
 
@@ -47,7 +61,9 @@ export const WorkflowList = ({ workflows }: WorkflowListProps) => {
 
   const handleDeleteWorkflow = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await deleteChat(id);
+    if (confirm("Are you sure you want to delete this workflow?")) {
+      await deleteChat(id);
+    }
   };
 
   return (
@@ -55,20 +71,20 @@ export const WorkflowList = ({ workflows }: WorkflowListProps) => {
       {sortedWorkflows.map((workflow) => (
         <Card 
           key={workflow.id}
-          className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+          className="p-4 cursor-pointer hover:shadow-md transition-shadow group"
           onClick={() => handleOpenWorkflow(workflow.id)}
         >
           <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="p-2 rounded-md bg-primary/10">
                 <GitBranch className="h-5 w-5 text-primary" />
               </div>
               {editingId === workflow.id ? (
-                <div className="flex items-center" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center flex-1" onClick={e => e.stopPropagation()}>
                   <Input 
                     value={editTitle} 
                     onChange={e => setEditTitle(e.target.value)}
-                    className="h-8"
+                    className="h-8 flex-1"
                     autoFocus
                   />
                   <Button 
@@ -93,23 +109,45 @@ export const WorkflowList = ({ workflows }: WorkflowListProps) => {
               )}
             </div>
             {editingId !== workflow.id && (
-              <div className="flex items-center">
+              <div className="flex items-center gap-1">
                 <Button 
                   size="icon" 
                   variant="ghost" 
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                  onClick={e => handleEditWorkflow(workflow.id, workflow.title, e)}
+                  className="h-8 w-8"
+                  onClick={e => handleRunWorkflow(workflow.id, e)}
                 >
-                  <Edit className="h-4 w-4" />
+                  <Play className="h-4 w-4 text-green-500" />
                 </Button>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100"
-                  onClick={e => handleDeleteWorkflow(workflow.id, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleEditWorkflow(workflow.id, workflow.title, e);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit name
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={e => handleDeleteWorkflow(workflow.id, e)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>

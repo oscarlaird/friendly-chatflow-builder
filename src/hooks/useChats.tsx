@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -75,6 +76,7 @@ export const useChats = () => {
       
       // Update local state with the new chat
       setChats(prevChats => [...prevChats, newChat as Chat]);
+      toast.success(`Workflow "${title}" created`);
       
       return newChat as Chat;
     } catch (error) {
@@ -101,9 +103,11 @@ export const useChats = () => {
       );
       
       toast.success('Workflow title updated');
+      return data as Chat;
     } catch (error) {
       console.error('Error updating chat title:', error);
       toast.error('Failed to update workflow title');
+      return null;
     }
   };
 
@@ -120,9 +124,11 @@ export const useChats = () => {
       setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
       
       toast.success('Workflow deleted');
+      return true;
     } catch (error) {
       console.error('Error deleting chat:', error);
       toast.error('Failed to delete workflow');
+      return false;
     }
   };
 
@@ -137,7 +143,7 @@ export const useChats = () => {
 };
 
 export const useSelectedChat = (chatId: string | null) => {
-  const { chats, loading, error } = useChats();
+  const { chats, loading, error, updateChatTitle } = useChats();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<'thinking' | 'rewriting_code' | 'done'>('done');
 
@@ -158,10 +164,16 @@ export const useSelectedChat = (chatId: string | null) => {
     }
   }, [selectedChat?.requires_code_rewrite]);
 
+  const updateWorkflowTitle = async (title: string) => {
+    if (!chatId) return null;
+    return await updateChatTitle(chatId, title);
+  };
+
   return {
     selectedChat,
     loading,
     error,
-    codeRewritingStatus
+    codeRewritingStatus,
+    updateWorkflowTitle
   };
 };

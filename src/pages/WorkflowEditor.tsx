@@ -1,23 +1,26 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Settings, PlayCircle, StopCircle } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from '@/components/chat/MessageList';
 import { MessageInput } from '@/components/chat/MessageInput';
 import { Workflow } from '@/components/workflow/Workflow';
 import { useSelectedChat } from '@/hooks/useChats';
 import { Button } from '@/components/ui/button';
+import { ConnectedApps } from '@/components/ui/ConnectedApps';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWindowMessages } from '@/hooks/useWindowMessages';
+import { toast } from 'sonner';
 
 const WorkflowEditor = () => {
   const { id } = useParams<{ id: string }>();
   const { dataState, loading, sendMessage } = useMessages(id || null);
   const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const [sending, setSending] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'workflow' : 'chat');
   const navigate = useNavigate();
@@ -37,6 +40,28 @@ const WorkflowEditor = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleRunWorkflow = () => {
+    if (!selectedChat?.steps || selectedChat.steps.length === 0) {
+      toast.warning("This workflow has no steps to run");
+      return;
+    }
+    
+    setIsRunning(true);
+    toast.success("Workflow started");
+    
+    // In a real implementation, you would send a message to run the workflow
+    // For now, let's simulate a running workflow that completes after 3 seconds
+    setTimeout(() => {
+      setIsRunning(false);
+      toast.success("Workflow completed successfully");
+    }, 3000);
+  };
+
+  const handleStopWorkflow = () => {
+    setIsRunning(false);
+    toast.info("Workflow stopped");
   };
 
   if (!id) {
@@ -62,7 +87,30 @@ const WorkflowEditor = () => {
           <h1 className="text-xl font-semibold truncate">
             {selectedChat?.title || 'Workflow Editor'}
           </h1>
+          <div className="ml-4">
+            <ConnectedApps />
+          </div>
           <div className="ml-auto flex items-center space-x-2">
+            {isRunning ? (
+              <Button 
+                variant="outline" 
+                onClick={handleStopWorkflow}
+                className="gap-1 text-red-500"
+              >
+                <StopCircle className="h-4 w-4" />
+                Stop Workflow
+              </Button>
+            ) : (
+              <Button 
+                variant="default" 
+                onClick={handleRunWorkflow}
+                className="gap-1"
+                disabled={!selectedChat?.steps || selectedChat.steps.length === 0}
+              >
+                <PlayCircle className="h-4 w-4" />
+                Run Workflow
+              </Button>
+            )}
             <Button variant="outline" size="icon">
               <Settings className="h-4 w-4" />
             </Button>
