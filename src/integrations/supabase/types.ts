@@ -168,6 +168,30 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: number
+          type: string | null
+          uid: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          type?: string | null
+          uid?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          type?: string | null
+          uid?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           apps: string[] | null

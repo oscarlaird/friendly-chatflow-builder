@@ -11,6 +11,7 @@ import { ExtensionStatus } from '@/components/ui/extension-status';
 import { ConnectedApps } from '@/components/ui/ConnectedApps';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
+import { FeedbackButton } from './FeedbackButton'; // New import
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -166,8 +167,9 @@ export function Layout({ children }: LayoutProps) {
           </div>
           
           {/* Main content */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto relative">
             {children}
+            <FeedbackButton />
           </main>
         </div>
       </div>
