@@ -18,6 +18,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ExtensionStatus } from '@/components/ui/extension-status';
 import { UserProfile } from '@/components/ui/user-profile';
 import { ConnectedApps } from '@/components/ui/ConnectedApps';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Simple component to use the correct icon based on sidebar state
 const SidebarIcon = () => {
@@ -73,48 +74,50 @@ const Index = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full overflow-hidden">
-        <Sidebar collapsible="offcanvas">
-          <div className="flex flex-col h-full">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h1 className="text-lg font-bold">Macro AI</h1>
-              <div className="flex items-center space-x-2">
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex h-screen w-full overflow-hidden">
+          <Sidebar collapsible="offcanvas">
+            <div className="flex flex-col h-full">
+              <div className="p-4 border-b flex items-center justify-between">
+                <h1 className="text-lg font-bold">Macro AI</h1>
+                <div className="flex items-center space-x-2">
+                  <ThemeToggle />
+                  <Button variant="ghost" size="icon" onClick={signOut}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <ChatList
+                selectedChatId={selectedChatId}
+                onSelectChat={handleSelectChat}
+              />
+            </div>
+          </Sidebar>
+
+          <SidebarInset className="flex flex-col overflow-hidden w-full">
+            <div className="flex items-center p-4 border-b flex-shrink-0">
+              <SidebarTrigger className="mr-2">
+                <SidebarIcon />
+              </SidebarTrigger>
+              <h2 className="text-lg font-medium flex-1">
+                {selectedChatId ? 'Chat' : 'Select or create a chat'}
+              </h2>
+              <div className="flex items-center space-x-3">
+                <ConnectedApps />
+                <ExtensionStatus />
                 <ThemeToggle />
-                <Button variant="ghost" size="icon" onClick={signOut}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                <UserProfile />
               </div>
             </div>
-            <ChatList
-              selectedChatId={selectedChatId}
-              onSelectChat={handleSelectChat}
-            />
-          </div>
-        </Sidebar>
-
-        <SidebarInset className="flex flex-col overflow-hidden w-full">
-          <div className="flex items-center p-4 border-b flex-shrink-0">
-            <SidebarTrigger className="mr-2">
-              <SidebarIcon />
-            </SidebarTrigger>
-            <h2 className="text-lg font-medium flex-1">
-              {selectedChatId ? 'Chat' : 'Select or create a chat'}
-            </h2>
-            <div className="flex items-center space-x-3">
-              <ConnectedApps />
-              <ExtensionStatus />
-              <ThemeToggle />
-              <UserProfile />
+            <div className="flex-1 overflow-hidden w-full">
+              <ChatInterface chatId={selectedChatId} />
             </div>
-          </div>
-          <div className="flex-1 overflow-hidden w-full">
-            <ChatInterface chatId={selectedChatId} />
-          </div>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </TooltipProvider>
   );
-};
+}
 
 export default Index;
