@@ -170,7 +170,7 @@ export type Database = {
       }
       messages: {
         Row: {
-          apps: string | null
+          apps: string[] | null
           chat_id: string
           code_output: Json | null
           code_run_error: string | null
@@ -193,7 +193,7 @@ export type Database = {
           window_has_spawned: boolean | null
         }
         Insert: {
-          apps?: string | null
+          apps?: string[] | null
           chat_id: string
           code_output?: Json | null
           code_run_error?: string | null
@@ -216,7 +216,7 @@ export type Database = {
           window_has_spawned?: boolean | null
         }
         Update: {
-          apps?: string | null
+          apps?: string[] | null
           chat_id?: string
           code_output?: Json | null
           code_run_error?: string | null

@@ -23,7 +23,7 @@ export interface Message {
   code_run_state?: 'stopped' | 'paused' | 'running' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed'; // Updated field for code run state
   model_cost?: number; // Added model cost field
   code_run_error?: string; // Added code run error field
-  apps?: string; // Added apps field for connect_app message type
+  apps?: string[]; // Changed from string to string[] for connect_app message type
 }
 
 export interface Chat {

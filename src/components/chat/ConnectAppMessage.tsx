@@ -49,8 +49,8 @@ export const ConnectAppMessage = ({ message }: ConnectAppMessageProps) => {
   const [connectingApp, setConnectingApp] = useState<string | null>(null);
   const { isAppConnected, loading: connectionsLoading } = useOAuthConnections();
   
-  // Parse apps from the message
-  const apps = message.apps ? message.apps.split(',').map(app => app.trim()) : [];
+  // Get apps from the message (using the array type)
+  const apps = message.apps || [];
   
   // Log connection status for debugging
   useEffect(() => {
