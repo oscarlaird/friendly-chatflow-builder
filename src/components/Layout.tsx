@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +10,7 @@ import { Home, FolderCog, Settings, LogOut, Menu, X } from 'lucide-react';
 import { ExtensionStatus } from '@/components/ui/extension-status';
 import { ConnectedApps } from '@/components/ui/ConnectedApps';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,19 +20,53 @@ export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [creditsUsed, setCreditsUsed] = useState(0);
+  const [codeRuns, setCodeRuns] = useState(0);
   
-  // Current plan is Trial, with 2500/10000 credits used
-  const creditsUsed = 2500;
-  const totalCredits = 10000;
-  const currentPlan = "Trial";
+  // Current plan is $100 = 2000 credits
+  const totalCredits = 2000;
   
-  const navItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/workflows", label: "Workflows", icon: FolderCog },
-    { href: "/settings", label: "Settings", icon: Settings },
-  ];
+  useEffect(() => {
+    if (user) {
+      // Fetch total model cost and convert to credits (1$ = 20 credits)
+      const fetchCreditsAndRuns = async () => {
+        // Get total model cost
+        const { data: costData, error: costError } = await supabase
+          .from('chats')
+          .select('model_cost')
+          .eq('uid', user.id);
+          
+        if (costError) {
+          console.error('Error fetching model costs:', costError);
+          return;
+        }
+        
+        const totalCost = costData.reduce((sum, chat) => sum + (chat.model_cost || 0), 0);
+        const credits = Math.round(totalCost * 20); // Convert dollars to credits
+        setCreditsUsed(credits);
+        
+        // Get total code runs
+        const { data: runsData, error: runsError } = await supabase
+          .from('messages')
+          .select('type')
+          .eq('uid', user.id)
+          .eq('type', 'code_run');
+          
+        if (runsError) {
+          console.error('Error fetching code runs:', runsError);
+          return;
+        }
+        
+        setCodeRuns(runsData.length);
+      };
+      
+      fetchCreditsAndRuns();
+    }
+  }, [user]);
   
-  // Use useEffect to navigate instead of doing it directly in the render function
+  // Current plan name
+  const currentPlan = "$100 Plan";
+  
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) {
@@ -41,6 +75,12 @@ export function Layout({ children }: LayoutProps) {
   }, [user, navigate]);
   
   if (!user) return null;
+  
+  const navItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/workflows", label: "Workflows", icon: FolderCog },
+    { href: "/settings", label: "Settings", icon: Settings },
+  ];
   
   return (
     <TooltipProvider>
@@ -90,7 +130,10 @@ export function Layout({ children }: LayoutProps) {
             <div className="p-4 border-t space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{currentPlan}</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{currentPlan}</span>
+                    <span className="text-xs text-muted-foreground">{codeRuns} total runs</span>
+                  </div>
                   <span className="text-muted-foreground">{creditsUsed} / {totalCredits} credits</span>
                 </div>
                 <Progress value={(creditsUsed / totalCredits) * 100} />

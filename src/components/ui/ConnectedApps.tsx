@@ -1,41 +1,46 @@
 
 import React, { useEffect } from 'react';
 import { useOAuthConnections } from '@/hooks/useOAuthConnections';
+import { useOAuthFlow } from '@/hooks/useOAuthFlow';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
   DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
+  DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
-import { Chrome, Mail, FileSpreadsheet, Link2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FileSpreadsheet, Mail, Link2, Loader2, Plus } from 'lucide-react';
 
-// App configuration with proper icons
-const APP_CONFIG = {
+// App configuration with proper icons and connection details
+const AVAILABLE_APPS = {
   google_sheets: {
     name: 'Google Sheets',
     icon: FileSpreadsheet,
     color: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+    available: true
   },
   gmail: {
     name: 'Gmail',
     icon: Mail,
     color: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
+    available: true
   },
   outlook: {
     name: 'Outlook',
     icon: Mail,
     color: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20',
-  },
+    available: false,
+    comingSoon: true
+  }
 };
 
 export function ConnectedApps() {
   const { connectedApps, loading } = useOAuthConnections();
+  const { initiateOAuthFlow, connectingApp } = useOAuthFlow();
   
-  // Log the connected apps for debugging
   useEffect(() => {
     console.log('ConnectedApps component - connected apps:', connectedApps);
   }, [connectedApps]);
@@ -49,9 +54,7 @@ export function ConnectedApps() {
     );
   }
   
-  if (connectedApps.length === 0) {
-    return null;
-  }
+  const connectedAppIds = new Set(connectedApps.map(app => app.provider));
   
   return (
     <DropdownMenu>
@@ -64,27 +67,49 @@ export function ConnectedApps() {
           </Badge>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Connected Applications</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel>Applications</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {connectedApps.map((app) => {
-          const appConfig = APP_CONFIG[app.provider as keyof typeof APP_CONFIG];
-          if (!appConfig) {
-            console.log('No config found for app provider:', app.provider);
-            return null;
-          }
-          
+        
+        {Object.entries(AVAILABLE_APPS).map(([appId, appConfig]) => {
+          const isConnected = connectedAppIds.has(appId);
           const AppIcon = appConfig.icon;
           
           return (
-            <DropdownMenuItem key={app.id} className={appConfig.color + " rounded-md mb-1"}>
-              <AppIcon className="mr-2 h-4 w-4" />
-              <span>{appConfig.name}</span>
-              {app.scopes && app.scopes.length > 0 && (
-                <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]" title={app.scopes.join(', ')}>
-                  {app.scopes.length > 1 ? `${app.scopes.length} scopes` : app.scopes[0].split('/').pop()}
-                </span>
-              )}
+            <DropdownMenuItem
+              key={appId}
+              className={`${appConfig.color} rounded-md mb-1 ${!appConfig.available ? 'opacity-50' : ''}`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <AppIcon className="mr-2 h-4 w-4" />
+                  <span>{appConfig.name}</span>
+                </div>
+                
+                {appConfig.comingSoon ? (
+                  <Badge variant="outline" className="ml-2">Coming Soon</Badge>
+                ) : isConnected ? (
+                  <Badge variant="outline" className="ml-2 bg-white/10">Connected</Badge>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-2 h-6 hover:bg-white/20"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      initiateOAuthFlow(appId);
+                    }}
+                    disabled={connectingApp === appId || !appConfig.available}
+                  >
+                    {connectingApp === appId ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                  </Button>
+                )}
+              </div>
             </DropdownMenuItem>
           );
         })}
