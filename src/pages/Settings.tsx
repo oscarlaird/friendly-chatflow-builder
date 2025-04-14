@@ -1,8 +1,8 @@
-
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { ConnectedAppsSettings } from '@/components/settings/ConnectedAppsSettings';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export default function Settings() {
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="api">API & Integrations</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
           </TabsList>
           
           <TabsContent value="general" className="mt-4 space-y-4">
@@ -61,21 +61,8 @@ export default function Settings() {
             </Card>
           </TabsContent>
           
-          <TabsContent value="api" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>API & Integrations</CardTitle>
-                <CardDescription>
-                  Manage your API keys and external service integrations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* API settings content will go here */}
-                <p className="text-muted-foreground">
-                  API and integration settings will be implemented in future updates.
-                </p>
-              </CardContent>
-            </Card>
+          <TabsContent value="integrations" className="mt-4 space-y-4">
+            <ConnectedAppsSettings />
           </TabsContent>
         </Tabs>
       </div>
