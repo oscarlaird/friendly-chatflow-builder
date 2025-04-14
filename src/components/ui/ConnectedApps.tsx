@@ -12,12 +12,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
-import { FileSpreadsheet, Mail, Link2, Loader2, Plus } from 'lucide-react';
+import { Link2, Loader2, Plus } from 'lucide-react';
+import { OAuthIcon } from '@/components/ui/oauth-icons';
 
 // Updated app configuration with proper interface definition
 interface AppConfig {
   name: string;
-  icon: React.ForwardRefExoticComponent<any>;
+  provider: string;
   color: string;
   available: boolean;
   comingSoon?: boolean;
@@ -27,20 +28,20 @@ interface AppConfig {
 const AVAILABLE_APPS: Record<string, AppConfig> = {
   google_sheets: {
     name: 'Google Sheets',
-    icon: FileSpreadsheet,
-    color: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+    provider: 'google_sheets',
+    color: 'bg-[#34A853]/10 text-[#34A853] hover:bg-[#34A853]/20',
     available: true
   },
   gmail: {
     name: 'Gmail',
-    icon: Mail,
-    color: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
+    provider: 'gmail',
+    color: 'bg-[#EA4335]/10 text-[#EA4335] hover:bg-[#EA4335]/20',
     available: true
   },
   outlook: {
     name: 'Outlook',
-    icon: Mail,
-    color: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20',
+    provider: 'outlook',
+    color: 'bg-[#0078D4]/10 text-[#0078D4] hover:bg-[#0078D4]/20',
     available: false,
     comingSoon: true
   }
@@ -82,7 +83,6 @@ export function ConnectedApps() {
         
         {Object.entries(AVAILABLE_APPS).map(([appId, appConfig]) => {
           const isConnected = connectedAppIds.has(appId);
-          const AppIcon = appConfig.icon;
           
           return (
             <DropdownMenuItem
@@ -91,7 +91,12 @@ export function ConnectedApps() {
             >
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <AppIcon className="mr-2 h-4 w-4" />
+                  <OAuthIcon 
+                    provider={appConfig.provider as keyof typeof OAuthIcons} 
+                    isConnected={isConnected}
+                    size={16}
+                    className="mr-2"
+                  />
                   <span>{appConfig.name}</span>
                 </div>
                 

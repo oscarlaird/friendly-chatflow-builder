@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Icons } from '@/components/ui/icons';
 import { Badge } from '@/components/ui/badge';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
+import { OAuthIcon } from '@/components/ui/oauth-icons';
 
 export function WorkflowList() {
   const [chats, setChats] = useState<any[]>([]);
@@ -115,28 +115,19 @@ export function WorkflowList() {
   const renderAppIcons = (apps: string[] | null) => {
     if (!apps || apps.length === 0) return null;
     
-    // Map app names to icon components
-    const iconMap = {
-      google_sheets: Icons.fileSpreadsheet,
-      gmail: Icons.mail,
-      outlook: Icons.mail,
-      google_drive: Icons.folderClosed,
-      salesforce: Icons.database,
-      zapier: Icons.plugZap,
-      dropbox: Icons.cloudStorage,
-    };
-    
     return (
       <div className="flex items-center gap-1 mt-2">
-        {apps.map(app => {
-          const AppIcon = iconMap[app as keyof typeof iconMap] || Icons.link;
-          return (
-            <Badge key={app} variant="outline" className="px-1.5 py-0.5">
-              <AppIcon className="h-3 w-3 mr-1" />
-              <span className="text-xs">{APP_CONFIG[app as keyof typeof APP_CONFIG]?.name || app}</span>
-            </Badge>
-          );
-        })}
+        {apps.map(app => (
+          <Badge key={app} variant="outline" className="px-1.5 py-0.5">
+            <OAuthIcon 
+              provider={app as keyof typeof OAuthIcons}
+              isConnected={true}
+              size={12}
+              className="mr-1"
+            />
+            <span className="text-xs">{APP_CONFIG[app as keyof typeof APP_CONFIG]?.name || app}</span>
+          </Badge>
+        ))}
       </div>
     );
   };
