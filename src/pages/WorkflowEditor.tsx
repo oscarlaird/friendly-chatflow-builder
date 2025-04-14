@@ -10,7 +10,6 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { UserProfile } from '@/components/ui/user-profile';
 import { useChats } from '@/hooks/useChats';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Workflow } from '@/components/workflow/Workflow';
 
 export default function WorkflowEditor() {
   const { id } = useParams<{ id: string }>();
@@ -78,14 +77,9 @@ export default function WorkflowEditor() {
           </div>
         </header>
         
-        <div className="flex flex-1 overflow-hidden">
-          {/* Simple two-column layout */}
-          <div className="flex-1 overflow-hidden border-r">
-            <ChatInterface chatId={id} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <Workflow chatId={id} />
-          </div>
+        {/* Use a simplified layout with chat interface only */}
+        <div className="flex-1 overflow-hidden">
+          <ChatInterface chatId={id} />
         </div>
       </div>
     </TooltipProvider>
