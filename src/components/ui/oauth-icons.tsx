@@ -1,11 +1,11 @@
 
-import { SiGooglesheets, SiGmail, SiMicrosoftoutlook365 } from '@icons-pack/react-simple-icons';
+import { SiGooglesheets, SiGmail, SiMicrosoftoutlook } from '@icons-pack/react-simple-icons';
 
 // Define the mapping of provider keys to icon components
 export const OAuthIcons = {
   google_sheets: SiGooglesheets,
   gmail: SiGmail,
-  outlook: SiMicrosoftoutlook365,
+  outlook: SiMicrosoftoutlook,
 };
 
 // Define the accepted provider types
