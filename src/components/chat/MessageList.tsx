@@ -466,23 +466,40 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   const { messages, browserEvents } = dataState;
   const prevMessageCountRef = useRef(Object.keys(messages).length);
   const prevMessagesRef = useRef<string[]>([]);
+  const lastScrollPositionRef = useRef(0);
   
-  // Auto-scroll to bottom when new messages are added, but not when existing messages are updated
+  // Enhanced auto-scroll logic
   useEffect(() => {
     const currentMessageCount = Object.keys(messages).length;
     const currentMessageIds = Object.keys(messages);
+    const scrollContainer = scrollRef.current?.parentElement;
     
-    // Check if there are new messages added (not just updates)
+    if (!scrollContainer) return;
+    
+    // Calculate if user was near bottom before new content
+    const wasNearBottom = lastScrollPositionRef.current + scrollContainer.clientHeight >= 
+      scrollContainer.scrollHeight - 100;
+    
+    // Check if there are new messages
     const hasNewMessages = currentMessageIds.some(id => !prevMessagesRef.current.includes(id));
     
-    // Only auto-scroll if new messages were added, not when existing ones are updated
-    if ((currentMessageCount > prevMessageCountRef.current || hasNewMessages) && scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Auto-scroll if new messages were added and user was near bottom
+    if ((currentMessageCount > prevMessageCountRef.current || hasNewMessages) && wasNearBottom) {
+      setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
     
+    // Update refs for next check
     prevMessageCountRef.current = currentMessageCount;
     prevMessagesRef.current = currentMessageIds;
   }, [messages]);
+  
+  // Track scroll position
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const container = event.currentTarget;
+    lastScrollPositionRef.current = container.scrollTop;
+  };
 
   // Sort messages by created_at once instead of re-sorting on every render
   const messageList = Object.values(messages).sort((a, b) => 
@@ -511,7 +528,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
   };
 
   return (
-    <ScrollArea className="h-full px-2 py-6">
+    <ScrollArea className="h-full px-2 py-6" onScroll={handleScroll}>
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
