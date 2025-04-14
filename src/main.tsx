@@ -6,7 +6,7 @@ import './index.css'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class">
+  <ThemeProvider attribute="class" defaultTheme="system">
     <TooltipProvider>
       <App />
     </TooltipProvider>
