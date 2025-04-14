@@ -127,13 +127,6 @@ export function WorkflowList() {
             </Button>
             <div className="flex space-x-2">
               <Button
-                variant="destructive"
-                size="sm"
-                onClick={(e) => handleDeleteWorkflow(chat.id, e)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button
                 variant="outline"
                 size="sm"
                 onClick={(e) => {
@@ -142,6 +135,14 @@ export function WorkflowList() {
                 }}
               >
                 <ArrowUpRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-destructive text-destructive hover:bg-destructive/10"
+                onClick={(e) => handleDeleteWorkflow(chat.id, e)}
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </CardFooter>

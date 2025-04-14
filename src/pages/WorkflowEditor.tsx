@@ -3,19 +3,22 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Check, X } from 'lucide-react';
 import { ExtensionStatus } from '@/components/ui/extension-status';
 import { ConnectedApps } from '@/components/ui/ConnectedApps';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { UserProfile } from '@/components/ui/user-profile';
 import { useChats } from '@/hooks/useChats';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
 
 export default function WorkflowEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { chats, deleteChat } = useChats();
+  const { chats, deleteChat, updateChatTitle } = useChats();
   const [title, setTitle] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     if (!id) {
@@ -31,6 +34,7 @@ export default function WorkflowEditor() {
     if (workflow) {
       console.log("Found workflow:", workflow);
       setTitle(workflow.title);
+      setEditTitle(workflow.title);
     } else {
       console.log("Workflow not found, navigating to workflows");
       if (chats.length > 0) {
@@ -47,6 +51,23 @@ export default function WorkflowEditor() {
     }
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setEditTitle(title);
+  };
+
+  const handleSaveTitle = async () => {
+    if (id && editTitle.trim() !== '') {
+      await updateChatTitle(id, editTitle);
+      setTitle(editTitle);
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
   // Show loading state if ID is present but chats are still loading
   if (!id) return null;
 
@@ -58,13 +79,42 @@ export default function WorkflowEditor() {
             <Button variant="ghost" size="icon" onClick={() => navigate('/workflows')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold">{title || 'Loading...'}</h1>
+            
+            {isEditing ? (
+              <div className="flex items-center space-x-2">
+                <Input 
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  autoFocus
+                  className="h-9 w-60"
+                />
+                <Button variant="ghost" size="icon" onClick={handleSaveTitle}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold">{title || 'Loading...'}</h1>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={handleEditClick}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-3">
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
+              className="border-destructive text-destructive hover:bg-destructive/10"
               onClick={handleDeleteWorkflow}
             >
               <Trash2 className="h-4 w-4 mr-2" />
