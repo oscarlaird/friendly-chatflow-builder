@@ -59,7 +59,7 @@ export type Database = {
       }
       chats: {
         Row: {
-          apps: string | null
+          apps: string[] | null
           code_approved: boolean | null
           created_at: string | null
           id: string
@@ -74,7 +74,7 @@ export type Database = {
           uid: string
         }
         Insert: {
-          apps?: string | null
+          apps?: string[] | null
           code_approved?: boolean | null
           created_at?: string | null
           id?: string
@@ -89,7 +89,7 @@ export type Database = {
           uid: string
         }
         Update: {
-          apps?: string | null
+          apps?: string[] | null
           code_approved?: boolean | null
           created_at?: string | null
           id?: string

@@ -15,6 +15,6 @@ export const Icons = {
   link: Link,
   folderClosed: FolderClosed,
   database: Database,
-  cloudStorage: Cloud, // Changed from CloudStorage to Cloud
+  cloudStorage: Cloud,
   plugZap: PlugZap
 };

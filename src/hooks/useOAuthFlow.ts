@@ -22,6 +22,22 @@ export const APP_CONFIG = {
     name: 'Outlook',
     scopes: ['offline_access', 'mail.read', 'mail.send'],
   },
+  google_drive: {
+    name: 'Google Drive',
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  },
+  salesforce: {
+    name: 'Salesforce',
+    scopes: ['api', 'refresh_token'],
+  },
+  zapier: {
+    name: 'Zapier',
+    scopes: ['zapier.api'],
+  },
+  dropbox: {
+    name: 'Dropbox',
+    scopes: ['files.content.read', 'files.content.write'],
+  },
 } as const;
 
 export function useOAuthFlow() {
@@ -53,7 +69,7 @@ export function useOAuthFlow() {
       // Build OAuth URL based on provider
       let authUrl: string;
 
-      if (appName === 'google_sheets' || appName === 'gmail') {
+      if (appName === 'google_sheets' || appName === 'gmail' || appName === 'google_drive') {
         authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + 
           `client_id=1011255092960-rdmg43m71oubmr1rgvm6r234uop3fseu.apps.googleusercontent.com&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
