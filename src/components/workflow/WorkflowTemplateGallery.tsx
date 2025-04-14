@@ -35,7 +35,7 @@ const templates: Template[] = [
 interface WorkflowTemplateGalleryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectTemplate: (templateId: string | null) => void;
+  onSelectTemplate: (templateId: string | null) => Promise<void>;
 }
 
 export function WorkflowTemplateGallery({

@@ -111,18 +111,18 @@ export default function WorkflowEditor() {
           </div>
           
           <div className="flex items-center space-x-3">
+            <ConnectedApps />
+            <ExtensionStatus />
+            <ThemeToggle />
             <Button
               variant="outline"
               size="sm"
-              className="border-destructive text-destructive hover:bg-destructive/10"
+              className="text-destructive border-destructive/50 hover:bg-destructive/10"
               onClick={handleDeleteWorkflow}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
-            <ConnectedApps />
-            <ExtensionStatus />
-            <ThemeToggle />
             <UserProfile />
           </div>
         </header>

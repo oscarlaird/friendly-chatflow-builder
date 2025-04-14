@@ -14,12 +14,20 @@ export default function Workflows() {
   const navigate = useNavigate();
 
   const handleTemplateSelect = async (templateId: string | null) => {
-    // For now, create a blank workflow regardless of template selection
-    const newChat = await createChat('New Workflow');
-    if (newChat) {
-      setTemplateGalleryOpen(false);
-      // Navigate to the new workflow
-      navigate(`/workflow/${newChat.id}`);
+    try {
+      // For now, create a blank workflow regardless of template selection
+      const newChat = await createChat('New Workflow');
+      
+      if (newChat) {
+        console.log('Created new workflow with ID:', newChat.id);
+        setTemplateGalleryOpen(false);
+        
+        // Force navigation to the new workflow
+        // Use replace instead of push to avoid navigation stack issues
+        navigate(`/workflow/${newChat.id}`, { replace: true });
+      }
+    } catch (error) {
+      console.error('Error creating workflow:', error);
     }
   };
 
