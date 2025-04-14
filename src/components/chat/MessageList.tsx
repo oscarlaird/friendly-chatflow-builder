@@ -462,56 +462,32 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
 };
 
 export const MessageList = ({ dataState, loading }: MessageListProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, browserEvents } = dataState;
-  const prevMessageCountRef = useRef(Object.keys(messages).length);
-  const prevMessagesRef = useRef<string[]>([]);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(Object.keys(dataState.messages).length);
   
-  // Auto-scroll to bottom when new messages are added, but not when existing messages are updated
+  // Auto-scroll when new messages are added
   useEffect(() => {
-    const currentMessageCount = Object.keys(messages).length;
-    const currentMessageIds = Object.keys(messages);
+    const currentMessageCount = Object.keys(dataState.messages).length;
+    const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
     
-    // Check if there are new messages added (not just updates)
-    const hasNewMessages = currentMessageIds.some(id => !prevMessagesRef.current.includes(id));
-    
-    // Only auto-scroll if new messages were added, not when existing ones are updated
-    if ((currentMessageCount > prevMessageCountRef.current || hasNewMessages) && scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (hasNewMessages && lastMessageRef.current) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      });
     }
     
     prevMessageCountRef.current = currentMessageCount;
-    prevMessagesRef.current = currentMessageIds;
-  }, [messages]);
+  }, [dataState.messages]);
 
   // Sort messages by created_at once instead of re-sorting on every render
-  const messageList = Object.values(messages).sort((a, b) => 
+  const messageList = Object.values(dataState.messages).sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 
-  const renderMessage = (message: Message) => {
-    switch (message.type) {
-      case 'text_message':
-        return <TextMessageBubble key={message.id} message={message} />;
-      case 'code_run':
-        return (
-          <CodeRunMessageBubble 
-            key={message.id}
-            message={message}
-            browserEvents={browserEvents}
-          />
-        );
-      case 'screen_recording':
-        return <ScreenRecordingBubble key={message.id} message={message} />;
-      case 'connect_app':
-        return <ConnectAppMessage key={message.id} message={message} />;
-      default:
-        return <TextMessageBubble key={message.id} message={message} />;
-    }
-  };
-
   return (
-    <ScrollArea className="h-full px-2 py-6">
+    <ScrollArea className="h-full px-2 py-6" ref={scrollAreaRef}>
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
@@ -526,10 +502,32 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
               </div>
             ) : (
               <div className="flex flex-col items-stretch w-full">
-                {messageList.map(renderMessage)}
+                {messageList.map((message, index) => (
+                  <div 
+                    key={message.id}
+                    ref={index === messageList.length - 1 ? lastMessageRef : undefined}
+                  >
+                    {/* Message bubble components */}
+                    {message.type === 'text_message' && (
+                      <TextMessageBubble message={message} />
+                    )}
+                    {message.type === 'code_run' && (
+                      <CodeRunMessageBubble 
+                        message={message}
+                        browserEvents={dataState.browserEvents}
+                      />
+                    )}
+                    {message.type === 'screen_recording' && (
+                      <ScreenRecordingBubble message={message} />
+                    )}
+                    {message.type === 'connect_app' && (
+                      <ConnectAppMessage message={message} />
+                    )}
+                  </div>
+                ))}
               </div>
             )}
-            <div ref={scrollRef} />
+            <div ref={lastMessageRef} />
           </div>
         </div>
       )}
