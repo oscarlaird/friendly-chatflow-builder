@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types';
-import { CircleCheck, CircleDot, CircleX, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { CircleCheck, CircleDot, CircleX, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const RUNS_PER_PAGE = 20;
+// Create a type for the run data from Supabase that doesn't include coderunEvents
+type RunData = Omit<Message, 'coderunEvents'> & {
+  chat_title?: string;
+  chats?: { title: string };
+  coderunEvents: string[];
+};
 
 const StatusIcon = ({ state }: { state?: string }) => {
   switch (state) {
@@ -28,15 +31,9 @@ const StatusIcon = ({ state }: { state?: string }) => {
   }
 };
 
-// Create a type for the run data from Supabase that doesn't include coderunEvents
-type RunData = Omit<Message, 'coderunEvents'> & {
-  chat_title?: string;
-  chats?: { title: string };
-};
-
 export const RecentRuns = () => {
-  const [expanded, setExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [totalRuns, setTotalRuns] = useState(0);
   const [runs, setRuns] = useState<RunData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +44,7 @@ export const RecentRuns = () => {
     if (user) {
       fetchRuns(currentPage);
     }
-  }, [currentPage, user]);
+  }, [currentPage, pageSize, user]);
 
   const fetchRuns = async (page: number) => {
     if (!user) return;
@@ -78,15 +75,14 @@ export const RecentRuns = () => {
         .eq('uid', user.id)
         .eq('type', 'code_run')
         .order('created_at', { ascending: false })
-        .range((page - 1) * RUNS_PER_PAGE, page * RUNS_PER_PAGE - 1);
+        .range((page - 1) * pageSize, page * pageSize - 1);
 
       if (error) throw error;
 
-      // Cast the data from supabase to our RunData type
       const formattedRuns = runsData.map(run => ({
         ...run,
         chat_title: run.chats?.title,
-        coderunEvents: [] // Add the required coderunEvents property
+        coderunEvents: []
       })) as RunData[];
 
       setRuns(formattedRuns);
@@ -97,7 +93,7 @@ export const RecentRuns = () => {
     }
   };
 
-  const totalPages = Math.ceil(totalRuns / RUNS_PER_PAGE);
+  const totalPages = Math.ceil(totalRuns / pageSize);
 
   const getStateColor = (state?: string) => {
     switch (state) {
@@ -122,100 +118,91 @@ export const RecentRuns = () => {
             <CardTitle>Recent Runs</CardTitle>
             <CardDescription>Your workflow execution history</CardDescription>
           </div>
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpanded(!expanded)}
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => {
+              setPageSize(Number(value));
+              setCurrentPage(1); // Reset to first page when changing page size
+            }}
           >
-            {expanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Runs per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 per page</SelectItem>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="20">20 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
-        <Collapsible open={expanded} onOpenChange={setExpanded}>
-          <CollapsibleContent>
-            {loading ? (
-              <div className="flex justify-center py-4">
-                <p className="text-sm text-muted-foreground">Loading runs...</p>
-              </div>
-            ) : runs.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                No runs found. Start by creating a workflow!
-              </div>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  {runs.slice(0, expanded ? undefined : 5).map((run) => (
-                    <div 
-                      key={run.id} 
-                      className="flex items-center justify-between py-2 border-b last:border-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <StatusIcon state={run.code_run_state} />
-                        <div>
-                          <div className="font-medium">{run.chat_title || 'Untitled Workflow'}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
-                          </div>
-                          <div className={`text-xs ${getStateColor(run.code_run_state)}`}>
-                            {run.code_run_state ? run.code_run_state.replace(/_/g, ' ') : 'Unknown state'}
-                          </div>
-                        </div>
+        {loading ? (
+          <div className="flex justify-center py-4">
+            <p className="text-sm text-muted-foreground">Loading runs...</p>
+          </div>
+        ) : runs.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            No runs found. Start by creating a workflow!
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {runs.map((run) => (
+                <div 
+                  key={run.id} 
+                  className="flex items-center justify-between py-2 border-b last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <StatusIcon state={run.code_run_state} />
+                    <div>
+                      <div className="font-medium">{run.chat_title || 'Untitled Workflow'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/workflow/${run.chat_id}`)}
-                      >
-                        View Details
-                      </Button>
+                      <div className={`text-xs ${getStateColor(run.code_run_state)}`}>
+                        {run.code_run_state ? run.code_run_state.replace(/_/g, ' ') : 'Unknown state'}
+                      </div>
                     </div>
-                  ))}
-                </div>
-
-                {expanded && totalPages > 1 && (
-                  <div className="mt-4 flex justify-center">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <Button
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                          >
-                            <ChevronUp className="h-4 w-4 rotate-90" />
-                            <span className="ml-1">Previous</span>
-                          </Button>
-                        </PaginationItem>
-                        <PaginationItem>
-                          <span className="text-sm px-4">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                        </PaginationItem>
-                        <PaginationItem>
-                          <Button 
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                          >
-                            <span className="mr-1">Next</span>
-                            <ChevronUp className="h-4 w-4 -rotate-90" />
-                          </Button>
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
                   </div>
-                )}
-              </>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/workflow/${run.chat_id}`)}
+                  >
+                    View Details
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             )}
-          </CollapsibleContent>
-        </Collapsible>
+          </>
+        )}
       </CardContent>
     </Card>
   );
