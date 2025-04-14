@@ -82,10 +82,12 @@ export const RecentRuns = () => {
 
       if (error) throw error;
 
+      // Cast the data from supabase to our RunData type
       const formattedRuns = runsData.map(run => ({
         ...run,
-        chat_title: run.chats?.title
-      }));
+        chat_title: run.chats?.title,
+        coderunEvents: [] // Add the required coderunEvents property
+      })) as RunData[];
 
       setRuns(formattedRuns);
     } catch (error) {
