@@ -43,6 +43,19 @@ export function WorkflowTemplateGallery({
   onOpenChange,
   onSelectTemplate,
 }: WorkflowTemplateGalleryProps) {
+  // Prevent gallery from closing automatically when template is selected
+  const handleTemplateSelect = async (templateId: string | null) => {
+    // Don't close the dialog here - let the parent component handle it
+    // after successful workflow creation
+    try {
+      await onSelectTemplate(templateId);
+    } catch (error) {
+      console.error('Error selecting template:', error);
+      // Only close on error to prevent flashing UI
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
@@ -57,7 +70,7 @@ export function WorkflowTemplateGallery({
           <Button
             variant="outline"
             className="justify-start h-auto p-4"
-            onClick={() => onSelectTemplate(null)}
+            onClick={() => handleTemplateSelect(null)}
           >
             <FileText className="h-5 w-5 mr-2" />
             <div className="text-left">
@@ -73,7 +86,7 @@ export function WorkflowTemplateGallery({
               <Card
                 key={template.id}
                 className="cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => onSelectTemplate(template.id)}
+                onClick={() => handleTemplateSelect(template.id)}
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">

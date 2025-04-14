@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, CodeRewritingStatus } from '@/types';
@@ -112,14 +113,14 @@ export const useChats = () => {
               updatedChats = [newChat, ...chatsCache.data];
               chatsCache.data = updatedChats;
               
-              // Just navigate without setting localStorage
-              navigate(`/?chatId=${newChat.id}`, { replace: true });
+              // DO NOT AUTO-NAVIGATE HERE - let the component handle it
+              console.log(`New chat ${newChat.id} created, not auto-navigating`);
               
               // Show toast notification
               toast({
-                title: 'Chat Created',
+                title: 'Workflow Created',
                 description: `"${newChat.title}" has been created successfully`,
-                duration: 2000, // 3 seconds
+                duration: 2000,
               });
             } 
             else if (payload.eventType === 'UPDATE') {
@@ -163,7 +164,7 @@ export const useChats = () => {
     
     try {
       const newChat = {
-        title: title || 'New Chat',
+        title: title || 'New Workflow',
         uid: user.id,
         is_example: false
       };
@@ -176,12 +177,18 @@ export const useChats = () => {
 
       if (error) throw error;
       
-      // Don't update local state - let the realtime subscription handle it
-      // Just return the data from the API call
-      return data;
+      // Add the new chat to cache manually to avoid race conditions
+      const createdChat = data as Chat;
+      chatsCache.data = [createdChat, ...chatsCache.data];
+      setChats([...chatsCache.data]);
+      
+      console.log('Created chat and updated local cache:', createdChat.id);
+      
+      // Return the data from the API call
+      return createdChat;
     } catch (error: any) {
       toast({
-        title: 'Error creating chat',
+        title: 'Error creating workflow',
         description: error.message,
         variant: 'destructive',
       });
