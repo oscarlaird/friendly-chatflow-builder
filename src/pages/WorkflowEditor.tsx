@@ -26,15 +26,24 @@ export default function WorkflowEditor() {
 
   useEffect(() => {
     if (!id) {
+      console.log("No ID provided, navigating to workflows");
       navigate('/workflows');
       return;
     }
 
+    console.log("Looking for workflow with ID:", id);
+    console.log("Available chats:", chats);
+
     const workflow = chats.find(chat => chat.id === id);
     if (workflow) {
+      console.log("Found workflow:", workflow);
       setTitle(workflow.title);
     } else {
-      navigate('/workflows');
+      console.log("Workflow not found, navigating to workflows");
+      if (chats.length > 0) {
+        // Only navigate away if we've already loaded chats
+        navigate('/workflows');
+      }
     }
   }, [id, chats, navigate]);
 
@@ -56,6 +65,7 @@ export default function WorkflowEditor() {
     setWorkflowPanelOpen(prev => !prev);
   };
 
+  // Show loading state if ID is present but chats are still loading
   if (!id) return null;
 
   return (
@@ -82,7 +92,7 @@ export default function WorkflowEditor() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold">{title}</h1>
+                <h1 className="text-lg font-semibold">{title || 'Loading...'}</h1>
                 <Button variant="ghost" size="icon" onClick={() => setEditingTitle(true)}>
                   <Edit2 className="h-4 w-4" />
                 </Button>
@@ -115,7 +125,7 @@ export default function WorkflowEditor() {
         </header>
         
         <div className="flex flex-1 overflow-hidden">
-          <div className={`flex flex-col border-r ${workflowPanelOpen ? 'w-64' : 'w-0'} transition-width duration-300 overflow-hidden`}>
+          <div className={`flex flex-col border-r ${workflowPanelOpen ? 'w-64' : 'w-0'} transition-all duration-300 overflow-hidden`}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
               <TabsList className="w-full justify-start rounded-none border-b px-4 pt-2">
                 <TabsTrigger value="chat" className="flex-1">Chat</TabsTrigger>

@@ -60,13 +60,17 @@ export function WorkflowList() {
     }
   };
 
+  const handleWorkflowClick = (id: string) => {
+    navigate(`/workflow/${id}`);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {chats.map((chat) => (
         <Card 
           key={chat.id} 
           className="hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => editId !== chat.id && navigate(`/workflow/${chat.id}`)}
+          onClick={() => editId !== chat.id && handleWorkflowClick(chat.id)}
         >
           <CardHeader className="pb-2">
             {editId === chat.id ? (
@@ -105,7 +109,7 @@ export function WorkflowList() {
           </CardHeader>
           <CardContent className="pb-2">
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {/* Since description doesn't exist on Chat type, we'll use a placeholder instead */}
+              {/* Placeholder text for workflow information */}
               Workflow information
             </p>
           </CardContent>
@@ -115,7 +119,7 @@ export function WorkflowList() {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/workflow/${chat.id}`);
+                handleWorkflowClick(chat.id);
               }}
             >
               <Play className="mr-1 h-4 w-4" /> 
@@ -134,7 +138,7 @@ export function WorkflowList() {
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/workflow/${chat.id}`);
+                  handleWorkflowClick(chat.id);
                 }}
               >
                 <ArrowUpRight className="h-4 w-4" />

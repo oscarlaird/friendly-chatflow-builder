@@ -11,24 +11,30 @@ import AuthCallback from './pages/AuthCallback';
 import AgentSidePanel from './pages/AgentSidePanel';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/hooks/useAuth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/workflows" element={<Workflows />} />
-          <Route path="/workflow/:id" element={<WorkflowEditor />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
-          <Route path="/auth-callback" element={<AuthCallback />} />
-          <Route path="/old-home" element={<Index />} /> {/* Keep old home page for reference */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster position="top-right" />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/workflows" element={<Workflows />} />
+            <Route path="/workflow/:id" element={<WorkflowEditor />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
+            <Route path="/auth-callback" element={<AuthCallback />} />
+            <Route path="/old-home" element={<Index />} /> {/* Keep old home page for reference */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster position="top-right" />
+        </AuthProvider>
+      </QueryClientProvider>
     </Router>
   );
 }
