@@ -28,16 +28,21 @@ const StatusIcon = ({ state }: { state?: string }) => {
   }
 };
 
+// Create a type for the run data from Supabase that doesn't include coderunEvents
+type RunData = Omit<Message, 'coderunEvents'> & {
+  chat_title?: string;
+  chats?: { title: string };
+};
+
 export const RecentRuns = () => {
   const [expanded, setExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRuns, setTotalRuns] = useState(0);
-  const [runs, setRuns] = useState<Array<Message & { chat_title?: string }>>([]);
+  const [runs, setRuns] = useState<RunData[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fixed useEffect instead of useState
   useEffect(() => {
     if (user) {
       fetchRuns(currentPage);
@@ -175,21 +180,31 @@ export const RecentRuns = () => {
                     <Pagination>
                       <PaginationContent>
                         <PaginationItem>
-                          <PaginationPrevious 
+                          <Button
+                            variant="ghost" 
+                            size="sm"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                          />
+                          >
+                            <ChevronUp className="h-4 w-4 rotate-90" />
+                            <span className="ml-1">Previous</span>
+                          </Button>
                         </PaginationItem>
                         <PaginationItem>
-                          <span className="text-sm">
+                          <span className="text-sm px-4">
                             Page {currentPage} of {totalPages}
                           </span>
                         </PaginationItem>
                         <PaginationItem>
-                          <PaginationNext 
+                          <Button 
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                          />
+                          >
+                            <span className="mr-1">Next</span>
+                            <ChevronUp className="h-4 w-4 -rotate-90" />
+                          </Button>
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
