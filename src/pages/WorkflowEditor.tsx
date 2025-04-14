@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/chat/ChatInterface';
@@ -20,6 +19,30 @@ export default function WorkflowEditor() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
 
+  // Helper function to ensure scrolling works
+  const scrollMessagesToBottom = () => {
+    // Try different selectors to find the scroll container
+    const selectors = [
+      '#message-end',
+      '[data-radix-scroll-area-viewport]',
+      '.message-list-container',
+      '.overflow-auto',
+      '.overflow-y-auto'
+    ];
+    
+    // Try each selector
+    for (const selector of selectors) {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        if (selector === '#message-end') {
+          (el as HTMLElement).scrollIntoView({ behavior: 'auto', block: 'end' });
+        } else {
+          (el as HTMLElement).scrollTop = (el as HTMLElement).scrollHeight;
+        }
+      });
+    }
+  };
+
   useEffect(() => {
     if (!id) {
       console.log("No ID provided, navigating to workflows");
@@ -35,6 +58,10 @@ export default function WorkflowEditor() {
       console.log("Found workflow:", workflow);
       setTitle(workflow.title);
       setEditTitle(workflow.title);
+      
+      // Scroll to bottom when workflow loads
+      setTimeout(scrollMessagesToBottom, 300);
+      setTimeout(scrollMessagesToBottom, 800);
     } else {
       console.log("Workflow not found, navigating to workflows");
       if (chats.length > 0) {
@@ -43,6 +70,12 @@ export default function WorkflowEditor() {
       }
     }
   }, [id, chats, navigate]);
+  
+  // Set up a regular interval to check and force scroll
+  useEffect(() => {
+    const scrollInterval = setInterval(scrollMessagesToBottom, 2000);
+    return () => clearInterval(scrollInterval);
+  }, []);
 
   const handleDeleteWorkflow = async () => {
     if (id && window.confirm('Are you sure you want to delete this workflow?')) {
