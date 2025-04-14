@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -103,3 +104,7 @@ export interface WorkflowDisplayProps {
 }
 
 export type CodeRewritingStatus = 'thinking' | 'rewriting_code' | 'done';
+
+export interface Workflow extends Chat {
+  // Additional workflow-specific properties could be added here
+}
