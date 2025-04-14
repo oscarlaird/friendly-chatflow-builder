@@ -1,18 +1,91 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChats } from '@/hooks/useChats';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Check, X, Play, ArrowUpRight, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { FolderCog } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export function WorkflowList() {
-  const { chats, loading, updateChatTitle, deleteChat } = useChats();
+  const [chats, setChats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [editId, setEditId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+
+  // Fetch user-specific chats
+  useEffect(() => {
+    if (!user) {
+      setChats([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchUserChats = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('uid', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching chats:', error);
+        setLoading(false);
+        return;
+      }
+
+      setChats(data || []);
+      setLoading(false);
+    };
+
+    fetchUserChats();
+  }, [user]);
+
+  const updateChatTitle = async (id: string, newTitle: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('chats')
+      .update({ title: newTitle })
+      .eq('id', id)
+      .eq('uid', user.id);
+
+    if (error) {
+      console.error('Error updating chat title:', error);
+      return;
+    }
+
+    // Optimistically update the local state
+    setChats(chats.map(chat => 
+      chat.id === id ? { ...chat, title: newTitle } : chat
+    ));
+    setEditId(null);
+  };
+
+  const deleteChat = async (id: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('chats')
+      .delete()
+      .eq('id', id)
+      .eq('uid', user.id);
+
+    if (error) {
+      console.error('Error deleting chat:', error);
+      return;
+    }
+
+    // Optimistically remove from local state
+    setChats(chats.filter(chat => chat.id !== id));
+  };
 
   if (loading) {
     return (
@@ -36,41 +109,13 @@ export function WorkflowList() {
     );
   }
 
-  const handleEditClick = (id: string, title: string) => {
-    setEditId(id);
-    setEditTitle(title);
-  };
-
-  const handleSaveTitle = async (id: string) => {
-    if (editTitle.trim() !== '') {
-      await updateChatTitle(id, editTitle);
-      setEditId(null);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditId(null);
-    setEditTitle('');
-  };
-
-  const handleDeleteWorkflow = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this workflow?')) {
-      await deleteChat(id);
-    }
-  };
-
-  const handleWorkflowClick = (id: string) => {
-    navigate(`/workflow/${id}`);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {chats.map((chat) => (
         <Card 
           key={chat.id} 
           className="hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => editId !== chat.id && handleWorkflowClick(chat.id)}
+          onClick={() => editId !== chat.id && navigate(`/workflow/${chat.id}`)}
         >
           <CardHeader className="pb-2">
             {editId === chat.id ? (
@@ -81,10 +126,18 @@ export function WorkflowList() {
                   autoFocus
                   className="h-8"
                 />
-                <Button variant="ghost" size="icon" onClick={() => handleSaveTitle(chat.id)}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => updateChatTitle(chat.id, editTitle)}
+                >
                   <Check className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setEditId(null)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -96,7 +149,8 @@ export function WorkflowList() {
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleEditClick(chat.id, chat.title);
+                    setEditId(chat.id);
+                    setEditTitle(chat.title);
                   }}
                 >
                   <Pencil className="h-4 w-4" />
@@ -109,7 +163,6 @@ export function WorkflowList() {
           </CardHeader>
           <CardContent className="pb-2">
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {/* Placeholder text for workflow information */}
               Workflow information
             </p>
           </CardContent>
@@ -119,7 +172,7 @@ export function WorkflowList() {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                handleWorkflowClick(chat.id);
+                navigate(`/workflow/${chat.id}`);
               }}
             >
               <Play className="mr-1 h-4 w-4" /> 
@@ -131,7 +184,7 @@ export function WorkflowList() {
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleWorkflowClick(chat.id);
+                  navigate(`/workflow/${chat.id}`);
                 }}
               >
                 <ArrowUpRight className="h-4 w-4" />
@@ -140,7 +193,12 @@ export function WorkflowList() {
                 variant="outline"
                 size="sm"
                 className="border-destructive text-destructive hover:bg-destructive/10"
-                onClick={(e) => handleDeleteWorkflow(chat.id, e)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Are you sure you want to delete this workflow?')) {
+                    deleteChat(chat.id);
+                  }
+                }}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -151,6 +209,3 @@ export function WorkflowList() {
     </div>
   );
 }
-
-// Import this icon for the empty state
-import { FolderCog } from 'lucide-react';

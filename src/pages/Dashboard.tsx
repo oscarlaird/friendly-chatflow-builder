@@ -8,13 +8,11 @@ import { Home, FolderCog, Settings, ArrowUpRight, Clock, CircleDot, CircleCheck,
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useChats } from '@/hooks/useChats';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 // Mock data for the dashboard
 const MOCK_DATA = {
-  totalWorkflows: 0,
-  totalRuns: 0,
-  creditsUsed: 2500,
-  totalCredits: 10000,
   recentRuns: [
     { id: 1, name: 'Social Media Analysis', status: 'completed', date: '2025-04-10T14:30:00Z' },
     { id: 2, name: 'Customer Research', status: 'failed', date: '2025-04-09T10:15:00Z' },
@@ -39,15 +37,65 @@ const StatusIcon = ({ status }: { status: string }) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { chats } = useChats();
-  const [data, setData] = useState(MOCK_DATA);
-  
+  const { user } = useAuth();
+  const [data, setData] = useState({
+    totalWorkflows: 0,
+    totalRuns: 0,
+    creditsUsed: 0,
+    totalCredits: 2000
+  });
+
   useEffect(() => {
-    setData(prev => ({
-      ...prev,
-      totalWorkflows: chats.length
-    }));
-  }, [chats]);
+    if (!user) return;
+
+    const fetchUserStats = async () => {
+      // Fetch total workflows for the user
+      const { count: workflowsCount, error: workflowsError } = await supabase
+        .from('chats')
+        .select('id', { count: 'exact' })
+        .eq('uid', user.id);
+
+      if (workflowsError) {
+        console.error('Error fetching workflows:', workflowsError);
+        return;
+      }
+
+      // Fetch total runs (code_run messages) for the user
+      const { count: runsCount, error: runsError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact' })
+        .eq('uid', user.id)
+        .eq('type', 'code_run');
+
+      if (runsError) {
+        console.error('Error fetching runs:', runsError);
+        return;
+      }
+
+      // Fetch total credits used from model costs
+      const { data: costsData, error: costsError } = await supabase
+        .from('chats')
+        .select('model_cost')
+        .eq('uid', user.id);
+
+      if (costsError) {
+        console.error('Error fetching model costs:', costsError);
+        return;
+      }
+
+      const totalModelCost = costsData.reduce((sum, chat) => sum + (chat.model_cost || 0), 0);
+      const creditsUsed = Math.round(totalModelCost * 20); // 1$ = 20 credits
+
+      setData({
+        totalWorkflows: workflowsCount || 0,
+        totalRuns: runsCount || 0,
+        creditsUsed,
+        totalCredits: 2000
+      });
+    };
+
+    fetchUserStats();
+  }, [user]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -111,9 +159,9 @@ export default function Dashboard() {
               <CardDescription>Your 5 most recent workflow executions</CardDescription>
             </CardHeader>
             <CardContent>
-              {data.recentRuns.length > 0 ? (
+              {data.totalRuns > 0 ? (
                 <div className="space-y-4">
-                  {data.recentRuns.map((run) => (
+                  {MOCK_DATA.recentRuns.map((run) => (
                     <div key={run.id} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div className="flex items-center gap-3">
                         <StatusIcon status={run.status} />
