@@ -1,11 +1,12 @@
 
-import { SiGooglesheets, SiGmail, SiMicrosoftoutlook } from '@icons-pack/react-simple-icons';
+import { SiGooglesheets, SiGmail } from '@icons-pack/react-simple-icons';
+import { Mail } from 'lucide-react';
 
 // Define the mapping of provider keys to icon components
 export const OAuthIcons = {
   google_sheets: SiGooglesheets,
   gmail: SiGmail,
-  outlook: SiMicrosoftoutlook,
+  outlook: Mail, // Use Lucide React Mail icon as a fallback
 };
 
 // Define the accepted provider types
@@ -37,3 +38,4 @@ export function OAuthIcon({ provider, className, size = 16, isConnected = false 
     />
   );
 }
+
