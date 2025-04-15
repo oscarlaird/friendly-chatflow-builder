@@ -69,3 +69,11 @@
 .dark .react-flow__attribution a {
   color: rgba(255, 255, 255, 0.7);
 }
+
+/* Fix for node content styling */
+.react-flow__node-stepNode {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}

@@ -87,10 +87,6 @@ export const WorkflowGraph = ({
           userInputs: step.type === 'user_input' ? userInputs : undefined,
           setUserInputs: step.type === 'user_input' ? setUserInputs : undefined,
           browserEvents: step.function_name ? browserEvents[step.function_name] || [] : []
-        },
-        style: {
-          width: nodeWidth,
-          height: nodeHeight,
         }
       });
     });
