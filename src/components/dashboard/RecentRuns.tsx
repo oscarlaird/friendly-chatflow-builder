@@ -8,6 +8,8 @@ import { Message } from '@/types';
 import { CircleCheck, CircleDot, CircleX, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RunScreenshotViewer } from './RunScreenshotViewer';
+import { cn } from '@/lib/utils';
 
 // Create a type for the run data from Supabase that doesn't include coderunEvents
 type RunData = Omit<Message, 'coderunEvents'> & {
@@ -151,18 +153,31 @@ export const RecentRuns = () => {
               {runs.map((run) => (
                 <div 
                   key={run.id} 
-                  className="flex items-center justify-between py-2 border-b last:border-0"
+                  className="flex items-start justify-between py-2 border-b last:border-0 gap-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
                     <StatusIcon state={run.code_run_state} />
-                    <div>
-                      <div className="font-medium">{run.chat_title || 'Untitled Workflow'}</div>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{run.chat_title || 'Untitled Workflow'}</div>
                       <div className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(run.created_at), { addSuffix: true })}
                       </div>
-                      <div className={`text-xs ${getStateColor(run.code_run_state)}`}>
+                      <div className={cn(
+                        "text-xs",
+                        getStateColor(run.code_run_state)
+                      )}>
                         {run.code_run_state ? run.code_run_state.replace(/_/g, ' ') : 'Unknown state'}
                       </div>
+                      
+                      {/* Show live preview for running workflows */}
+                      {run.code_run_state === 'running' && (
+                        <div className="mt-2 h-32">
+                          <RunScreenshotViewer 
+                            chatId={run.chat_id} 
+                            className="w-full h-full"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button
