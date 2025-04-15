@@ -11,8 +11,8 @@ interface WorkflowStepNodeProps {
 }
 
 export const WorkflowStepNode = memo(({ data, isConnectable }: WorkflowStepNodeProps) => {
-  // Make sure data.icon is a valid component or function before using it
-  const IconComponent = data.icon || (() => null);
+  // Get the icon component
+  const Icon = data.icon;
   const type = data.type || 'unknown';
   
   // Get background color based on step type
@@ -80,7 +80,7 @@ export const WorkflowStepNode = memo(({ data, isConnectable }: WorkflowStepNodeP
       
       <div className="flex items-center gap-2 mb-1">
         <div className="h-6 w-6 flex items-center justify-center rounded-full bg-background border">
-          <IconComponent className="h-3.5 w-3.5 text-muted-foreground" />
+          {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
         </div>
         <div className="font-medium text-sm truncate max-w-[180px]">
           {data.label || `Step ${data.step_number}`}
