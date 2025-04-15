@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -22,7 +23,7 @@ interface WorkflowProps {
   chatId?: string;
   compact?: boolean;
   className?: string;
-  pastRunMessageId?: string;
+  pastRunMessageId?: string | null;
   onClosePastRun?: () => void;
 }
 
@@ -83,7 +84,7 @@ const AppIntegrationIcons = ({ apps }: { apps: string[] }) => {
 };
 
 export const Workflow = ({ 
-  steps= [],
+  steps = [],
   initialSteps = [],
   chatId,
   compact = false,
@@ -110,6 +111,20 @@ export const Workflow = ({
 
   // Background color based on whether viewing past run
   const bgColor = pastRunMessage ? 'bg-muted/30' : 'bg-background';
+  
+  // Update workflowSteps when pastRunMessage changes
+  useEffect(() => {
+    if (pastRunMessage && pastRunMessage.steps) {
+      console.log("Displaying steps from past run message:", pastRunMessage.steps);
+      setWorkflowSteps(pastRunMessage.steps);
+    } else if (selectedChat && selectedChat.steps) {
+      console.log("Displaying steps from selected chat:", selectedChat.steps);
+      setWorkflowSteps(selectedChat.steps);
+    } else if (initialSteps.length > 0) {
+      console.log("Displaying initial steps:", initialSteps);
+      setWorkflowSteps(initialSteps);
+    }
+  }, [pastRunMessage, selectedChat, initialSteps]);
   
   const handleRunWorkflow = async () => {
     if (!chatId) return;
