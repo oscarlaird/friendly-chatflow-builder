@@ -1,12 +1,14 @@
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
+import { ThemeProvider } from 'next-themes'
 import App from './App.tsx'
 import './index.css'
-import './styles/animations.css'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+createRoot(document.getElementById("root")!).render(
+  <ThemeProvider attribute="class" defaultTheme="system">
+    <TooltipProvider>
+      <App />
+    </TooltipProvider>
+  </ThemeProvider>
+);
