@@ -4,17 +4,16 @@ import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
-import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle, Eye } from 'lucide-react';
+import { Play, Pause, Square, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle, Eye, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ConnectAppMessage } from './ConnectAppMessage';
-import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useScreenshots } from '@/hooks/useScreenshots';
+import { ScreenshotViewer } from '../screenshots/ScreenshotViewer';
 
 // Define the interface for MessageList props
 interface MessageListProps {
@@ -296,6 +295,24 @@ const CodeRunMessageBubble = ({
   const [highlight, setHighlight] = useState(false);
   const previousContentRef = useRef(message.content);
   
+  // Initialize screenshots functionality for this message
+  const { screenshots, latestScreenshot, requestScreenshot } = useScreenshots(message.id);
+  
+  // Request screenshots if this is a running message
+  useEffect(() => {
+    if (message.code_run_state === 'running') {
+      // Initial request
+      requestScreenshot(message.id);
+      
+      // Set up interval for continuous requests while running
+      const intervalId = setInterval(() => {
+        requestScreenshot(message.id);
+      }, 1000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [message.id, message.code_run_state, requestScreenshot]);
+  
   // Highlight content only when it changes from previous render
   useEffect(() => {
     if (message.content !== previousContentRef.current) {
@@ -322,30 +339,12 @@ const CodeRunMessageBubble = ({
         messageId: message.id
       }
     }, '*');
-    
   };
   
-  // Process workflow steps to include browser events
-  const processStepsWithBrowserEvents = (steps: any[]) => {
-    if (!steps || !Array.isArray(steps)) return [];
-    
-    return steps.map(step => {
-      // Only process function steps to add browser events
-      if (step.type === 'function' && step.function_name) {
-        const functionEvents = messageBrowserEvents.filter(
-          event => event.function_name === step.function_name
-        );
-        
-        if (functionEvents.length > 0) {
-          return {
-            ...step,
-            browserEvents: functionEvents,
-            active: true
-          };
-        }
-      }
-      return step;
-    });
+  const handleViewRun = () => {
+    if (message.id && onViewPastRun) {
+      onViewPastRun(message.id);
+    }
   };
   
   // Update the terminal states check
@@ -356,18 +355,13 @@ const CodeRunMessageBubble = ({
   
   // Check if message is in running state
   const isRunning = message.code_run_state === 'running';
-  
-  const handleViewRun = () => {
-    if (message.id && onViewPastRun) {
-      onViewPastRun(message.id);
-    }
-  };
 
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={cn(
         "w-full max-w-[95%] p-4 transition-colors duration-300",
-        highlight ? 'ring-2 ring-accent' : ''
+        highlight ? 'ring-2 ring-accent' : '',
+        isRunning ? 'border-pulse' : ''
       )}>
         <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -386,6 +380,19 @@ const CodeRunMessageBubble = ({
             {/* Show error badge if there's a code_run_error */}
             {message.code_run_error && (
               <CodeRunErrorBadge error={message.code_run_error} />
+            )}
+
+            {/* Live View button for running messages */}
+            {isRunning && latestScreenshot && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1"
+                onClick={() => setIsOpen(prev => !prev)}
+              >
+                <Monitor className="h-3.5 w-3.5 mr-1" />
+                {isOpen ? 'Hide Preview' : 'Show Preview'}
+              </Button>
             )}
 
             {/* View Run button */}
@@ -419,6 +426,21 @@ const CodeRunMessageBubble = ({
             )}
           </div>
         </div>
+        
+        {/* Show screenshot viewer if message is running and preview is open */}
+        {isRunning && isOpen && latestScreenshot && (
+          <div className="mt-4">
+            <ScreenshotViewer
+              screenshots={screenshots}
+              latestScreenshot={latestScreenshot}
+              isRunning={isRunning}
+              title="Live Agent View"
+              onRequestScreenshot={() => requestScreenshot(message.id)}
+              autoRequest={true}
+              compact={true}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

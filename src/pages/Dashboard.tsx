@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useChats } from '@/hooks/useChats';
 import { ArrowUpRight } from 'lucide-react';
 import { RecentRuns } from '@/components/dashboard/RecentRuns';
+import { RunningScreenshots } from '@/components/dashboard/RunningScreenshots';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -120,6 +121,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        <RunningScreenshots />
+        
         <RecentRuns />
       </div>
     </Layout>
