@@ -6,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,11 +14,13 @@ import { toast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ConnectAppMessage } from './ConnectAppMessage';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 // Define the interface for MessageList props
 interface MessageListProps {
   dataState: DataState;
   loading: boolean;
+  onViewPastRun?: (messageId: string) => void;
 }
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
@@ -277,9 +279,14 @@ const ElapsedTimeDisplay = ({ createdAt }: { createdAt: string }) => {
   );
 };
 
-const CodeRunMessageBubble = ({ message, browserEvents }: { 
+const CodeRunMessageBubble = ({ 
+  message, 
+  browserEvents,
+  onViewPastRun
+}: { 
   message: Message; 
   browserEvents: Record<string, BrowserEvent>;
+  onViewPastRun?: (messageId: string) => void;
 }) => {
   // Determine if this is a recent message (created in the last 5 seconds)
   const isRecentMessage = new Date().getTime() - new Date(message.created_at).getTime() < 5000;
@@ -350,71 +357,68 @@ const CodeRunMessageBubble = ({ message, browserEvents }: {
   // Check if message is in running state
   const isRunning = message.code_run_state === 'running';
   
+  const handleViewRun = () => {
+    if (message.id && onViewPastRun) {
+      onViewPastRun(message.id);
+    }
+  };
+
   return (
     <div className="flex justify-center mb-4 w-full">
-      <Card className={`w-full max-w-[95%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
-                </Button>
-              </CollapsibleTrigger>
-              <h3 className="text-sm font-medium">Code Run</h3>
-              
-              {/* Show elapsed time if message is in running state */}
-              {isRunning && (
-                <ElapsedTimeDisplay createdAt={message.created_at} />
-              )}
-              
-              {costInCents && costInCents !== "0.00" && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <DollarSign className="h-3 w-3" />
-                  <span>{costInCents}¢</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Show error badge if there's a code_run_error */}
-              {message.code_run_error && (
-                <CodeRunErrorBadge error={message.code_run_error} />
-              )}
-              
-              {/* Only show Jump to Window button if code_run_state is not in a terminal state */}
-              {message.code_run_state && !isTerminalState && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleJumpToWindow}
-                  title="Jump to Window"
-                >
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                  Jump to Window
-                </Button>
-              )}
-              <CodeRunStateIndicator state={message.code_run_state} />
-              {message.code_run_state && !isTerminalState && (
-                <CodeRunControls message={message} />
-              )}
-            </div>
-          </div>
-          
-          {/* Don't show message content for code_run messages */}
-          
-          <CollapsibleContent>
-            {/* Display workflow steps with browser events */}
-            {message.steps && message.steps.length > 0 && (
-              <div className="w-full overflow-hidden">
-                <WorkflowDisplay 
-                  steps={processStepsWithBrowserEvents(message.steps)}
-                  compact={true}
-                  autoActivateSteps={true} // Now this prop is defined in the interface
-                />
+      <Card className={cn(
+        "w-full max-w-[95%] p-4 transition-colors duration-300",
+        highlight ? 'ring-2 ring-accent' : ''
+      )}>
+        <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium">Code Run</h3>
+            {isRunning && (
+              <ElapsedTimeDisplay createdAt={message.created_at} />
+            )}
+            {costInCents && costInCents !== "0.00" && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <DollarSign className="h-3 w-3" />
+                <span>{costInCents}¢</span>
               </div>
             )}
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Show error badge if there's a code_run_error */}
+            {message.code_run_error && (
+              <CodeRunErrorBadge error={message.code_run_error} />
+            )}
+
+            {/* View Run button */}
+            {message.code_run_state && isTerminalState && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleViewRun}
+                title="View Run"
+              >
+                <Eye className="h-3.5 w-3.5 mr-1" />
+                View Run
+              </Button>
+            )}
+            
+            {/* Show Jump to Window for ongoing runs */}
+            {message.code_run_state && !isTerminalState && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleJumpToWindow}
+                title="Jump to Window"
+              >
+                <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                Jump to Window
+              </Button>
+            )}
+            <CodeRunStateIndicator state={message.code_run_state} />
+            {message.code_run_state && !isTerminalState && (
+              <CodeRunControls message={message} />
+            )}
+          </div>
+        </div>
       </Card>
     </div>
   );
@@ -461,7 +465,7 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   );
 };
 
-export const MessageList = ({ dataState, loading }: MessageListProps) => {
+export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(Object.keys(dataState.messages).length);
@@ -515,6 +519,7 @@ export const MessageList = ({ dataState, loading }: MessageListProps) => {
                       <CodeRunMessageBubble 
                         message={message}
                         browserEvents={dataState.browserEvents}
+                        onViewPastRun={onViewPastRun}
                       />
                     )}
                     {message.type === 'screen_recording' && (

@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { Play, Loader2, Link } from 'lucide-react';
+import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +7,6 @@ import { useMessages } from '@/hooks/useMessages';
 import { CodeRewritingStatus, Chat } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { nestSteps } from './utils/nestingUtils';
 import { useSelectedChat } from '@/hooks/useChats';
 import { useRequiredApps } from '@/hooks/useRequiredApps';
 import { ConnectionModal } from './ConnectionModal';
@@ -24,6 +22,8 @@ interface WorkflowProps {
   chatId?: string;
   compact?: boolean;
   className?: string;
+  pastRunMessageId?: string;
+  onClosePastRun?: () => void;
 }
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
@@ -83,115 +83,107 @@ const AppIntegrationIcons = ({ apps }: { apps: string[] }) => {
 };
 
 export const Workflow = ({ 
-  initialSteps = [],
   steps= [],
+  initialSteps = [],
   chatId,
   compact = false,
   className = '',
+  pastRunMessageId,
+  onClosePastRun,
 }: WorkflowProps) => {
-
-  useEffect(() => {
-    console.log('RENDER - Workflow component rendered');
-  });
-  
   const [workflowSteps, setWorkflowSteps] = useState<any[]>(steps.length > 0 ? steps : initialSteps);
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
   const [userInputs, setUserInputs] = useState<Record<string, any>>({});
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   
-  const { sendMessage } = useMessages(chatId || null);
-  
-  // Use our hooks for selected chat, code rewriting status, and required apps
+  const { dataState, sendMessage } = useMessages(chatId || null);
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
   const { requiredApps, missingConnections, allAppsConnected, loading: loadingApps } = useRequiredApps(chatId);
-  
-  // When selectedChat changes, log its properties
-  useEffect(() => {
-    if (selectedChat) {
-      console.log('Workflow: Selected chat updated:', {
-        id: selectedChat.id,
-        requires_code_rewrite: selectedChat.requires_code_rewrite,
-        code_approved: selectedChat.code_approved,
-        codeRewritingStatus: codeRewritingStatus,
-        apps: selectedChat.apps
-      });
-    } else {
-      console.log('Workflow: Selected chat is null');
-    }
-  }, [selectedChat, codeRewritingStatus]);
-  
-  // Initialize with steps coming from props or selected chat
-  useEffect(() => {
-    let stepsToUse: any[] = [];
 
-    if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
-      stepsToUse = selectedChat.steps;
-    }
-      
-    setWorkflowSteps(stepsToUse);
-    
-    // Initialize user input values from steps if applicable
-    if (stepsToUse.length > 0) {
-      const userInputStep = stepsToUse.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        // Only set initial values if we don't have any
-        setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
-      }
-    }
-   
-  }, [selectedChat]);
+  // Find the current running message if any
+  const runningMessage = Object.values(dataState.messages).find(
+    msg => msg.type === 'code_run' && msg.code_run_state === 'running'
+  );
+
+  // Get past run message if viewing one
+  const pastRunMessage = pastRunMessageId ? dataState.messages[pastRunMessageId] : null;
+
+  // Background color based on whether viewing past run
+  const bgColor = pastRunMessage ? 'bg-muted/30' : 'bg-background';
   
   const handleRunWorkflow = async () => {
-    console.log('handleRunWorkflow - userInputs', userInputs);
-    
     if (!chatId) return;
     
-    // Check if all required apps are connected
     if (!allAppsConnected && requiredApps.length > 0) {
       setShowConnectionModal(true);
       return;
     }
     
     try {
-      // Send an empty message instead of "Run workflow"
       const data = await sendMessage("", "user", "code_run", userInputs);
-      
-      console.log("Message sent:", data);
-      const messageId = data.id;
       window.postMessage({
         type: 'CREATE_AGENT_RUN_WINDOW',
         payload: {
           chatId: chatId,
-          roomId: messageId
+          roomId: data.id
         }
       }, '*');
     } catch (error) {
       console.error("Error running workflow:", error);
     }
   };
-  
+
   return (
     <div className={cn("flex flex-col h-full overflow-hidden", className)}>
-      <div className="p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0">
+      <div className={cn(
+        "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
+        bgColor
+      )}>
         <div className="flex items-center">
-          <h2 className="text-lg font-semibold">Workflow</h2>
+          {pastRunMessage && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onClosePastRun}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <h2 className="text-lg font-semibold">
+            {pastRunMessage ? 'Past Run' : 'Workflow'}
+          </h2>
           {requiredApps.length > 0 && !loadingApps && (
             <AppIntegrationIcons apps={requiredApps} />
           )}
         </div>
         <div className="flex items-center gap-2">
-          <StatusBadge status={codeRewritingStatus} />
-          <Button 
-            size="sm" 
-            className="gap-1 ml-1" 
-            onClick={handleRunWorkflow} 
-            disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
-          >
-            <Play className="h-4 w-4" />
-            Run
-          </Button>
+          {!pastRunMessage && (
+            <>
+              <StatusBadge status={codeRewritingStatus} />
+              <Button 
+                size="sm" 
+                className="gap-1 ml-1" 
+                onClick={handleRunWorkflow} 
+                disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
+              >
+                <Play className="h-4 w-4" />
+                Run
+              </Button>
+            </>
+          )}
+          {pastRunMessage && (
+            <Button 
+              variant="secondary"
+              size="sm" 
+              onClick={onClosePastRun}
+            >
+              Close Past Run
+            </Button>
+          )}
         </div>
       </div>
+
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
@@ -212,7 +204,6 @@ export const Workflow = ({
         </ScrollArea>
       </div>
       
-      {/* Connection Modal */}
       <ConnectionModal 
         open={showConnectionModal}
         onOpenChange={setShowConnectionModal}

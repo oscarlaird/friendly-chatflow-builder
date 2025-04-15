@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
@@ -23,13 +22,31 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [sending, setSending] = useState(false);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
-  
+  const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
+
   // Initialize the window message handler
   useWindowMessages();
 
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);
   const initialWorkflowSteps = currentChat?.steps as any[] || [];
+
+  // Find the running message if any
+  const runningMessage = Object.values(dataState.messages).find(
+    msg => msg.type === 'code_run' && msg.code_run_state === 'running'
+  );
+
+  // Handle viewing past run
+  const handleViewPastRun = (messageId: string) => {
+    setPastRunMessageId(messageId);
+    if (isMobile) {
+      setActiveView('workflow');
+    }
+  };
+
+  const handleClosePastRun = () => {
+    setPastRunMessageId(null);
+  };
 
   const handleSendMessage = async (content: string, type: 'text_message' | 'code_run' = 'text_message') => {
     if (!chatId) return;
@@ -69,29 +86,39 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         </Tabs>
       </div>
 
-      {/* Mobile view (tabs) */}
+      {/* Mobile view */}
       <div className="md:hidden flex-1 overflow-hidden w-full">
         {activeView === 'chat' ? (
           <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
-            <MessageList dataState={dataState} loading={loading} />
+            <MessageList 
+              dataState={dataState} 
+              loading={loading} 
+              onViewPastRun={handleViewPastRun}
+            />
             <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
           </div>
         ) : (
           <div className="h-full overflow-hidden w-full">
             <Workflow 
               initialSteps={initialWorkflowSteps} 
-              chatId={chatId} 
+              chatId={chatId}
+              pastRunMessageId={pastRunMessageId}
+              onClosePastRun={handleClosePastRun}
             />
           </div>
         )}
       </div>
 
-      {/* Desktop view (resizable panels) */}
+      {/* Desktop view */}
       <div className="hidden md:block flex-1 overflow-hidden w-full">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
           <ResizablePanel defaultSize={60} minSize={30}>
             <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
-              <MessageList dataState={dataState} loading={loading} />
+              <MessageList 
+                dataState={dataState} 
+                loading={loading}
+                onViewPastRun={handleViewPastRun}
+              />
               <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
             </div>
           </ResizablePanel>
@@ -101,11 +128,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           <ResizablePanel defaultSize={40} minSize={30}>
             <Workflow 
               initialSteps={initialWorkflowSteps} 
-              chatId={chatId} 
+              chatId={chatId}
+              pastRunMessageId={pastRunMessageId}
+              onClosePastRun={handleClosePastRun}
             />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
     </div>
   );
-}
+};
