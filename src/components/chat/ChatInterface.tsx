@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, GitBranch, Monitor } from 'lucide-react';
 import { ScreenshotViewer } from '../screenshots/ScreenshotViewer';
 import { useScreenshots } from '@/hooks/useScreenshots';
-import '../styles/animations.css';
+import '@/styles/animations.css';
 
 interface ChatInterfaceProps {
   chatId: string | null;
