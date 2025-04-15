@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -10,11 +11,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSelectedChat } from '@/hooks/useChats';
 import { useRequiredApps } from '@/hooks/useRequiredApps';
 import { ConnectionModal } from './ConnectionModal';
-import { formatDistanceToNow } from 'date-fns';
+import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 import { Icons } from '@/components/ui/icons';
 import { OAuthIcon } from '@/components/ui/oauth-icons';
 import { useOAuthConnections } from '@/hooks/useOAuthConnections';
-import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 
 
 interface WorkflowProps {
@@ -154,37 +154,24 @@ export const Workflow = ({
         "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
         bgColor
       )}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           {pastRunMessage && (
-            <>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={onClosePastRun}
-                className="h-8 w-8"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold">Past Run</h2>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{formatDistanceToNow(new Date(pastRunMessage.created_at), { addSuffix: true })}</span>
-                  <span>•</span>
-                  <span className="capitalize">{pastRunMessage.code_run_state?.replace('_', ' ')}</span>
-                </div>
-              </div>
-            </>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onClosePastRun}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
           )}
-          {!pastRunMessage && (
-            <>
-              <h2 className="text-lg font-semibold">Workflow</h2>
-              {requiredApps.length > 0 && !loadingApps && (
-                <AppIntegrationIcons apps={requiredApps} />
-              )}
-            </>
+          <h2 className="text-lg font-semibold">
+            {pastRunMessage ? 'Past Run' : 'Workflow'}
+          </h2>
+          {requiredApps.length > 0 && !loadingApps && (
+            <AppIntegrationIcons apps={requiredApps} />
           )}
         </div>
-        
         <div className="flex items-center gap-2">
           {!pastRunMessage && (
             <>

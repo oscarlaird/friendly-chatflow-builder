@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSelectedChat } from "@/hooks/useChats";
@@ -34,16 +35,8 @@ const AgentSidePanel = () => {
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get('chatId');
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
-  const { dataState, sendMessage } = useMessages(chatId || null);
+  const { sendMessage } = useMessages(chatId || null);
   const [userInputs, setUserInputs] = useState<Record<string, any>>({});
-  
-  // Find the latest running code_run message
-  const latestRunningMessage = Object.values(dataState.messages)
-    .filter(msg => msg.type === 'code_run' && msg.code_run_state === 'running')
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-
-  // Use steps from the running message or fall back to chat steps
-  const workflowSteps = latestRunningMessage?.steps || selectedChat?.steps || [];
   
   // Initialize user inputs from selected chat steps
   useEffect(() => {
@@ -102,7 +95,7 @@ const AgentSidePanel = () => {
       <main className="flex-1 overflow-hidden">
         {selectedChat && selectedChat.steps && (
           <WorkflowSidePanel 
-            steps={workflowSteps}
+            steps={selectedChat.steps}
             chatId={chatId || undefined}
             userInputs={userInputs}
             setUserInputs={setUserInputs}
