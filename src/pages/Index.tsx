@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -79,7 +80,7 @@ const Index = () => {
           <Sidebar collapsible="offcanvas">
             <div className="flex flex-col h-full">
               <div className="p-4 border-b flex items-center justify-between">
-                <h1 className="text-lg font-bold">Mill AI</h1>
+                <h1 className="text-lg font-bold">Mill</h1>
                 <div className="flex items-center space-x-2">
                   <ThemeToggle />
                   <Button variant="ghost" size="icon" onClick={signOut}>
