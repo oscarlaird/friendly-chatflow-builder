@@ -54,7 +54,6 @@ export const WorkflowStepNode = memo(({ data, isConnectable }: WorkflowStepNodeP
       <div className="mt-2 text-xs">
         <KeyValueDisplay
           data={data.userInputs}
-          edit={true}
           onUpdate={(key, value) => {
             if (data.setUserInputs) {
               const updatedInputs = { ...data.userInputs, [key]: value };

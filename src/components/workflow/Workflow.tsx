@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Loader2, Link, FlowChart, ListOrdered } from 'lucide-react';
+import { Play, Loader2, Link, GitBranch, ListOrdered } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
 import { WorkflowGraph } from './WorkflowGraph';
 import { Button } from '@/components/ui/button';
@@ -194,7 +194,7 @@ export const Workflow = ({
                 List
               </TabsTrigger>
               <TabsTrigger value="graph" className="h-7 px-3 text-xs">
-                <FlowChart className="h-3.5 w-3.5 mr-1" />
+                <GitBranch className="h-3.5 w-3.5 mr-1" />
                 Graph
               </TabsTrigger>
             </TabsList>
