@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -27,6 +26,66 @@ interface WorkflowProps {
   pastRunMessageId?: string | null;
   onClosePastRun?: () => void;
 }
+
+// Add new component for screenshot preview
+const ScreenshotPreview = ({ chatId }: { chatId?: string }) => {
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<string>("16/9");
+  const screenshotInterval = useRef<NodeJS.Timeout | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  
+  useEffect(() => {
+    // Listen for screenshot responses
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'AGENT_SCREENSHOT_RESPONSE' && 
+          event.data.payload?.screenshot) {
+        setScreenshot(event.data.payload.screenshot);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    // Request screenshots every 300ms if we have a chatId
+    if (chatId) {
+      screenshotInterval.current = setInterval(() => {
+        window.postMessage({
+          type: 'REQUEST_AGENT_SCREENSHOT',
+          payload: { roomId: chatId }
+        }, '*');
+      }, 300);
+    }
+    
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      if (screenshotInterval.current) {
+        clearInterval(screenshotInterval.current);
+      }
+    };
+  }, [chatId]);
+  
+  // Detect the aspect ratio once the image loads
+  const handleImageLoad = () => {
+    if (imgRef.current) {
+      const { naturalWidth, naturalHeight } = imgRef.current;
+      setAspectRatio(`${naturalWidth}/${naturalHeight}`);
+    }
+  };
+  
+  if (!screenshot) return null;
+  
+  return (
+    <div className="mt-2 rounded-md overflow-hidden border border-border">
+      <img 
+        ref={imgRef}
+        src={screenshot} 
+        alt="Agent Screenshot" 
+        className="w-full h-auto object-contain max-h-50"
+        style={{ aspectRatio, maxWidth: "100%" }}
+        onLoad={handleImageLoad}
+      />
+    </div>
+  );
+};
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
@@ -192,12 +251,9 @@ export const Workflow = ({
   useEffect(() => {
     if (workflowSteps && workflowSteps.length > 0) {
       const userInputStep = workflowSteps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        // Only update if we don't already have values or if they're different
-        if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
-          console.log('Setting user inputs from workflow steps:', userInputStep.output);
-          setUserInputs(userInputStep.output);
-        }
+      if (userInputStep?.output && Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
+        console.log('Setting user inputs from workflow steps:', userInputStep.output);
+        setUserInputs(userInputStep.output);
       }
     }
   }, [workflowSteps]);
@@ -217,7 +273,7 @@ export const Workflow = ({
         type: 'CREATE_AGENT_RUN_WINDOW',
         payload: {
           chatId: chatId,
-          roomId: data.id
+          roomId: chatId
         }
       }, '*');
     } catch (error) {
@@ -288,6 +344,17 @@ export const Workflow = ({
           )}
         </div>
       </div>
+      
+      {/* Add Screenshot preview below header if extension is installed */}
+      { runningMessage && (
+        <div className="px-3 py-2 border-b">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <Eye className="h-3.5 w-3.5" />
+            <span>Live Preview</span>
+          </div>
+          <ScreenshotPreview chatId={chatId} />
+        </div>
+      )}
 
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
