@@ -1,7 +1,8 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Loader2, Link } from 'lucide-react';
+import { Play, Loader2, Link, FlowChart, ListOrdered } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
+import { WorkflowGraph } from './WorkflowGraph';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMessages } from '@/hooks/useMessages';
@@ -16,6 +17,7 @@ import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 import { Icons } from '@/components/ui/icons';
 import { OAuthIcon } from '@/components/ui/oauth-icons';
 import { useOAuthConnections } from '@/hooks/useOAuthConnections';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 interface WorkflowProps {
@@ -98,6 +100,7 @@ export const Workflow = ({
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
   const [userInputs, setUserInputs] = useState<Record<string, any>>({});
   const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'graph'>('list');
   
   const { sendMessage } = useMessages(chatId || null);
   
@@ -180,6 +183,22 @@ export const Workflow = ({
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Tabs
+            value={viewMode}
+            onValueChange={(value) => setViewMode(value as 'list' | 'graph')}
+            className="mr-2"
+          >
+            <TabsList className="h-8">
+              <TabsTrigger value="list" className="h-7 px-3 text-xs">
+                <ListOrdered className="h-3.5 w-3.5 mr-1" />
+                List
+              </TabsTrigger>
+              <TabsTrigger value="graph" className="h-7 px-3 text-xs">
+                <FlowChart className="h-3.5 w-3.5 mr-1" />
+                Graph
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <StatusBadge status={codeRewritingStatus} />
           <Button 
             size="sm" 
@@ -192,24 +211,37 @@ export const Workflow = ({
           </Button>
         </div>
       </div>
+      
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="p-4 space-y-4">
-            {(!workflowSteps || workflowSteps.length === 0) ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                No workflow steps defined
-              </div>
-            ) : (
-              <WorkflowDisplay 
-                steps={workflowSteps} 
-                browserEvents={browserEvents}
-                compact={compact}
-                userInputs={userInputs}
-                setUserInputs={setUserInputs}
-              />
-            )}
+        {viewMode === 'list' ? (
+          <ScrollArea className="h-full">
+            <div className="p-4 space-y-4">
+              {(!workflowSteps || workflowSteps.length === 0) ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  No workflow steps defined
+                </div>
+              ) : (
+                <WorkflowDisplay 
+                  steps={workflowSteps} 
+                  browserEvents={browserEvents}
+                  compact={compact}
+                  userInputs={userInputs}
+                  setUserInputs={setUserInputs}
+                />
+              )}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="h-full">
+            <WorkflowGraph
+              steps={workflowSteps}
+              chatId={chatId}
+              browserEvents={browserEvents}
+              userInputs={userInputs}
+              setUserInputs={setUserInputs}
+            />
           </div>
-        </ScrollArea>
+        )}
       </div>
       
       {/* Connection Modal */}
