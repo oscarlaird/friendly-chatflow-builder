@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
@@ -29,11 +30,13 @@ export const KeyValueDisplay = ({
     if(isEditable) {
       console.log('data', data);
     }
-  });
+  }, [data, isEditable]);
 
   // Handler for all value changes from any child component
   const handleValueChange = (key: string, value: any) => {
-    console.log('data changed', data);
+    if (!setUserInputs) return;
+    
+    console.log('Changing data', key, value);
     const newData = JSON.parse(JSON.stringify(data));
     newData[key] = value;
     setUserInputs(newData);
@@ -63,7 +66,7 @@ export const KeyValueDisplay = ({
             <DisplayTable 
               data={singleValue} 
               isEditable={isEditable}
-              onTableChange={isEditable ? 
+              onTableChange={isEditable && setUserInputs ? 
                 (newValue) => handleValueChange(singleKey, newValue) : 
                 undefined
               }
@@ -93,7 +96,7 @@ export const KeyValueDisplay = ({
                 <DisplayValue 
                   value={value} 
                   isEditable={isEditable}
-                  onValueChange={isEditable ? 
+                  onValueChange={isEditable && setUserInputs ? 
                     (newValue) => handleValueChange(key, newValue) : 
                     undefined
                   }

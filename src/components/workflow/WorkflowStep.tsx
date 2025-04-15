@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -35,11 +36,16 @@ export const WorkflowStep = ({
 
   useEffect(() => {
     console.log('RENDER - WorkflowStep component rendered');
-  });
+    if (isUserInputStep && userInputs) {
+      console.log('UserInputs available:', userInputs);
+    }
+  }, [isUserInputStep, userInputs]);
+
   const [isInputOpen, setIsInputOpen] = useState(autoOpen);
   const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
   const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
+  const [isUserInputsOpen, setIsUserInputsOpen] = useState(autoOpen);
   
   const stepType = step.type;
   const isActive = step.active || false;
@@ -51,6 +57,7 @@ export const WorkflowStep = ({
   const hasControlValue = stepType === 'for' && step.control_value !== undefined;
   const hasIfControlValue = stepType === 'if' && typeof step.control_value === 'boolean';
   const hasBrowserAgentData = step.browser_agent_data && Object.keys(step.browser_agent_data).length > 0;
+  const hasUserInputs = isUserInputStep && userInputs && Object.keys(userInputs).length > 0;
   
   // Determine if step has progress info
   const hasProgress = stepType === 'for' && 
@@ -317,17 +324,15 @@ export const WorkflowStep = ({
                   <KeyValueDisplay 
                     data={step.output} 
                     compact={true}
-                    isEditable={isUserInputStep}
-                  
                   />
                 </CollapsibleContent>
               </Collapsible>
             )}
 
-{isUserInputStep && (
-              <Collapsible >
+            {hasUserInputs && (
+              <Collapsible open={isUserInputsOpen} onOpenChange={setIsUserInputsOpen}>
                 <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  {isUserInputsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   Input Values
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-1.5">

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSelectedChat } from "@/hooks/useChats";
@@ -45,9 +46,17 @@ const AgentSidePanel = () => {
   // Use steps from the running message or fall back to chat steps
   const workflowSteps = latestRunningMessage?.steps || selectedChat?.steps || [];
   
-  // Initialize user inputs from selected chat steps
+  // Initialize user inputs from workflow steps
   useEffect(() => {
-    if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
+    if (workflowSteps && workflowSteps.length > 0) {
+      const userInputStep = workflowSteps.find(step => step.type === 'user_input');
+      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+        console.log('Setting user inputs in AgentSidePanel:', userInputStep.output);
+        if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
+          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
+        }
+      }
+    } else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
       const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
       if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
         if (Object.keys(userInputs).length === 0) {
@@ -55,7 +64,15 @@ const AgentSidePanel = () => {
         }
       }
     }
-  }, [selectedChat]);
+  }, [workflowSteps, selectedChat]);
+  
+  // Initialize user inputs from a running message if available
+  useEffect(() => {
+    if (latestRunningMessage?.user_inputs && Object.keys(latestRunningMessage.user_inputs).length > 0) {
+      console.log('Setting user inputs from running message:', latestRunningMessage.user_inputs);
+      setUserInputs(latestRunningMessage.user_inputs);
+    }
+  }, [latestRunningMessage]);
   
   // Listen for window messages
   useWindowMessages();
@@ -65,6 +82,7 @@ const AgentSidePanel = () => {
     if (!chatId) return;
     
     try {
+      console.log("Running workflow with user inputs:", userInputs);
       const data = await sendMessage("", "user", "code_run", userInputs);
       console.log("Message sent:", data);
       const messageId = data.id;
@@ -100,15 +118,14 @@ const AgentSidePanel = () => {
       </header>
       
       <main className="flex-1 overflow-hidden">
-        {selectedChat && selectedChat.steps && (
+        {workflowSteps && workflowSteps.length > 0 ? (
           <WorkflowSidePanel 
             steps={workflowSteps}
             chatId={chatId || undefined}
             userInputs={userInputs}
             setUserInputs={setUserInputs}
           />
-        )}
-        {(!selectedChat?.steps || selectedChat.steps.length === 0) && (
+        ) : (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
             No workflow steps available
           </div>

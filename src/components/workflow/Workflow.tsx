@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -15,7 +16,7 @@ import { Icons } from '@/components/ui/icons';
 import { OAuthIcon } from '@/components/ui/oauth-icons';
 import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
-
+import { supabase } from '@/integrations/supabase/client';
 
 interface WorkflowProps {
   steps?: any[];
@@ -31,7 +32,6 @@ const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
   const prevStatusRef = useRef<CodeRewritingStatus>(status);
 
-  
   // Only log when status changes, not on every render
   useEffect(() => {
     if (prevStatusRef.current !== status) {
@@ -112,20 +112,96 @@ export const Workflow = ({
   // Background color based on whether viewing past run
   const bgColor = pastRunMessage ? 'bg-muted/30' : 'bg-background';
   
-  // Update workflowSteps when pastRunMessage changes
+  // Update workflowSteps when pastRunMessage changes or running message updates
   useEffect(() => {
     if (pastRunMessage && pastRunMessage.steps) {
       console.log("Displaying steps from past run message:", pastRunMessage.steps);
       setWorkflowSteps(pastRunMessage.steps);
+      
+      // If past run had user inputs, show them
+      if (pastRunMessage.user_inputs && Object.keys(pastRunMessage.user_inputs).length > 0) {
+        setUserInputs(pastRunMessage.user_inputs);
+      }
+    } else if (runningMessage && runningMessage.steps) {
+      console.log("Displaying steps from running message:", runningMessage.steps);
+      setWorkflowSteps(runningMessage.steps);
+      
+      // If running message has user inputs, show them
+      if (runningMessage.user_inputs && Object.keys(runningMessage.user_inputs).length > 0) {
+        setUserInputs(runningMessage.user_inputs);
+      }
     } else if (selectedChat && selectedChat.steps) {
       console.log("Displaying steps from selected chat:", selectedChat.steps);
       setWorkflowSteps(selectedChat.steps);
+      
+      // Initialize user inputs from selected chat steps
+      const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
+      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+        setUserInputs(userInputStep.output);
+      }
     } else if (initialSteps.length > 0) {
       console.log("Displaying initial steps:", initialSteps);
       setWorkflowSteps(initialSteps);
     }
-  }, [pastRunMessage, selectedChat, initialSteps]);
+  }, [pastRunMessage, runningMessage, selectedChat, initialSteps]);
   
+  // Set up real-time subscription for messages
+  useEffect(() => {
+    if (!chatId) return;
+    
+    // Subscribe to real-time updates for messages
+    const messagesChannel = supabase
+      .channel('messages-steps-updates')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          const updatedMessage = payload.new;
+          console.log('Real-time message update received:', updatedMessage);
+          
+          // If this is the currently running message, update workflow steps
+          if (
+            updatedMessage.type === 'code_run' && 
+            updatedMessage.code_run_state === 'running' &&
+            updatedMessage.steps
+          ) {
+            console.log('Updating workflow steps from real-time data:', updatedMessage.steps);
+            setWorkflowSteps(updatedMessage.steps);
+          }
+          
+          // If we're viewing a past run that got updated, update its steps
+          if (pastRunMessageId && updatedMessage.id === pastRunMessageId && updatedMessage.steps) {
+            setWorkflowSteps(updatedMessage.steps);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount or when chatId changes
+    return () => {
+      supabase.removeChannel(messagesChannel);
+    };
+  }, [chatId, pastRunMessageId]);
+  
+  // Initialize user inputs from the workflow steps or message
+  useEffect(() => {
+    if (workflowSteps && workflowSteps.length > 0) {
+      const userInputStep = workflowSteps.find(step => step.type === 'user_input');
+      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+        // Only update if we don't already have values or if they're different
+        if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
+          console.log('Setting user inputs from workflow steps:', userInputStep.output);
+          setUserInputs(userInputStep.output);
+        }
+      }
+    }
+  }, [workflowSteps]);
+
   const handleRunWorkflow = async () => {
     if (!chatId) return;
     
@@ -135,6 +211,7 @@ export const Workflow = ({
     }
     
     try {
+      console.log('Running workflow with user inputs:', userInputs);
       const data = await sendMessage("", "user", "code_run", userInputs);
       window.postMessage({
         type: 'CREATE_AGENT_RUN_WINDOW',

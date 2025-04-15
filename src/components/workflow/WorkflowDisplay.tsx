@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -31,17 +32,14 @@ export const WorkflowDisplay = ({
   
   // Add state for animated steps display
   const [visibleSteps, setVisibleSteps] = useState<any[]>(steps);
-  const [isAnimating, setIsAnimating] = useState(false);
   
   // Create nested steps structure
   const nestedSteps = nestSteps(visibleSteps);
 
   // Reset visible steps when actual steps change
   useEffect(() => {
-    if (!isAnimating) {
-      setVisibleSteps(steps);
-    }
-  }, [steps, isAnimating]);
+    setVisibleSteps(steps);
+  }, [steps]);
   
   // Compare current steps with previous steps to detect changes
   useEffect(() => {
@@ -97,30 +95,6 @@ export const WorkflowDisplay = ({
   const hasStepChanged = (step: any) => {
     const stepId = step.id || `step-${step.step_number}`;
     return changedStepIds.has(stepId);
-  };
-  
-  // Function to handle mock animation
-  const handleMockAnimate = () => {
-    setIsAnimating(true);
-    setVisibleSteps([]);
-    
-    // Animate steps appearing one by one
-    let currentSteps: any[] = [];
-    
-    steps.forEach((step, index) => {
-      // Random delay between 300ms and 1200ms
-      const delay = 300 + Math.random() * 900;
-      
-      setTimeout(() => {
-        currentSteps = [...currentSteps, step];
-        setVisibleSteps([...currentSteps]);
-        
-        // Check if this is the last step
-        if (index === steps.length - 1) {
-          setIsAnimating(false);
-        }
-      }, delay * (index + 1));
-    });
   };
   
   // Recursive component to render step nodes
@@ -217,22 +191,7 @@ export const WorkflowDisplay = ({
   };
   
   return (
-    <div className={`${className || ''} w-full max-w-full overflow-hidden`}>
-      {/* Add Mock Animate button */}
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={handleMockAnimate}
-          disabled={isAnimating || steps.length === 0}
-          className={cn(
-            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-            "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-800/70",
-            "disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {isAnimating ? "Animating..." : "Mock Animate"}
-        </button>
-      </div>
-      
+    <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
         <div className="space-y-1">
