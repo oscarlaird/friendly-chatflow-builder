@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
@@ -9,6 +10,7 @@ interface KeyValueDisplayProps {
   isEditable?: boolean;
   compact?: boolean;
   setUserInputs?: (userInputs: Record<string, any>) => void;
+  onUpdate?: (key: string, value: any) => void; // Add backward compatibility
 }
 
 // Utility function for formatting key names
@@ -22,6 +24,7 @@ export const KeyValueDisplay = ({
   isEditable = false, 
   compact = false,
   setUserInputs,
+  onUpdate,
 }: KeyValueDisplayProps) => {
 
   useEffect(() => {
@@ -36,7 +39,14 @@ export const KeyValueDisplay = ({
     console.log('data changed', data);
     const newData = JSON.parse(JSON.stringify(data));
     newData[key] = value;
-    setUserInputs(newData);
+    
+    // Support both new and old API
+    if (setUserInputs) {
+      setUserInputs(newData);
+    }
+    if (onUpdate) {
+      onUpdate(key, value);
+    }
   };
   
   // Guard clause for empty data
