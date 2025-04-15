@@ -63,10 +63,11 @@ export const WorkflowStep = ({
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
   
-  // Update card styling based on whether it's a parent with children
+  // Update card styling based on whether it's active and running
   const cardStyle = cn(
     "p-3",
     isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
+    isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
     hasChildren && (
       stepType === 'for' 
