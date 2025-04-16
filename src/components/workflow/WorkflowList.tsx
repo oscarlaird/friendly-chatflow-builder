@@ -4,21 +4,30 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, FileText } from 'lucide-react';
+import { Clock, FileText, MoreVertical, Star, Trash, Copy } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 
 export function WorkflowList({ className = '' }: { className?: string }) {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [workflowApps, setWorkflowApps] = useState<{[key: string]: string[]}>({});
+  const [favorites, setFavorites] = useState<string[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
       fetchWorkflows();
+      // Load favorites from localStorage
+      const savedFavorites = localStorage.getItem('favoriteWorkflows');
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      }
     }
   }, [user]);
 
@@ -60,6 +69,81 @@ export function WorkflowList({ className = '' }: { className?: string }) {
     }
   };
 
+  const toggleFavorite = (workflowId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    const newFavorites = favorites.includes(workflowId)
+      ? favorites.filter(id => id !== workflowId)
+      : [...favorites, workflowId];
+    
+    setFavorites(newFavorites);
+    localStorage.setItem('favoriteWorkflows', JSON.stringify(newFavorites));
+    
+    toast.success(
+      favorites.includes(workflowId) 
+        ? 'Removed from favorites' 
+        : 'Added to favorites'
+    );
+  };
+
+  const deleteWorkflow = async (workflowId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', workflowId);
+      
+      if (error) throw error;
+      
+      // Remove from local state
+      setWorkflows(workflows.filter(w => w.id !== workflowId));
+      
+      // Remove from favorites if it's there
+      if (favorites.includes(workflowId)) {
+        const newFavorites = favorites.filter(id => id !== workflowId);
+        setFavorites(newFavorites);
+        localStorage.setItem('favoriteWorkflows', JSON.stringify(newFavorites));
+      }
+      
+      toast.success('Workflow deleted');
+    } catch (error) {
+      console.error('Error deleting workflow:', error);
+      toast.error('Failed to delete workflow');
+    }
+  };
+
+  const duplicateWorkflow = async (workflow: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    try {
+      // Create a copy of the workflow
+      const newTitle = `${workflow.title || 'Untitled Workflow'} (Copy)`;
+      
+      const { data, error } = await supabase
+        .from('chats')
+        .insert({
+          title: newTitle,
+          uid: user?.id,
+          steps: workflow.steps || [],
+          apps: workflow.apps || []
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      if (data && data[0]) {
+        // Add the new workflow to the list
+        setWorkflows([data[0], ...workflows]);
+        toast.success('Workflow duplicated');
+      }
+    } catch (error) {
+      console.error('Error duplicating workflow:', error);
+      toast.error('Failed to duplicate workflow');
+    }
+  };
+
   if (loading) {
     return (
       <div className={className}>
@@ -91,25 +175,59 @@ export function WorkflowList({ className = '' }: { className?: string }) {
       {workflows.map((workflow) => {
         // Get required apps for this workflow from our state
         const requiredApps = workflowApps[workflow.id] || [];
+        const isFavorite = favorites.includes(workflow.id);
         
         return (
           <Card 
             key={workflow.id} 
-            className="workflow-card overflow-hidden hover:shadow-md transition-shadow h-[160px] flex flex-col justify-between"
+            className="workflow-card overflow-hidden hover:shadow-md transition-shadow h-[160px] flex flex-col justify-between relative"
             onClick={() => navigate(`/workflow/${workflow.id}`)}
           >
+            {/* Favorite indicator */}
+            {isFavorite && (
+              <div className="absolute top-2 right-2 text-yellow-400">
+                <Star className="h-4 w-4 fill-current" />
+              </div>
+            )}
+            
             <CardHeader className="pb-2 flex-1">
               <div className="flex items-start gap-3">
                 <div className="text-blue-600 mt-1">
                   <FileText className="h-5 w-5" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 pr-8">
                   <CardTitle className="text-lg truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-1">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
                   </CardDescription>
                 </div>
+                
+                {/* Three-dot menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" className="h-8 w-8 p-0 absolute top-2 right-2">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => toggleFavorite(workflow.id, e)}>
+                      <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                      {isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => duplicateWorkflow(workflow, e)}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Duplicate workflow
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="text-red-600" 
+                      onClick={(e) => deleteWorkflow(workflow.id, e)}
+                    >
+                      <Trash className="mr-2 h-4 w-4" />
+                      Delete workflow
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </CardHeader>
             {requiredApps && requiredApps.length > 0 && (

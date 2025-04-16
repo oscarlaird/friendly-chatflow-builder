@@ -127,10 +127,6 @@
     @apply border-[hsl(var(--dropbox-blue)/30%)] bg-[hsl(var(--dropbox-light-blue)/50%)];
   }
   
-  .dark .workflow-card:hover {
-    @apply border-[hsl(var(--dropbox-blue)/30%)] bg-[hsl(var(--dropbox-light-blue)/30%)];
-  }
-  
   /* Flowchart specific styles */
   .flowchart-node {
     @apply shadow-sm rounded-md border border-[hsl(var(--dropbox-blue)/20%)] bg-white dark:bg-gray-800;
@@ -205,6 +201,32 @@
     @apply px-2 py-1 border-t border-muted/30 truncate;
     max-width: 200px;
   }
+  
+  /* Single view button styles */
+  .view-button {
+    @apply text-xs bg-transparent hover:bg-accent text-muted-foreground hover:text-foreground px-2 py-1 rounded-sm flex items-center gap-1;
+  }
+  
+  /* Modal styles for content viewing */
+  .content-modal-overlay {
+    @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4;
+  }
+  
+  .content-modal {
+    @apply bg-background rounded-lg shadow-lg overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col;
+  }
+  
+  .content-modal-header {
+    @apply flex items-center justify-between p-4 border-b;
+  }
+  
+  .content-modal-body {
+    @apply p-4 overflow-auto;
+  }
+  
+  .content-modal-footer {
+    @apply p-4 border-t flex justify-end;
+  }
 }
 
 /* Animation for active workflow steps */
@@ -228,4 +250,21 @@
 .MessageList {
   max-height: 100%;
   overflow-y: auto;
+}
+
+/* Pulse animation for favorite icon */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.favorite-pulse {
+  animation: pulse 1s ease-in-out;
 }

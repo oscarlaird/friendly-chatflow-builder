@@ -33,3 +33,15 @@ export const formatUrl = (url: string): string => {
   if (!url) return '';
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 }; 
+
+/**
+ * Creates a shortened version of a long prompt for display
+ */
+export const shortenPrompt = (prompt: string): string => {
+  // Extract first few words (up to 5)
+  const words = prompt.split(' ');
+  const shortened = words.slice(0, 4).join(' ');
+  
+  // If original prompt is longer than what we've shortened it to, add ellipsis
+  return words.length > 4 ? `${shortened}...` : shortened;
+};

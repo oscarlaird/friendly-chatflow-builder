@@ -18,11 +18,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import '../styles/animations.css';
 
+// Updated prompts with full text
 const examplePrompts = [
-  "Automate CRM qualification of new leads",
-  "Build an email outreach workflow to follow up with applicants",
-  "Create a workflow to analyze customer feedback from surveys",
-  "Automate social media monitoring and response workflow"
+  "Research the companies in my google sheets, find the founders and send them a linkedin request.",
+  "Get data from dashboard and put that in google sheet",
+  "Update contacts in my salesforce instance if they no longer work in the same company - mark them disqualified.",
+  "Build drafts for messages that came in for product query in my gmail."
+];
+
+// Shortened versions for display
+const shortPrompts = [
+  "Research companies & founders",
+  "Dashboard data to sheets",
+  "Update disqualified contacts",
+  "Draft product query responses"
 ];
 
 export default function Dashboard() {
@@ -109,14 +118,16 @@ export default function Dashboard() {
                 </Button>
               </div>
               
-              <div className="flex flex-wrap justify-center gap-2 mt-4 fade-in delay-200">
+              {/* Updated prompt examples - horizontal layout */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 fade-in delay-200">
                 {examplePrompts.map((example, index) => (
                   <button
                     key={index}
                     onClick={() => handleCreateWorkflow(example)}
-                    className="px-3 py-1.5 text-sm rounded-full border hover:bg-accent transition-colors"
+                    title={example} // Full prompt as tooltip
+                    className="px-3 py-2 text-sm rounded-md border hover:bg-accent transition-colors"
                   >
-                    {example}
+                    {shortPrompts[index]}
                   </button>
                 ))}
               </div>
