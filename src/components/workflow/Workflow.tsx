@@ -275,7 +275,7 @@ export const Workflow = ({
         type: 'CREATE_AGENT_RUN_WINDOW',
         payload: {
           chatId: chatId,
-          roomId: chatId
+          roomId: data.id
         }
       }, '*');
     } catch (error) {
