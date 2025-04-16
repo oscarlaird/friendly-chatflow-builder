@@ -109,13 +109,14 @@ export default function Dashboard() {
                   </Button>
                 </div>
                 
-                <div className="flex justify-center space-x-4 mt-4 fade-in delay-200">
+                <div className="flex flex-wrap justify-center gap-3 mt-4 fade-in delay-200">
                   {examplePrompts.map((example, index) => (
                     <Tooltip key={index}>
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => handleCreateWorkflow(example)}
-                          className="prompt-badge"
+                          className="prompt-badge flex-shrink-0"
+                          style={{ maxWidth: `${200 + index * 50}px` }}
                         >
                           {example.split(',')[0].trim()}
                         </button>
