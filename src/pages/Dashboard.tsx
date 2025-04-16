@@ -1,127 +1,186 @@
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Layout } from '@/components/Layout';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useChats } from '@/hooks/useChats';
-import { ArrowUpRight } from 'lucide-react';
-import { RecentRuns } from '@/components/dashboard/RecentRuns';
-import { supabase } from '@/integrations/supabase/client';
+import { SendHorizontal, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useChats } from '@/hooks/useChats';
+import { Button } from '@/components/ui/button';
+import { UserProfile } from '@/components/ui/user-profile';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { ExtensionStatus } from '@/components/ui/extension-status';
+import { ConnectedApps } from '@/components/ui/ConnectedApps';
+import { WorkflowList } from '@/components/workflow/WorkflowList';
+import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
+import { WorkflowGallery } from '@/components/workflow/WorkflowGallery';
+import { RecentRuns } from '@/components/dashboard/RecentRuns';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import '../styles/animations.css';
+
+const examplePrompts = [
+  "Automate CRM qualification of new leads",
+  "Build an email outreach workflow to follow up with applicants",
+  "Create a workflow to analyze customer feedback from surveys",
+  "Automate social media monitoring and response workflow"
+];
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  const [prompt, setPrompt] = useState('');
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const { user } = useAuth();
-  const [data, setData] = useState({
-    totalWorkflows: 0,
-    totalRuns: 0,
-    creditsUsed: 0,
-    totalCredits: 2000
-  });
+  const { createChat } = useChats();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchUserStats = async () => {
-      try {
-        // Fetch total workflows count
-        const { count: workflowsCount, error: workflowsError } = await supabase
-          .from('chats')
-          .select('*', { count: 'exact', head: true })
-          .eq('uid', user.id);
-
-        if (workflowsError) throw workflowsError;
-
-        // Fetch total runs count (code_run messages)
-        const { count: runsCount, error: runsError } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('uid', user.id)
-          .eq('type', 'code_run');
-
-        if (runsError) throw runsError;
-
-        // Fetch total credits used from model costs
-        const { data: costsData, error: costsError } = await supabase
-          .from('chats')
-          .select('model_cost')
-          .eq('uid', user.id);
-
-        if (costsError) throw costsError;
-
-        const totalModelCost = costsData.reduce((sum, chat) => sum + (chat.model_cost || 0), 0);
-        const creditsUsed = Math.round(totalModelCost * 20); // 1$ = 20 credits
-
-        setData({
-          totalWorkflows: workflowsCount || 0,
-          totalRuns: runsCount || 0,
-          creditsUsed,
-          totalCredits: 2000
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
+  const handleCreateWorkflow = async (initialPrompt?: string) => {
+    try {
+      const promptText = initialPrompt || prompt;
+      if (!promptText.trim()) return;
+      
+      const newChat = await createChat('New Workflow');
+      
+      if (newChat) {
+        // Navigate to workflow editor
+        navigate(`/workflow/${newChat.id}`);
+        
+        // Use a small delay before sending the initial message
+        setTimeout(() => {
+          // We'll handle sending the initial message in the WorkflowEditor
+          navigate(`/workflow/${newChat.id}?initialPrompt=${encodeURIComponent(promptText)}`);
+        }, 100);
       }
-    };
+    } catch (error) {
+      console.error('Error creating workflow:', error);
+    }
+  };
 
-    fetchUserStats();
-  }, [user]);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && prompt.trim()) {
+      e.preventDefault();
+      handleCreateWorkflow();
+    }
+  };
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <Button onClick={() => navigate('/workflows')}>
-            View All Workflows
-            <ArrowUpRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+    <TooltipProvider>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b">
+          <div className="container mx-auto flex items-center justify-between py-4">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">Mill</h1>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <ConnectedApps />
+              <ExtensionStatus />
+              <ThemeToggle />
+              <UserProfile />
+            </div>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Workflows
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.totalWorkflows}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Runs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.totalRuns}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Credits Used
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {data.creditsUsed} / {data.totalCredits}
+        {/* Hero Section */}
+        <section className="py-16 text-center max-w-3xl mx-auto px-4">
+          <div className="space-y-6 fade-in">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Idea to workflow in seconds.
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Mill is your workflow builder assistant.
+            </p>
+            
+            <div className="max-w-xl mx-auto mt-10 fade-in delay-100">
+              <div className="flex items-end gap-2 mt-6 rounded-lg border bg-background p-1 shadow-sm">
+                <Input
+                  placeholder="Ask Mill to automate your workflow..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="border-0 bg-transparent shadow-none focus-visible:ring-0 text-base"
+                />
+                <Button 
+                  size="icon" 
+                  disabled={!prompt.trim()}
+                  onClick={() => handleCreateWorkflow()}
+                >
+                  <SendHorizontal className="h-5 w-5" />
+                </Button>
               </div>
-              <Progress 
-                className="h-2 mt-2" 
-                value={(data.creditsUsed / data.totalCredits) * 100} 
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <RecentRuns />
+              
+              <div className="flex flex-wrap justify-center gap-2 mt-4 fade-in delay-200">
+                {examplePrompts.map((example, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleCreateWorkflow(example)}
+                    className="px-3 py-1.5 text-sm rounded-full border hover:bg-accent transition-colors"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Workflows and Gallery Section */}
+        <section className="container mx-auto py-8 px-4 fade-in delay-300">
+          <Tabs defaultValue="my-workflows" className="w-full">
+            <TabsList className="mb-8">
+              <TabsTrigger value="my-workflows">My Workflows</TabsTrigger>
+              <TabsTrigger value="recent-runs">Recent Runs</TabsTrigger>
+              <TabsTrigger value="gallery">Workflow Gallery</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="my-workflows" className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">My Workflows</h2>
+                <Button onClick={() => setTemplateGalleryOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Workflow
+                </Button>
+              </div>
+              <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
+              
+              <Button 
+                variant="outline" 
+                className="mt-6 mx-auto flex items-center" 
+                onClick={() => navigate('/workflows')}
+              >
+                View all workflows
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </TabsContent>
+            
+            <TabsContent value="recent-runs">
+              <RecentRuns />
+            </TabsContent>
+            
+            <TabsContent value="gallery">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Workflow Gallery</h2>
+              </div>
+              <WorkflowGallery onSelectTemplate={handleCreateWorkflow} />
+            </TabsContent>
+          </Tabs>
+        </section>
+        
+        <WorkflowTemplateGallery 
+          open={templateGalleryOpen}
+          onOpenChange={setTemplateGalleryOpen}
+          onSelectTemplate={async (templateId) => {
+            try {
+              const newChat = await createChat('New Workflow');
+              if (newChat) {
+                setTemplateGalleryOpen(false);
+                navigate(`/workflow/${newChat.id}`);
+              }
+            } catch (error) {
+              console.error('Error creating workflow:', error);
+            }
+          }}
+        />
       </div>
-    </Layout>
+    </TooltipProvider>
   );
 }
