@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SendHorizontal, Plus, ChevronRight } from 'lucide-react';
+import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChats } from '@/hooks/useChats';
 import { Button } from '@/components/ui/button';
@@ -19,12 +18,12 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import '../styles/animations.css';
 
-// Updated prompts with full text
+// Shorter prompts with icons
 const examplePrompts = [
-  "Research companies in Google Sheets, find founders, send LinkedIn requests",
-  "Transfer dashboard data to Google Sheet",
-  "Update Salesforce contacts if they've changed companies",
-  "Draft product query responses in Gmail"
+  { text: "Research companies", icon: <Search className="mr-1 h-3 w-3" />, fullText: "Research companies in Google Sheets, find founders, send LinkedIn requests" },
+  { text: "Transfer data", icon: <FileSpreadsheet className="mr-1 h-3 w-3" />, fullText: "Transfer dashboard data to Google Sheet" },
+  { text: "Update contacts", icon: <RefreshCw className="mr-1 h-3 w-3" />, fullText: "Update Salesforce contacts if they've changed companies" },
+  { text: "Draft responses", icon: <Mail className="mr-1 h-3 w-3" />, fullText: "Draft product query responses in Gmail" }
 ];
 
 export default function Dashboard() {
@@ -110,28 +109,23 @@ export default function Dashboard() {
                   </Button>
                 </div>
                 
-                <div className="flex flex-wrap justify-center gap-4 mt-6 fade-in delay-200">
-                  {examplePrompts.map((example, index) => {
-                    // Dynamically calculate width based on content length
-                    const textLength = example.split(',')[0].trim().length;
-                    // Assign natural width based on content with min/max constraints
-                    
-                    return (
-                      <Tooltip key={index}>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleCreateWorkflow(example)}
-                            className="prompt-badge"
-                          >
-                            {example.split(',')[0].trim()}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{example}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
+                <div className="flex justify-center gap-3 mt-4 fade-in delay-200">
+                  {examplePrompts.map((example, index) => (
+                    <Tooltip key={index}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleCreateWorkflow(example.fullText)}
+                          className="prompt-badge-mini"
+                        >
+                          {example.icon}
+                          {example.text}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{example.fullText}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
                 </div>
               </div>
             </div>

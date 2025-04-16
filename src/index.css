@@ -240,6 +240,19 @@
     max-width: fit-content;
     width: auto;
   }
+  
+  /* New smaller prompt badge for mini prompts */
+  .prompt-badge-mini {
+    @apply px-3 py-1.5 text-xs rounded-full border 
+    hover:border-[hsl(var(--dropbox-blue))] 
+    hover:bg-[hsl(var(--dropbox-blue)/10%)] 
+    transition-all duration-200 
+    flex items-center justify-center
+    shadow-sm hover:shadow-md;
+    font-size: 0.7rem;
+    min-width: auto;
+    max-width: fit-content;
+  }
 }
 
 /* Animation for active workflow steps */
