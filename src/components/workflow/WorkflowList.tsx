@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowUpRight, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { OAuthIcon } from '@/components/ui/oauth-icons';
+import { useRequiredApps } from '@/hooks/useRequiredApps';
 
 export function WorkflowList({ className = '' }: { className?: string }) {
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -50,9 +51,8 @@ export function WorkflowList({ className = '' }: { className?: string }) {
               <Skeleton className="h-5 w-3/4 mb-2" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
-            <CardFooter className="pt-2 flex justify-between items-center">
+            <CardFooter className="pt-2">
               <Skeleton className="h-4 w-1/3" />
-              <Skeleton className="h-9 w-20 rounded" />
             </CardFooter>
           </Card>
         ))}
@@ -63,40 +63,40 @@ export function WorkflowList({ className = '' }: { className?: string }) {
   if (workflows.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-muted-foreground mb-4">No workflows yet</p>
-        <Button onClick={() => navigate('/workflows')}>Create your first workflow</Button>
+        <p className="text-muted-foreground">No workflows yet</p>
       </div>
     );
   }
 
   return (
     <div className={className}>
-      {workflows.map((workflow) => (
-        <Card 
-          key={workflow.id} 
-          className="overflow-hidden hover:shadow-md transition-shadow"
-        >
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
-            <CardDescription className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="pt-2 flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
-              {workflow.message_count || 0} messages
-            </span>
-            <Button 
-              variant="ghost" 
-              className="gap-1"
-              onClick={() => navigate(`/workflow/${workflow.id}`)}
-            >
-              Open <ArrowUpRight className="h-3 w-3" />
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
+      {workflows.map((workflow) => {
+        // Fetch required apps for this workflow
+        const { requiredApps } = useRequiredApps(workflow.id);
+        
+        return (
+          <Card 
+            key={workflow.id} 
+            className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate(`/workflow/${workflow.id}`)}
+          >
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
+              <CardDescription className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
+              </CardDescription>
+            </CardHeader>
+            {requiredApps && requiredApps.length > 0 && (
+              <CardFooter className="pt-2 flex gap-2">
+                {requiredApps.map((app: string) => (
+                  <OAuthIcon key={app} provider={app} size={16} />
+                ))}
+              </CardFooter>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }
