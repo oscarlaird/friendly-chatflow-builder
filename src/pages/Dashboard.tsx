@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight } from 'lucide-react';
@@ -20,10 +21,10 @@ import '../styles/animations.css';
 
 // Updated prompts with full text
 const examplePrompts = [
-  "Build your personalized workflow automation",
-  "Use browser to interact with your systems",
-  "Run complex workflows seamlessly",
-  "Become your virtual employee"
+  "Research the companies in my google sheets, find the founders and send them a linkedin request.",
+  "Get data from dashboard and put that in google sheet",
+  "Update contacts in my salesforce instance if they no longer work in the same company - mark them disqualified.",
+  "Build drafts for messages that came in for product query in my gmail."
 ];
 
 // Shortened versions for display
@@ -102,47 +103,47 @@ export default function Dashboard() {
               <p className="text-xl text-muted-foreground">
                 Mill is your workflow builder assistant.
               </p>
-            
-            <div className="max-w-xl mx-auto mt-12 fade-in delay-100">
-              <div className="enhanced-input-container">
-                <Input
-                  placeholder="Ask Mill to automate your workflow..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="enhanced-input"
-                />
-                <Button 
-                  size="icon" 
-                  disabled={!prompt.trim()}
-                  onClick={() => handleCreateWorkflow()}
-                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
-                >
-                  <SendHorizontal className="h-5 w-5" />
-                </Button>
-              </div>
               
-              {/* Redesigned prompt badges */}
-              <div className="flex justify-center space-x-4 mt-6 fade-in delay-200">
-                {examplePrompts.map((example, index) => (
-                  <Tooltip key={index}>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => handleCreateWorkflow(example)}
-                        className="prompt-badge rounded-full px-4 py-2 text-xs"
-                      >
-                        {example}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">{example}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
+              <div className="max-w-xl mx-auto mt-12 fade-in delay-100">
+                <div className="enhanced-input-container">
+                  <Input
+                    placeholder="Ask Mill to automate your workflow..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="enhanced-input"
+                  />
+                  <Button 
+                    size="icon" 
+                    disabled={!prompt.trim()}
+                    onClick={() => handleCreateWorkflow()}
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                  >
+                    <SendHorizontal className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                {/* Badge-like prompt examples */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 fade-in delay-200">
+                  {examplePrompts.map((example, index) => (
+                    <Tooltip key={index}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleCreateWorkflow(example)}
+                          className="prompt-badge"
+                        >
+                          {shortPrompts[index]}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{example}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
         </div>
         
         {/* Workflows and Gallery Section */}
