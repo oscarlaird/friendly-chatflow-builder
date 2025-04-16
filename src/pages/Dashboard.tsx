@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight } from 'lucide-react';
@@ -109,23 +110,28 @@ export default function Dashboard() {
                   </Button>
                 </div>
                 
-                <div className="flex flex-wrap justify-center gap-3 mt-4 fade-in delay-200">
-                  {examplePrompts.map((example, index) => (
-                    <Tooltip key={index}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => handleCreateWorkflow(example)}
-                          className="prompt-badge flex-shrink-0"
-                          style={{ maxWidth: `${200 + index * 50}px` }}
-                        >
-                          {example.split(',')[0].trim()}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{example}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
+                <div className="flex flex-wrap justify-center gap-4 mt-6 fade-in delay-200">
+                  {examplePrompts.map((example, index) => {
+                    // Dynamically calculate width based on content length
+                    const textLength = example.split(',')[0].trim().length;
+                    // Assign natural width based on content with min/max constraints
+                    
+                    return (
+                      <Tooltip key={index}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleCreateWorkflow(example)}
+                            className="prompt-badge"
+                          >
+                            {example.split(',')[0].trim()}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{example}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
                 </div>
               </div>
             </div>

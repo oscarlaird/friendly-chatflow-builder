@@ -227,6 +227,7 @@
     @apply p-4 border-t flex justify-end;
   }
 
+  /* Prompt badge styles - updated to allow natural widths */
   .prompt-badge {
     @apply px-4 py-2 text-xs rounded-full border 
     hover:border-[hsl(var(--dropbox-blue))] 
@@ -234,7 +235,10 @@
     transition-all duration-300 
     flex items-center justify-center
     shadow-sm hover:shadow-md 
-    max-w-[250px] truncate;
+    truncate;
+    min-width: 100px;
+    max-width: fit-content;
+    width: auto;
   }
 }
 
