@@ -16,6 +16,7 @@ import { RecentRuns } from '@/components/dashboard/RecentRuns';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import '../styles/animations.css';
 
 // Updated prompts with full text
@@ -28,10 +29,10 @@ const examplePrompts = [
 
 // Shortened versions for display
 const shortPrompts = [
-  "Research companies & founders",
-  "Dashboard data to sheets",
-  "Update disqualified contacts",
-  "Draft product query responses"
+  "Research companies",
+  "Dashboard to sheets",
+  "Update contacts",
+  "Draft responses"
 ];
 
 export default function Dashboard() {
@@ -89,51 +90,61 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section className="py-16 text-center max-w-3xl mx-auto px-4">
-          <div className="space-y-6 fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Idea to workflow in seconds.
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Mill is your workflow builder assistant.
-            </p>
-            
-            <div className="max-w-xl mx-auto mt-10 fade-in delay-100">
-              <div className="flex items-end gap-2 mt-6 rounded-lg border bg-background p-1 shadow-sm">
-                <Input
-                  placeholder="Ask Mill to automate your workflow..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="border-0 bg-transparent shadow-none focus-visible:ring-0 text-base"
-                />
-                <Button 
-                  size="icon" 
-                  disabled={!prompt.trim()}
-                  onClick={() => handleCreateWorkflow()}
-                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
-                >
-                  <SendHorizontal className="h-5 w-5" />
-                </Button>
-              </div>
+        {/* Gradient background */}
+        <div className="relative">
+          <div className="absolute inset-0 -z-10 h-72 w-full animated-gradient-bg"></div>
+
+          {/* Hero Section */}
+          <section className="py-24 text-center max-w-3xl mx-auto px-4">
+            <div className="space-y-6 fade-in">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                Idea to workflow in seconds.
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                Mill is your workflow builder assistant.
+              </p>
               
-              {/* Updated prompt examples - horizontal layout */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 fade-in delay-200">
-                {examplePrompts.map((example, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleCreateWorkflow(example)}
-                    title={example} // Full prompt as tooltip
-                    className="px-3 py-2 text-sm rounded-md border hover:bg-accent transition-colors"
+              <div className="max-w-xl mx-auto mt-12 fade-in delay-100">
+                <div className="enhanced-input-container">
+                  <Input
+                    placeholder="Ask Mill to automate your workflow..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="enhanced-input"
+                  />
+                  <Button 
+                    size="icon" 
+                    disabled={!prompt.trim()}
+                    onClick={() => handleCreateWorkflow()}
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
                   >
-                    {shortPrompts[index]}
-                  </button>
-                ))}
+                    <SendHorizontal className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                {/* Badge-like prompt examples */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 fade-in delay-200">
+                  {examplePrompts.map((example, index) => (
+                    <Tooltip key={index}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleCreateWorkflow(example)}
+                          className="prompt-badge"
+                        >
+                          {shortPrompts[index]}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{example}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
         
         {/* Workflows and Gallery Section */}
         <section className="container mx-auto py-8 px-4 fade-in delay-300">
