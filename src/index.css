@@ -130,4 +130,29 @@
   .dark .workflow-card:hover {
     @apply border-[hsl(var(--dropbox-blue)/30%)] bg-[hsl(var(--dropbox-light-blue)/30%)];
   }
+  
+  /* Flowchart specific styles */
+  .flowchart-node {
+    @apply shadow-sm rounded-md border border-[hsl(var(--dropbox-blue)/20%)] bg-white dark:bg-gray-800;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .flowchart-style .workflow-node {
+    @apply relative flex flex-col items-center;
+  }
+  
+  .flowchart-connector {
+    @apply w-0.5 h-6 bg-[hsl(var(--dropbox-blue))/30%] mx-auto my-1;
+  }
+  
+  .flowchart-arrow {
+    @apply text-[hsl(var(--dropbox-blue))] h-4 w-4;
+  }
+  
+  /* Make chat text smaller */
+  .chat-text-sm {
+    @apply text-sm;
+  }
 }

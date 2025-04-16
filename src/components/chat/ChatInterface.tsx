@@ -110,10 +110,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         )}
       </div>
 
-      {/* Desktop view */}
+      {/* Desktop view - Adjusted to give more space to workflow */}
       <div className="hidden md:block flex-1 overflow-hidden w-full">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          <ResizablePanel defaultSize={60} minSize={30}>
+          <ResizablePanel defaultSize={35} minSize={25} className="text-sm"> {/* Reduced size and added smaller text */}
             <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
               <MessageList 
                 dataState={dataState} 
@@ -126,12 +126,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={40} minSize={30}>
+          <ResizablePanel defaultSize={65} minSize={40}> {/* Increased size for workflow */}
             <Workflow 
               initialSteps={initialWorkflowSteps} 
               chatId={chatId}
               pastRunMessageId={pastRunMessageId}
               onClosePastRun={handleClosePastRun}
+              className="flowchart-style" {/* Add class for flowchart styling */}
             />
           </ResizablePanel>
         </ResizablePanelGroup>

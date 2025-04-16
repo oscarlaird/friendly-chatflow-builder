@@ -35,7 +35,6 @@ export const WorkflowStep = ({
   // Use the store
 
   useEffect(() => {
-    console.log('RENDER - WorkflowStep component rendered');
     if (isUserInputStep && userInputs) {
       console.log('UserInputs available:', userInputs);
     }
@@ -72,8 +71,8 @@ export const WorkflowStep = ({
   
   // Update card styling based on whether it's active and running
   const cardStyle = cn(
-    "p-3",
-    isActive && !isDisabled && "border-primary shadow-sm bg-primary/5",
+    "p-3 w-full max-w-[28rem]", // Fixed width for uniform cards
+    isActive && !isDisabled && "border-[hsl(var(--dropbox-blue))] shadow-sm bg-[hsl(var(--dropbox-light-blue))/30]",
     isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
     hasChildren && (
@@ -185,10 +184,10 @@ export const WorkflowStep = ({
         <div className={cn(
           "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
           isActive && !isDisabled 
-            ? "bg-primary text-primary-foreground border-primary" 
+            ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
             : isDisabled 
               ? "bg-muted text-muted-foreground border-muted" 
-              : "bg-primary/10 text-primary border-primary/20"
+              : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
         )}>
           {step.step_number}
         </div>
@@ -199,7 +198,7 @@ export const WorkflowStep = ({
               {getStepIcon(stepType)}
               <h3 className={cn(
                 "font-medium",
-                isActive && !isDisabled && "text-primary",
+                isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
                 isDisabled && "text-muted-foreground"
               )}>
                 {getStepTitle()}
@@ -217,7 +216,7 @@ export const WorkflowStep = ({
             )}
             
             {isActive && !isDisabled && (
-              <Badge className="bg-primary text-primary-foreground">
+              <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
                 Active
               </Badge>
             )}

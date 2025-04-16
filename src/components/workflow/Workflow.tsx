@@ -1,6 +1,8 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
+import { FlowchartDisplay } from './FlowchartDisplay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMessages } from '@/hooks/useMessages';
@@ -324,7 +326,7 @@ export const Workflow = ({
               <StatusBadge status={codeRewritingStatus} />
               <Button 
                 size="sm" 
-                className="gap-1 ml-1" 
+                className="gap-1 ml-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]" 
                 onClick={handleRunWorkflow} 
                 disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
               >
@@ -364,12 +366,13 @@ export const Workflow = ({
                 No workflow steps defined
               </div>
             ) : (
-              <WorkflowDisplay 
+              <FlowchartDisplay 
                 steps={workflowSteps} 
                 browserEvents={browserEvents}
                 compact={compact}
                 userInputs={userInputs}
                 setUserInputs={setUserInputs}
+                autoActivateSteps={true}
               />
             )}
           </div>
