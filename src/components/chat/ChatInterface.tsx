@@ -132,7 +132,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               chatId={chatId}
               pastRunMessageId={pastRunMessageId}
               onClosePastRun={handleClosePastRun}
-              className="flowchart-style" {/* Add class for flowchart styling */}
+              className="flowchart-style" 
             />
           </ResizablePanel>
         </ResizablePanelGroup>
