@@ -109,7 +109,12 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground dark:bg-black dark:text-white;
+  }
+  
+  /* Force dark mode for dashboard */
+  .min-h-screen.bg-black {
+    @apply text-white;
   }
 }
 
@@ -227,6 +232,12 @@
   .content-modal-footer {
     @apply p-4 border-t flex justify-end;
   }
+  
+  /* New prompt button style to match reference image */
+  .prompt-button {
+    @apply px-4 py-2 text-sm rounded-full border border-gray-700 bg-gray-900/60 
+           backdrop-blur-sm hover:bg-gray-800 transition-colors text-white;
+  }
 }
 
 /* Animation for active workflow steps */
@@ -267,4 +278,38 @@
 
 .favorite-pulse {
   animation: pulse 1s ease-in-out;
+}
+
+/* Improve the focus on the input box */
+.focus-input {
+  @apply ring-2 ring-blue-500 ring-opacity-50;
+}
+
+/* New dark theme styling for dashboard */
+.dark-dashboard {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.dark-dashboard input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-dashboard .button-dark {
+  @apply bg-gray-900 border border-gray-700 text-white hover:bg-gray-800;
+}
+
+/* Cursor animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: currentColor;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
 }
