@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -9,7 +10,7 @@ export default function WorkflowEditor() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const initialPrompt = searchParams.get('initialPrompt');
-  const { isLoading, currentChat } = useSelectedChat(id || '');
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
   
@@ -28,7 +29,8 @@ export default function WorkflowEditor() {
     }
   }, [initialPrompt, id, sendMessage, navigate]);
 
-  if (isLoading) {
+  // Show loading state while chat is being fetched
+  if (codeRewritingStatus === 'thinking' && !selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -38,7 +40,7 @@ export default function WorkflowEditor() {
     );
   }
 
-  if (!currentChat) {
+  if (!selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
