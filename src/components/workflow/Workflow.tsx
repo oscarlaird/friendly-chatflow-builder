@@ -29,6 +29,24 @@ interface WorkflowProps {
   onClosePastRun?: () => void;
 }
 
+// Add CSS for fixed width workflow steps
+const workflowStyles = `
+  .workflow-step-card {
+    width: 320px;
+  }
+
+  .workflow-fixed-width {
+    width: 320px;
+  }
+
+  @media (max-width: 640px) {
+    .workflow-step-card, 
+    .workflow-fixed-width {
+      width: 100%;
+    }
+  }
+`;
+
 // Add new component for screenshot preview
 const ScreenshotPreview = ({ chatId }: { chatId?: string }) => {
   const [screenshot, setScreenshot] = useState<string | null>(null);
@@ -284,112 +302,118 @@ export const Workflow = ({
   };
 
   return (
-    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
-      <div className={cn(
-        "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
-        bgColor
-      )}>
-        <div className="flex items-center gap-2">
-          {pastRunMessage && (
-            <>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={onClosePastRun}
-                className="h-8 w-8"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold">Past Run</h2>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{formatDistanceToNow(new Date(pastRunMessage.created_at), { addSuffix: true })}</span>
-                  <span>•</span>
-                  <span className="capitalize">{pastRunMessage.code_run_state?.replace('_', ' ')}</span>
-                </div>
-              </div>
-            </>
-          )}
-          {!pastRunMessage && (
-            <>
-              <h2 className="text-lg font-semibold">Workflow</h2>
-              {requiredApps.length > 0 && !loadingApps && (
-                <AppIntegrationIcons apps={requiredApps} />
-              )}
-            </>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {!pastRunMessage && (
-            <>
-              <StatusBadge status={codeRewritingStatus} />
-              <Button 
-                size="sm" 
-                className="gap-1 ml-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]" 
-                onClick={handleRunWorkflow} 
-                disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
-              >
-                <Play className="h-4 w-4" />
-                Run
-              </Button>
-            </>
-          )}
-          {pastRunMessage && (
-            <Button 
-              variant="secondary"
-              size="sm" 
-              onClick={onClosePastRun}
-            >
-              Close Past Run
-            </Button>
-          )}
-        </div>
-      </div>
+    <>
+      {/* Add the CSS styles */}
+      <style>{workflowStyles}</style>
       
-      {/* Add Screenshot preview below header if extension is installed */}
-      { runningMessage && (
-        <div className="px-3 py-2 border-b">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Eye className="h-3.5 w-3.5" />
-            <span>Live Preview</span>
-          </div>
-          <ScreenshotPreview chatId={chatId} />
-        </div>
-      )}
-
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="p-4 space-y-4">
-            {(!workflowSteps || workflowSteps.length === 0) ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                No workflow steps defined
-              </div>
-            ) : (
-              <FlowchartDisplay 
-                steps={workflowSteps} 
-                browserEvents={browserEvents}
-                compact={compact}
-                userInputs={userInputs}
-                setUserInputs={setUserInputs}
-                autoActivateSteps={true}
-              />
+      <div className={cn("flex flex-col h-full overflow-hidden", className)}>
+        <div className={cn(
+          "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
+          bgColor
+        )}>
+          <div className="flex items-center gap-2">
+            {pastRunMessage && (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={onClosePastRun}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-semibold">Past Run</h2>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{formatDistanceToNow(new Date(pastRunMessage.created_at), { addSuffix: true })}</span>
+                    <span>•</span>
+                    <span className="capitalize">{pastRunMessage.code_run_state?.replace('_', ' ')}</span>
+                  </div>
+                </div>
+              </>
+            )}
+            {!pastRunMessage && (
+              <>
+                <h2 className="text-lg font-semibold">Workflow</h2>
+                {requiredApps.length > 0 && !loadingApps && (
+                  <AppIntegrationIcons apps={requiredApps} />
+                )}
+              </>
             )}
           </div>
-        </ScrollArea>
+          
+          <div className="flex items-center gap-2">
+            {!pastRunMessage && (
+              <>
+                <StatusBadge status={codeRewritingStatus} />
+                <Button 
+                  size="sm" 
+                  className="gap-1 ml-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]" 
+                  onClick={handleRunWorkflow} 
+                  disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
+                >
+                  <Play className="h-4 w-4" />
+                  Run
+                </Button>
+              </>
+            )}
+            {pastRunMessage && (
+              <Button 
+                variant="secondary"
+                size="sm" 
+                onClick={onClosePastRun}
+              >
+                Close Past Run
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {/* Add Screenshot preview below header if extension is installed */}
+        { runningMessage && (
+          <div className="px-3 py-2 border-b">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <Eye className="h-3.5 w-3.5" />
+              <span>Live Preview</span>
+            </div>
+            <ScreenshotPreview chatId={chatId} />
+          </div>
+        )}
+
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-4 flex justify-center">
+              {(!workflowSteps || workflowSteps.length === 0) ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  No workflow steps defined
+                </div>
+              ) : (
+                <FlowchartDisplay 
+                  steps={workflowSteps} 
+                  browserEvents={browserEvents}
+                  compact={compact}
+                  userInputs={userInputs}
+                  setUserInputs={setUserInputs}
+                  autoActivateSteps={false} // Default to collapsed for all steps
+                />
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+        
+        <ConnectionModal 
+          open={showConnectionModal}
+          onOpenChange={setShowConnectionModal}
+          missingConnections={missingConnections}
+          onContinue={() => {
+            setShowConnectionModal(false);
+            if (allAppsConnected) {
+              handleRunWorkflow();
+            }
+          }}
+        />
       </div>
-      
-      <ConnectionModal 
-        open={showConnectionModal}
-        onOpenChange={setShowConnectionModal}
-        missingConnections={missingConnections}
-        onContinue={() => {
-          setShowConnectionModal(false);
-          if (allAppsConnected) {
-            handleRunWorkflow();
-          }
-        }}
-      />
-    </div>
+    </>
   );
 };
+

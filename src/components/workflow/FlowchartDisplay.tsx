@@ -133,11 +133,11 @@ export const FlowchartDisplay = ({
     };
     
     if (!hasChildren) {
-      // For leaf nodes (no children), render a simple step
+      // For leaf nodes (no children), render a simple step with fixed width
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2"
+          className="workflow-node mb-2 workflow-fixed-width"
           initial="initial"
           animate="animate"
           exit="exit"
@@ -156,7 +156,7 @@ export const FlowchartDisplay = ({
             <WorkflowStep
               step={node.step}
               browserEvents={getBrowserEventsForStep(node.step)}
-              autoOpen={node.step.active === true || autoActivateSteps}
+              autoOpen={false} // Default to collapsed
               hasChildren={false}
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
@@ -174,7 +174,7 @@ export const FlowchartDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2"
+        className="workflow-node mb-2 workflow-fixed-width"
         initial="initial"
         animate="animate"
         exit="exit"
@@ -196,7 +196,7 @@ export const FlowchartDisplay = ({
           <WorkflowStep
             step={node.step}
             browserEvents={getBrowserEventsForStep(node.step)}
-            autoOpen={node.step.active === true || autoActivateSteps}
+            autoOpen={false} // Default to collapsed
             hasChildren={true}
             isUserInputStep={isUserInputStep}
             userInputs={isUserInputStep ? userInputs : undefined}
@@ -237,3 +237,4 @@ export const FlowchartDisplay = ({
 };
 
 FlowchartDisplay.displayName = "FlowchartDisplay";
+
