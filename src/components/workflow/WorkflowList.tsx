@@ -8,11 +8,11 @@ import { Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
-import { useRequiredApps } from '@/hooks/useRequiredApps';
 
 export function WorkflowList({ className = '' }: { className?: string }) {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workflowApps, setWorkflowApps] = useState<{[key: string]: string[]}>({});
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -34,7 +34,25 @@ export function WorkflowList({ className = '' }: { className?: string }) {
       
       if (error) throw error;
       
+      // Store the workflows
       setWorkflows(data || []);
+      
+      // Now fetch all required apps for these workflows in one batch
+      if (data && data.length > 0) {
+        const appsMap: {[key: string]: string[]} = {};
+        
+        // Extract apps directly from the workflow data
+        data.forEach(workflow => {
+          // Check if workflow has apps field and it's an array
+          if (workflow.apps && Array.isArray(workflow.apps)) {
+            appsMap[workflow.id] = workflow.apps;
+          } else {
+            appsMap[workflow.id] = []; // Empty array if no apps
+          }
+        });
+        
+        setWorkflowApps(appsMap);
+      }
     } catch (error) {
       console.error('Error fetching workflows:', error);
     } finally {
@@ -71,8 +89,8 @@ export function WorkflowList({ className = '' }: { className?: string }) {
   return (
     <div className={className}>
       {workflows.map((workflow) => {
-        // Fetch required apps for this workflow
-        const { requiredApps } = useRequiredApps(workflow.id);
+        // Get required apps for this workflow from our state
+        const requiredApps = workflowApps[workflow.id] || [];
         
         return (
           <Card 
