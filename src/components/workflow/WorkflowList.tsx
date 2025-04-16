@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OAuthIcon } from '@/components/ui/oauth-icons';
+import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 import { useRequiredApps } from '@/hooks/useRequiredApps';
 
 export function WorkflowList({ className = '' }: { className?: string }) {
@@ -90,7 +90,11 @@ export function WorkflowList({ className = '' }: { className?: string }) {
             {requiredApps && requiredApps.length > 0 && (
               <CardFooter className="pt-2 flex gap-2">
                 {requiredApps.map((app: string) => (
-                  <OAuthIcon key={app} provider={app} size={16} />
+                  <OAuthIcon 
+                    key={app} 
+                    provider={app as OAuthProviderType} 
+                    size={16} 
+                  />
                 ))}
               </CardFooter>
             )}
