@@ -6,7 +6,7 @@ import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
 import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, DollarSign, Clock, AlertTriangle, Eye } from 'lucide-react';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, Clock, AlertTriangle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,9 +39,6 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
     }
   }, [message.content]);
   
-  // Calculate cost in cents (if model_cost exists)
-  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
-  
   return (
     <div
       className={`flex ${
@@ -55,16 +52,9 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
             : 'bg-muted ml-0'
         } ${highlight ? 'ring-2 ring-accent' : ''}`}
       >
-        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden">
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
-        
-        {costInCents && costInCents !== "0.00" && (
-          <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1 text-xs text-muted-foreground">
-            <DollarSign className="h-3 w-3" />
-            <span>{costInCents}¢</span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -311,9 +301,6 @@ const CodeRunMessageBubble = ({
     event => event.message_id === message.id
   );
   
-  // Calculate cost in cents (if model_cost exists)
-  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
-  
   // Handle jump to window button click
   const handleJumpToWindow = () => {
     window.postMessage({
@@ -375,12 +362,6 @@ const CodeRunMessageBubble = ({
             {isRunning && (
               <ElapsedTimeDisplay createdAt={message.created_at} />
             )}
-            {costInCents && costInCents !== "0.00" && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <DollarSign className="h-3 w-3" />
-                <span>{costInCents}¢</span>
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Show error badge if there's a code_run_error */}
@@ -425,9 +406,6 @@ const CodeRunMessageBubble = ({
 };
 
 const ScreenRecordingBubble = ({ message }: { message: Message }) => {
-  // Calculate cost in cents (if model_cost exists)
-  const costInCents = message.model_cost ? (message.model_cost * 100).toFixed(2) : null;
-  
   // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
@@ -444,20 +422,13 @@ const ScreenRecordingBubble = ({ message }: { message: Message }) => {
   return (
     <div className="flex justify-start mb-4 w-full">
       <Card className={`max-w-[80%] p-4 transition-colors duration-300 ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-hidden">
+        <div ref={contentRef} className="whitespace-pre-wrap mb-2 overflow-hidden chat-text-sm">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
         {message.screenrecording_url && (
           <div className="mt-2 border-t pt-2">
             <p className="text-sm font-medium mb-1">Screen Recording:</p>
             <p className="text-xs text-muted-foreground truncate">{message.screenrecording_url}</p>
-          </div>
-        )}
-        
-        {costInCents && costInCents !== "0.00" && (
-          <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1 text-xs text-muted-foreground">
-            <DollarSign className="h-3 w-3" />
-            <span>{costInCents}¢</span>
           </div>
         )}
       </Card>

@@ -10,7 +10,9 @@ import { useSelectedChat } from '@/hooks/useChats';
 import { useWindowMessages } from '@/hooks/useWindowMessages';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, GitBranch } from 'lucide-react';
+import { MessageCircle, GitBranch, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -24,6 +26,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
   const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Initialize the window message handler
   useWindowMessages();
@@ -61,6 +64,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     }
   };
 
+  // Handle back navigation
+  const handleBack = () => {
+    navigate('/');
+  };
+
   if (!chatId) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -72,6 +80,15 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b bg-background">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="font-medium truncate">{selectedChat?.title || 'Workflow'}</h2>
+        </div>
+      </div>
+      
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">
@@ -113,7 +130,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       {/* Desktop view - Adjusted to give more space to workflow */}
       <div className="hidden md:block flex-1 overflow-hidden w-full">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          <ResizablePanel defaultSize={35} minSize={25} className="text-sm"> {/* Reduced size and added smaller text */}
+          <ResizablePanel defaultSize={30} minSize={20} className="text-sm"> 
             <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
               <MessageList 
                 dataState={dataState} 
@@ -126,7 +143,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={65} minSize={40}> {/* Increased size for workflow */}
+          <ResizablePanel defaultSize={70} minSize={40}> 
             <Workflow 
               initialSteps={initialWorkflowSteps} 
               chatId={chatId}

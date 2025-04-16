@@ -155,4 +155,51 @@
   .chat-text-sm {
     @apply text-sm;
   }
+  
+  /* Make sure content doesn't overflow in MessageList */
+  .chat-text-sm pre {
+    @apply overflow-x-auto;
+    max-width: 100%;
+  }
+  
+  .chat-text-sm code {
+    @apply text-xs;
+  }
+  
+  .chat-text-sm p {
+    @apply mb-2;
+  }
+  
+  /* Ensure workflow boxes don't overflow their content */
+  .max-h-60 .key-value-row {
+    @apply overflow-hidden text-ellipsis;
+  }
+  
+  /* Improve scrollArea visibility */
+  .ScrollAreaScrollbar {
+    @apply w-2.5 hover:w-3 transition-all;
+  }
+}
+
+/* Animation for active workflow steps */
+@keyframes border-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-border-pulse {
+  animation: border-pulse 2s infinite;
+}
+
+/* Fix for chat visibility issues */
+.MessageList {
+  max-height: 100%;
+  overflow-y: auto;
 }

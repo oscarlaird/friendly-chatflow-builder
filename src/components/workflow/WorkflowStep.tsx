@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X, Maximize2 } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,9 @@ import { Progress } from "@/components/ui/progress";
 import { getStepIcon } from "./utils/iconUtils";
 import { formatFunctionName } from "./utils/stringUtils";
 import { useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface WorkflowStepProps {
   step: any;
@@ -21,7 +24,7 @@ interface WorkflowStepProps {
   isUserInputStep?: boolean;
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
-  }
+}
 
 export const WorkflowStep = ({ 
   step, 
@@ -32,8 +35,6 @@ export const WorkflowStep = ({
   userInputs,
   setUserInputs,
 }: WorkflowStepProps) => {
-  // Use the store
-
   useEffect(() => {
     if (isUserInputStep && userInputs) {
       console.log('UserInputs available:', userInputs);
@@ -45,6 +46,9 @@ export const WorkflowStep = ({
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
   const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
   const [isUserInputsOpen, setIsUserInputsOpen] = useState(autoOpen);
+  const [dataModalOpen, setDataModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalData, setModalData] = useState<Record<string, any>>({});
   
   const stepType = step.type;
   const isActive = step.active || false;
@@ -122,6 +126,56 @@ export const WorkflowStep = ({
     }
   };
   
+  // Open modal to show data in full screen
+  const openDataModal = (title: string, data: Record<string, any>) => {
+    setModalTitle(title);
+    setModalData(data);
+    setDataModalOpen(true);
+  };
+  
+  // Render table data in the modal
+  const renderTableData = (data: Record<string, any>) => {
+    // Check if it's an array of objects
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+      // Get all unique keys from all objects in the array
+      const allKeys = Array.from(
+        new Set(
+          data.flatMap(item => Object.keys(item))
+        )
+      );
+      
+      return (
+        <div className="w-full overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {allKeys.map(key => (
+                  <TableHead key={key}>{key}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((row, idx) => (
+                <TableRow key={idx}>
+                  {allKeys.map(key => (
+                    <TableCell key={`${idx}-${key}`}>
+                      {typeof row[key] === 'object' 
+                        ? JSON.stringify(row[key])
+                        : String(row[key] ?? '')}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+    
+    // For regular objects or non-tabular data
+    return <KeyValueDisplay data={data} compact={false} />;
+  };
+  
   // Browser event item component for function steps
   const BrowserEventItem = ({ event }: { event: BrowserEvent }) => {
     const browserState = event?.data?.browser_state;
@@ -179,174 +233,240 @@ export const WorkflowStep = ({
   };
   
   return (
-    <Card className={cardStyle}>
-      <div className="flex items-start gap-3">
-        <div className={cn(
-          "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
-          isActive && !isDisabled 
-            ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
-            : isDisabled 
-              ? "bg-muted text-muted-foreground border-muted" 
-              : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
-        )}>
-          {step.step_number}
-        </div>
-        
-        <div className="flex-1 space-y-2">
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="flex items-center gap-2">
-              {getStepIcon(stepType)}
-              <h3 className={cn(
-                "font-medium",
-                isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
-                isDisabled && "text-muted-foreground"
-              )}>
-                {getStepTitle()}
-              </h3>
-            </div>
-            
-            {stepType === 'function' && step.browser_required && (
-              <Badge 
-                variant="outline" 
-                className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Browser
-              </Badge>
-            )}
-            
-            {isActive && !isDisabled && (
-              <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
-                Active
-              </Badge>
-            )}
-            
-            {hasIfControlValue && (
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "flex items-center gap-1 text-xs font-normal border",
-                  step.control_value 
-                    ? "bg-green-100 text-green-800 border-green-200" 
-                    : "bg-red-100 text-red-800 border-red-200"
-                )}
-              >
-                {step.control_value ? (
-                  <><Check className="h-3 w-3" /> True</>
-                ) : (
-                  <><X className="h-3 w-3" /> False</>
-                )}
-              </Badge>
-            )}
-            
-            {hasChildren && ['for', 'if'].includes(stepType) && (
-              <Badge variant="outline" className="text-xs font-normal">
-                {step.child_count} {step.child_count === 1 ? 'step' : 'steps'}
-              </Badge>
-            )}
+    <>
+      <Card className={cardStyle}>
+        <div className="flex items-start gap-3">
+          <div className={cn(
+            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
+            isActive && !isDisabled 
+              ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
+              : isDisabled 
+                ? "bg-muted text-muted-foreground border-muted" 
+                : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
+          )}>
+            {step.step_number}
           </div>
           
-          {getStepDescription() && (
-            <p className={cn(
-              "text-sm",
-              isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
-            )}>
-              {getStepDescription()}
-            </p>
-          )}
-
-          {hasProgress && (
-            <div className="mt-2 space-y-1">
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Progress</span>
-                <span>{step.n_progress} of {step.n_total}</span>
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex items-center gap-2">
+                {getStepIcon(stepType)}
+                <h3 className={cn(
+                  "font-medium",
+                  isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
+                  isDisabled && "text-muted-foreground"
+                )}>
+                  {getStepTitle()}
+                </h3>
               </div>
-              <Progress value={progressValue} className="h-2" />
+              
+              {stepType === 'function' && step.browser_required && (
+                <Badge 
+                  variant="outline" 
+                  className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Browser
+                </Badge>
+              )}
+              
+              {isActive && !isDisabled && (
+                <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
+                  Active
+                </Badge>
+              )}
+              
+              {hasIfControlValue && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "flex items-center gap-1 text-xs font-normal border",
+                    step.control_value 
+                      ? "bg-green-100 text-green-800 border-green-200" 
+                      : "bg-red-100 text-red-800 border-red-200"
+                  )}
+                >
+                  {step.control_value ? (
+                    <><Check className="h-3 w-3" /> True</>
+                  ) : (
+                    <><X className="h-3 w-3" /> False</>
+                  )}
+                </Badge>
+              )}
+              
+              {hasChildren && ['for', 'if'].includes(stepType) && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  {step.child_count} {step.child_count === 1 ? 'step' : 'steps'}
+                </Badge>
+              )}
             </div>
-          )}
-          
-          {/* Display browser agent data if available */}
-          {hasBrowserAgentData && <BrowserAgentDataDisplay />}
-          
-          <div className="space-y-1.5 mt-2">
-            {hasInput && (
-              <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Input
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5">
-                  <KeyValueDisplay data={step.input} compact={true} />
-                </CollapsibleContent>
-              </Collapsible>
-            )}
             
-            {hasControlValue && (
-              <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Loop Value
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5">
-                  <KeyValueDisplay data={{ value: step.control_value }} compact={true} />
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-            
-            {hasBrowserEvents && stepType === 'function' && (
-              <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Browser Events
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5">
-                  <div className="border rounded-sm text-xs overflow-hidden">
-                    <ScrollArea className="max-h-32">
-                      {browserEvents
-                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                        .map((event, index) => (
-                          <BrowserEventItem key={index} event={event} />
-                        ))}
-                    </ScrollArea>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-            
-            {hasOutput && (
-              <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Output
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5">
-                  <KeyValueDisplay 
-                    data={step.output} 
-                    compact={true}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
+            {getStepDescription() && (
+              <p className={cn(
+                "text-sm",
+                isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
+              )}>
+                {getStepDescription()}
+              </p>
             )}
 
-            {hasUserInputs && (
-              <Collapsible open={isUserInputsOpen} onOpenChange={setIsUserInputsOpen}>
-                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isUserInputsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                  Input Values
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1.5">
-                  <KeyValueDisplay 
-                    data={userInputs} 
-                    setUserInputs={setUserInputs}
-                    compact={true}
-                    isEditable={true}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
+            {hasProgress && (
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                  <span>Progress</span>
+                  <span>{step.n_progress} of {step.n_total}</span>
+                </div>
+                <Progress value={progressValue} className="h-2" />
+              </div>
             )}
+            
+            {/* Display browser agent data if available */}
+            {hasBrowserAgentData && <BrowserAgentDataDisplay />}
+            
+            <div className="space-y-1.5 mt-2">
+              {hasInput && (
+                <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
+                  <div className="flex items-center justify-between">
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      Input
+                    </CollapsibleTrigger>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                      onClick={() => openDataModal(`Input for ${getStepTitle()}`, step.input)}
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span className="sr-only">View Full Screen</span>
+                    </Button>
+                  </div>
+                  <CollapsibleContent className="pt-1.5">
+                    <div className="max-h-60 overflow-hidden relative">
+                      <KeyValueDisplay data={step.input} compact={true} />
+                      {Object.keys(step.input).length > 3 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              
+              {hasControlValue && (
+                <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    Loop Value
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5">
+                    <KeyValueDisplay data={{ value: step.control_value }} compact={true} />
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              
+              {hasBrowserEvents && stepType === 'function' && (
+                <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
+                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    Browser Events
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1.5">
+                    <div className="border rounded-sm text-xs overflow-hidden">
+                      <ScrollArea className="max-h-32">
+                        {browserEvents
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((event, index) => (
+                            <BrowserEventItem key={index} event={event} />
+                          ))}
+                      </ScrollArea>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              
+              {hasOutput && (
+                <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
+                  <div className="flex items-center justify-between">
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      Output
+                    </CollapsibleTrigger>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                      onClick={() => openDataModal(`Output from ${getStepTitle()}`, step.output)}
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span className="sr-only">View Full Screen</span>
+                    </Button>
+                  </div>
+                  <CollapsibleContent className="pt-1.5">
+                    <div className="max-h-60 overflow-hidden relative">
+                      <KeyValueDisplay data={step.output} compact={true} />
+                      {Object.keys(step.output).length > 3 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
+              {hasUserInputs && (
+                <Collapsible open={isUserInputsOpen} onOpenChange={setIsUserInputsOpen}>
+                  <div className="flex items-center justify-between">
+                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {isUserInputsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      Input Values
+                    </CollapsibleTrigger>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                      onClick={() => openDataModal(`Input Values`, userInputs || {})}
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span className="sr-only">View Full Screen</span>
+                    </Button>
+                  </div>
+                  <CollapsibleContent className="pt-1.5">
+                    <div className="max-h-60 overflow-hidden relative">
+                      <KeyValueDisplay 
+                        data={userInputs || {}} 
+                        setUserInputs={setUserInputs}
+                        compact={true}
+                        isEditable={true}
+                      />
+                      {userInputs && Object.keys(userInputs).length > 3 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+      
+      {/* Modal for viewing data in full screen */}
+      <Dialog open={dataModalOpen} onOpenChange={setDataModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{modalTitle}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 overflow-auto">
+            <div className="p-4">
+              {renderTableData(modalData)}
+            </div>
+          </ScrollArea>
+          <div className="p-4 border-t">
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

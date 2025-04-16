@@ -5,6 +5,8 @@ import { Layout } from '@/components/Layout';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { useSelectedChat } from '@/hooks/useChats';
 import { useMessages } from '@/hooks/useMessages';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function WorkflowEditor() {
   const { id } = useParams();
@@ -29,6 +31,10 @@ export default function WorkflowEditor() {
     }
   }, [initialPrompt, id, sendMessage, navigate]);
 
+  const handleBack = () => {
+    navigate('/');
+  };
+
   // Show loading state while chat is being fetched
   if (codeRewritingStatus === 'thinking' && !selectedChat) {
     return (
@@ -45,6 +51,10 @@ export default function WorkflowEditor() {
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
           <p>Chat not found</p>
+          <Button variant="outline" onClick={handleBack} className="ml-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
         </div>
       </Layout>
     );
