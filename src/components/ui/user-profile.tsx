@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Home, Settings, FolderCog } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function UserProfile() {
   const { user, signOut } = useAuth();
@@ -37,6 +38,25 @@ export function UserProfile() {
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/">
+            <Home className="mr-2 h-4 w-4" />
+            <span>Usage</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/workflows">
+            <FolderCog className="mr-2 h-4 w-4" />
+            <span>Workflows</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="mr-2 h-4 w-4" />
