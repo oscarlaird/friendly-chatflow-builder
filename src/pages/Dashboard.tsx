@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,18 +20,10 @@ import '../styles/animations.css';
 
 // Updated prompts with full text
 const examplePrompts = [
-  "Research the companies in my google sheets, find the founders and send them a linkedin request.",
-  "Get data from dashboard and put that in google sheet",
-  "Update contacts in my salesforce instance if they no longer work in the same company - mark them disqualified.",
-  "Build drafts for messages that came in for product query in my gmail."
-];
-
-// Shortened versions for display
-const shortPrompts = [
-  "Research companies",
-  "Dashboard to sheets",
-  "Update contacts",
-  "Draft responses"
+  "Research companies in Google Sheets, find founders, send LinkedIn requests",
+  "Transfer dashboard data to Google Sheet",
+  "Update Salesforce contacts if they've changed companies",
+  "Draft product query responses in Gmail"
 ];
 
 export default function Dashboard() {
@@ -50,12 +41,9 @@ export default function Dashboard() {
       const newChat = await createChat('New Workflow');
       
       if (newChat) {
-        // Navigate to workflow editor
         navigate(`/workflow/${newChat.id}`);
         
-        // Use a small delay before sending the initial message
         setTimeout(() => {
-          // We'll handle sending the initial message in the WorkflowEditor
           navigate(`/workflow/${newChat.id}?initialPrompt=${encodeURIComponent(promptText)}`);
         }, 100);
       }
@@ -90,11 +78,9 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Gradient background */}
         <div className="relative">
           <div className="absolute inset-0 -z-10 h-72 w-full animated-gradient-bg"></div>
 
-          {/* Hero Section */}
           <section className="py-24 text-center max-w-3xl mx-auto px-4">
             <div className="space-y-6 fade-in">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -123,8 +109,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
                 
-                {/* Badge-like prompt examples */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 fade-in delay-200">
+                <div className="flex justify-center space-x-4 mt-4 fade-in delay-200">
                   {examplePrompts.map((example, index) => (
                     <Tooltip key={index}>
                       <TooltipTrigger asChild>
@@ -132,11 +117,11 @@ export default function Dashboard() {
                           onClick={() => handleCreateWorkflow(example)}
                           className="prompt-badge"
                         >
-                          {shortPrompts[index]}
+                          {example.split(',')[0].trim()}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="max-w-xs">{example}</p>
+                        <p>{example}</p>
                       </TooltipContent>
                     </Tooltip>
                   ))}

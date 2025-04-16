@@ -226,6 +226,16 @@
   .content-modal-footer {
     @apply p-4 border-t flex justify-end;
   }
+
+  .prompt-badge {
+    @apply px-4 py-2 text-xs rounded-full border 
+    hover:border-[hsl(var(--dropbox-blue))] 
+    hover:bg-[hsl(var(--dropbox-blue)/10%)] 
+    transition-all duration-300 
+    flex items-center justify-center
+    shadow-sm hover:shadow-md 
+    max-w-[250px] truncate;
+  }
 }
 
 /* Animation for active workflow steps */
