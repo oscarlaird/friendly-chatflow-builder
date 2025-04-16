@@ -45,29 +45,3 @@ export const shortenPrompt = (prompt: string): string => {
   // If original prompt is longer than what we've shortened it to, add ellipsis
   return words.length > 4 ? `${shortened}...` : shortened;
 };
-
-/**
- * Truncates a string for display in a table cell
- * with a reasonable default length for tables
- */
-export const truncateForTable = (text: string, maxLength: number = 50): string => {
-  return truncateText(text, maxLength);
-};
-
-/**
- * Formats a JSON object for display
- */
-export const formatJson = (json: any): string => {
-  if (!json) return '';
-  try {
-    if (typeof json === 'string') {
-      // Try to parse if it's a string that contains JSON
-      const parsed = JSON.parse(json);
-      return JSON.stringify(parsed, null, 2);
-    }
-    return JSON.stringify(json, null, 2);
-  } catch (e) {
-    // If it's not valid JSON or there's an error, return as is
-    return String(json);
-  }
-};
