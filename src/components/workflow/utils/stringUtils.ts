@@ -1,3 +1,4 @@
+
 /**
  * Formats a function name for display by:
  * - Converting underscores to spaces

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X, Maximize2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X, Maximize2, ArrowLeft } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { truncateText } from "./utils/stringUtils";
 
 interface WorkflowStepProps {
   step: any;
@@ -105,7 +106,7 @@ export const WorkflowStep = ({
   const getStepDescription = () => {
     switch (stepType) {
       case 'function':
-        return step.function_description;
+        return step.function_description ? truncateText(step.function_description, 100) : null;
       case 'for':
       case 'if':
         return null; // We'll use control_description as the main title now
@@ -131,6 +132,30 @@ export const WorkflowStep = ({
     setModalTitle(title);
     setModalData(data);
     setDataModalOpen(true);
+  };
+  
+  // Truncate long text values in data objects
+  const truncateDataValues = (data: Record<string, any>, maxLength = 50): Record<string, any> => {
+    if (!data || typeof data !== 'object') return data;
+    
+    const result: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string' && value.length > maxLength) {
+        result[key] = truncateText(value, maxLength);
+      } else if (Array.isArray(value)) {
+        result[key] = value.map(item => 
+          typeof item === 'object' ? truncateDataValues(item, maxLength) : 
+            (typeof item === 'string' && item.length > maxLength ? truncateText(item, maxLength) : item)
+        );
+      } else if (value !== null && typeof value === 'object') {
+        result[key] = truncateDataValues(value, maxLength);
+      } else {
+        result[key] = value;
+      }
+    }
+    
+    return result;
   };
   
   // Render table data in the modal
@@ -189,7 +214,7 @@ export const WorkflowStep = ({
         ) : (
           <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
         )}
-        <span className="truncate">{currentGoal || 'Browser action'}</span>
+        <span className="truncate">{currentGoal ? truncateText(currentGoal, 60) : 'Browser action'}</span>
       </div>
     );
   };
@@ -211,21 +236,31 @@ export const WorkflowStep = ({
           )}
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm truncate">
-              {browser_state?.title || browser_state?.url || 'Unknown Page'}
+              {browser_state?.title ? truncateText(browser_state.title, 40) : (browser_state?.url ? truncateText(browser_state.url, 40) : 'Unknown Page')}
             </div>
             <div className="text-xs text-muted-foreground truncate">
-              {browser_state?.url || ''}
+              {browser_state?.url ? truncateText(browser_state.url, 60) : ''}
             </div>
           </div>
           {current_goal && (
             <Badge variant="outline" className="ml-auto text-xs">
-              {current_goal}
+              {truncateText(current_goal, 30)}
             </Badge>
           )}
         </div>
         {memory_log && (
           <div className="p-2 text-sm bg-slate-100/80 dark:bg-slate-800/80 text-muted-foreground">
-            <p className="whitespace-pre-wrap">{memory_log}</p>
+            <p className="whitespace-pre-wrap line-clamp-2 text-xs">{memory_log}</p>
+            {memory_log.length > 100 && (
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="p-0 h-auto text-xs"
+                onClick={() => openDataModal('Memory Log', { content: memory_log })}
+              >
+                Show more
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -247,12 +282,12 @@ export const WorkflowStep = ({
             {step.step_number}
           </div>
           
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-2 overflow-hidden">
             <div className="flex flex-wrap gap-2 items-center">
               <div className="flex items-center gap-2">
                 {getStepIcon(stepType)}
                 <h3 className={cn(
-                  "font-medium",
+                  "font-medium truncate max-w-[180px]",
                   isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
                   isDisabled && "text-muted-foreground"
                 )}>
@@ -303,7 +338,7 @@ export const WorkflowStep = ({
             
             {getStepDescription() && (
               <p className={cn(
-                "text-sm",
+                "text-sm line-clamp-2",
                 isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
               )}>
                 {getStepDescription()}
@@ -343,7 +378,7 @@ export const WorkflowStep = ({
                   </div>
                   <CollapsibleContent className="pt-1.5">
                     <div className="max-h-60 overflow-hidden relative">
-                      <KeyValueDisplay data={step.input} compact={true} />
+                      <KeyValueDisplay data={truncateDataValues(step.input, 50)} compact={true} />
                       {Object.keys(step.input).length > 3 && (
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
                       )}
@@ -403,7 +438,7 @@ export const WorkflowStep = ({
                   </div>
                   <CollapsibleContent className="pt-1.5">
                     <div className="max-h-60 overflow-hidden relative">
-                      <KeyValueDisplay data={step.output} compact={true} />
+                      <KeyValueDisplay data={truncateDataValues(step.output, 50)} compact={true} />
                       {Object.keys(step.output).length > 3 && (
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
                       )}
@@ -432,7 +467,7 @@ export const WorkflowStep = ({
                   <CollapsibleContent className="pt-1.5">
                     <div className="max-h-60 overflow-hidden relative">
                       <KeyValueDisplay 
-                        data={userInputs || {}} 
+                        data={truncateDataValues(userInputs || {}, 50)} 
                         setUserInputs={setUserInputs}
                         compact={true}
                         isEditable={true}
