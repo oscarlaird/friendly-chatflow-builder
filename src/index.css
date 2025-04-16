@@ -227,67 +227,6 @@
   .content-modal-footer {
     @apply p-4 border-t flex justify-end;
   }
-  
-  /* Typing animation styles */
-  .typing-container {
-    @apply inline-flex items-center;
-  }
-  
-  .typing-text {
-    @apply text-primary;
-  }
-  
-  .typing-cursor {
-    @apply text-primary animate-pulse ml-0.5;
-  }
-  
-  /* Circular prompt styles */
-  .circular-prompt {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-  
-  .circular-prompt::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-      45deg,
-      hsla(var(--dropbox-blue), 0.1) 0%,
-      hsla(var(--dropbox-blue), 0.3) 50%,
-      hsla(var(--dropbox-blue), 0.1) 100%
-    );
-    animation: rotate 8s linear infinite;
-    z-index: -1;
-  }
-  
-  /* Input container with gradient background */
-  .input-container {
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .input-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      hsla(var(--dropbox-blue), 0.08) 0%,
-      hsla(var(--background), 1) 45%,
-      hsla(var(--dropbox-blue), 0.12) 100%
-    );
-    z-index: -1;
-    opacity: 0.7;
-    animation: gradient-shift 15s ease infinite;
-  }
 }
 
 /* Animation for active workflow steps */
@@ -305,29 +244,6 @@
 
 .animate-border-pulse {
   animation: border-pulse 2s infinite;
-}
-
-/* Rotation animation for circular prompt backgrounds */
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Subtle gradient shift animation */
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
 }
 
 /* Fix for chat visibility issues */
