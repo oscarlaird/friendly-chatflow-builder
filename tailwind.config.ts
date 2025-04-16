@@ -1,3 +1,4 @@
+
 import { Config } from 'tailwindcss';
 
 const config: Config = {
@@ -70,12 +71,23 @@ const config: Config = {
         "border-pulse": {
           "0%, 100%": { borderColor: "hsl(var(--primary))" },
           "50%": { borderColor: "transparent" }
+        },
+        "rotate": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" }
+        },
+        "gradient-shift": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" }
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "border-pulse": "border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
+        "border-pulse": "border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "rotate": "rotate 8s linear infinite",
+        "gradient-shift": "gradient-shift 15s ease infinite"
       },
     },
   },
