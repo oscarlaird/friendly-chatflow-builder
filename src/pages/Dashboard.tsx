@@ -103,6 +103,7 @@ export default function Dashboard() {
                   size="icon" 
                   disabled={!prompt.trim()}
                   onClick={() => handleCreateWorkflow()}
+                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
                 >
                   <SendHorizontal className="h-5 w-5" />
                 </Button>
@@ -135,7 +136,10 @@ export default function Dashboard() {
             <TabsContent value="my-workflows" className="space-y-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">My Workflows</h2>
-                <Button onClick={() => setTemplateGalleryOpen(true)}>
+                <Button 
+                  onClick={() => setTemplateGalleryOpen(true)}
+                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   New Workflow
                 </Button>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -49,6 +50,12 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Dropbox theme colors */
+    --dropbox-blue: 215 94% 52%;
+    --dropbox-light-blue: 210 100% 97%;
+    --dropbox-dark: 220 20% 20%;
+    --dropbox-light-gray: 220 20% 97%;
   }
 
   .dark {
@@ -87,6 +94,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Dropbox dark theme colors */
+    --dropbox-blue: 215 94% 62%;
+    --dropbox-light-blue: 210 30% 15%;
+    --dropbox-dark: 220 15% 85%;
+    --dropbox-light-gray: 220 10% 22%;
   }
 }
 
@@ -97,5 +110,24 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Dropbox-inspired styles */
+@layer components {
+  .workflow-card {
+    @apply border border-[#E6E8EB] rounded-lg bg-white shadow-sm hover:shadow-md transition-all;
+  }
+  
+  .dark .workflow-card {
+    @apply border-[#2D3748] bg-[#1A202C];
+  }
+  
+  .workflow-card:hover {
+    @apply border-[hsl(var(--dropbox-blue)/30%)] bg-[hsl(var(--dropbox-light-blue)/50%)];
+  }
+  
+  .dark .workflow-card:hover {
+    @apply border-[hsl(var(--dropbox-blue)/30%)] bg-[hsl(var(--dropbox-light-blue)/30%)];
   }
 }

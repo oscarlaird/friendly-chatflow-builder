@@ -42,13 +42,16 @@ export default function Workflows() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Workflows</h1>
-          <Button onClick={() => setTemplateGalleryOpen(true)}>
+          <Button 
+            onClick={() => setTemplateGalleryOpen(true)}
+            className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+          >
             <Plus className="mr-2 h-4 w-4" />
             New Workflow
           </Button>
         </div>
         
-        <WorkflowList />
+        <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
         
         <WorkflowTemplateGallery 
           open={templateGalleryOpen}

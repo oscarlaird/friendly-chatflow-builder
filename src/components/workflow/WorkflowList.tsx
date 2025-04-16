@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { Clock, FileText } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
@@ -64,7 +64,7 @@ export function WorkflowList({ className = '' }: { className?: string }) {
     return (
       <div className={className}>
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="overflow-hidden hover:shadow-md transition-shadow">
+          <Card key={i} className="workflow-card overflow-hidden hover:shadow-md transition-shadow h-[160px] flex flex-col justify-between">
             <CardHeader className="pb-4">
               <Skeleton className="h-5 w-3/4 mb-2" />
               <Skeleton className="h-4 w-1/2" />
@@ -95,25 +95,39 @@ export function WorkflowList({ className = '' }: { className?: string }) {
         return (
           <Card 
             key={workflow.id} 
-            className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+            className="workflow-card overflow-hidden hover:shadow-md transition-shadow h-[160px] flex flex-col justify-between"
             onClick={() => navigate(`/workflow/${workflow.id}`)}
           >
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
-              <CardDescription className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
-              </CardDescription>
+            <CardHeader className="pb-2 flex-1">
+              <div className="flex items-start gap-3">
+                <div className="text-blue-600 mt-1">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
+                  <CardDescription className="flex items-center gap-1 mt-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             {requiredApps && requiredApps.length > 0 && (
-              <CardFooter className="pt-2 flex gap-2">
-                {requiredApps.map((app: string) => (
-                  <OAuthIcon 
-                    key={app} 
-                    provider={app as OAuthProviderType} 
-                    size={16} 
-                  />
-                ))}
+              <CardFooter className="pt-2 border-t mt-auto">
+                <div className="flex gap-2 flex-wrap">
+                  {requiredApps.map((app: string) => (
+                    <OAuthIcon 
+                      key={app} 
+                      provider={app as OAuthProviderType} 
+                      size={16} 
+                    />
+                  ))}
+                </div>
+              </CardFooter>
+            )}
+            {(!requiredApps || requiredApps.length === 0) && (
+              <CardFooter className="pt-2 border-t mt-auto">
+                <span className="text-xs text-muted-foreground">No integrations</span>
               </CardFooter>
             )}
           </Card>
