@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
@@ -83,11 +83,11 @@ export const WorkflowDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-purple-100/30 dark:bg-purple-900/30';
+        return 'bg-[hsl(var(--dropbox-light-blue))] border-purple-300 dark:border-purple-800';
       case 'if':
-        return 'bg-blue-100/30 dark:bg-blue-900/30';
+        return 'bg-[hsl(var(--dropbox-light-blue))] border-blue-300 dark:border-blue-800';
       default:
-        return 'bg-gray-50 dark:bg-gray-900/40';
+        return 'bg-[hsl(var(--dropbox-light-blue))] dark:bg-gray-900/40';
     }
   };
   
@@ -165,7 +165,7 @@ export const WorkflowDisplay = ({
         <motion.div 
           className={cn(
             blockStyle, 
-            "rounded-md overflow-hidden border border-gray-200 dark:border-gray-800 w-[280px]" // Fixed width inner container
+            "rounded-md overflow-hidden border shadow-sm w-[280px]" // Fixed width inner container
           )}
           animate={isChanged ? { 
             boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
@@ -186,9 +186,13 @@ export const WorkflowDisplay = ({
           />
           
           <div className="p-3">
-            <div className="flex flex-col items-center space-y-1">
+            <div className="pl-6 border-l-2 border-[hsl(var(--dropbox-blue))/30]">
               <AnimatePresence>
-                {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
+                {node.children.map((childNode, childIdx) => (
+                  <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="relative">
+                    {renderStepNode(childNode, childIdx)}
+                  </div>
+                ))}
               </AnimatePresence>
             </div>
           </div>
