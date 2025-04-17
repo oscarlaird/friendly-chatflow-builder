@@ -26,11 +26,11 @@ export const FlowchartDisplay = ({
   autoActivateSteps = false,
 }: FlowchartDisplayProps) => {
   // Track previous steps for animation comparison
-  const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());
+  const [prevStepsMap, setPrevStepsMap = useState<Map<string, any>>(new Map());
   // Track changed steps to highlight them
-  const [changedStepIds, setChangedStepIds] = useState<Set<string>>(new Set());
+  const [changedStepIds, setChangedStepIds = useState<Set<string>>(new Set());
   // Add state for animated steps display
-  const [visibleSteps, setVisibleSteps] = useState<any[]>(steps);
+  const [visibleSteps, setVisibleSteps = useState<any[]>(steps);
   
   // Create nested steps structure
   const nestedSteps = nestSteps(visibleSteps);
@@ -82,11 +82,11 @@ export const FlowchartDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-blue-50/30 dark:bg-blue-950/20';
+        return 'bg-blue-50/10 dark:bg-blue-950/10';
       case 'if':
-        return 'bg-purple-50/30 dark:bg-purple-950/20';
+        return 'bg-purple-50/10 dark:bg-purple-950/10';
       default:
-        return 'bg-gray-50/30 dark:bg-gray-950/20';
+        return 'bg-gray-50/10 dark:bg-gray-950/10';
     }
   };
   
@@ -135,7 +135,7 @@ export const FlowchartDisplay = ({
           layout
         >
           <motion.div
-            className="w-full max-w-[320px]"
+            className="w-[320px]"  // Fixed width
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
               backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
@@ -159,7 +159,6 @@ export const FlowchartDisplay = ({
       );
     }
     
-    // For parent nodes with children, render a container with the step and its children
     const blockStyle = getControlBlockStyle(node.step.type);
     
     return (
@@ -173,7 +172,7 @@ export const FlowchartDisplay = ({
         transition={{ duration: 0.3 }}
         layout
       >
-        <div className="w-full max-w-[320px] mb-2">
+        <div className="w-[320px] mb-2">
           <motion.div
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
@@ -199,7 +198,7 @@ export const FlowchartDisplay = ({
         
         {/* Render children with a soft background */}
         <div className={cn(
-          "w-full max-w-[320px] rounded-lg overflow-hidden p-4 mb-2",
+          "w-[320px] p-4 rounded-lg overflow-hidden",
           blockStyle
         )}>
           <AnimatePresence>

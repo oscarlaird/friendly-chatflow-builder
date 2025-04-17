@@ -82,11 +82,11 @@ export const WorkflowDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-blue-50/30 dark:bg-blue-950/20';
+        return 'bg-blue-50/10 dark:bg-blue-950/10';
       case 'if':
-        return 'bg-purple-50/30 dark:bg-purple-950/20';
+        return 'bg-purple-50/10 dark:bg-purple-950/10';
       default:
-        return 'bg-gray-50/30 dark:bg-gray-950/20';
+        return 'bg-gray-50/10 dark:bg-gray-950/10';
     }
   };
   
@@ -124,7 +124,7 @@ export const WorkflowDisplay = ({
           layout
         >
           <motion.div
-            className="w-full max-w-[320px]"
+            className="w-[320px]"  // Fixed width
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
               backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
@@ -161,7 +161,7 @@ export const WorkflowDisplay = ({
         transition={{ duration: 0.3 }}
         layout
       >
-        <div className="w-full max-w-[320px] mb-4">
+        <div className="w-[320px] mb-4">
           <motion.div
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
@@ -185,7 +185,7 @@ export const WorkflowDisplay = ({
         
         {/* Render children in a container with subtle background */}
         <div className={cn(
-          "w-full max-w-[320px] p-4 rounded-lg overflow-hidden",
+          "w-[320px] p-4 rounded-lg overflow-hidden",
           blockStyle
         )}>
           <AnimatePresence>
