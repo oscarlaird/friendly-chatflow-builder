@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion, Reorder } from "framer-motion";
-import { ArrowDown, ArrowRight, MoveUp, MoveDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowDown, ArrowRight } from "lucide-react";
 
 interface FlowchartDisplayProps {
   steps: any[];
@@ -202,70 +202,18 @@ export const FlowchartDisplay = ({
     );
   };
   
-  // Add scroll position state
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'up' | 'down') => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const scrollAmount = 200; // Adjust scroll amount as needed
-    
-    const newPosition = direction === 'up' 
-      ? container.scrollTop - scrollAmount 
-      : container.scrollTop + scrollAmount;
-      
-    container.scrollTo({
-      top: newPosition,
-      behavior: 'smooth'
-    });
-    
-    setScrollPosition(newPosition);
-  };
-
   return (
     <div className={cn(
-      "flex flex-col items-center w-full max-w-full overflow-hidden p-4 relative",
-      "bg-[#f3f3f3] dark:bg-[#1A1F2C]",
-      "[background-image:radial-gradient(#8E9196_1px,transparent_1px)] dark:[background-image:radial-gradient(#ffffff1a_1px,transparent_1px)]",
-      "[background-size:20px_20px]",
+      "flex flex-col items-center w-full max-w-full overflow-hidden p-4",
       className
     )}>
-      {/* Navigation Controls */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => handleScroll('up')}
-          className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <MoveUp className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => handleScroll('down')}
-          className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <MoveDown className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Scrollable Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="flex flex-col items-center w-full h-full overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
-      >
-        {nestedSteps?.length > 0 && (
-          <div className="flex flex-col items-center w-full">
-            <AnimatePresence>
-              {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
+      {nestedSteps?.length > 0 && (
+        <div className="flex flex-col items-center w-full">
+          <AnimatePresence>
+            {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };
