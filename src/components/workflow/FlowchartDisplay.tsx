@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -26,11 +27,11 @@ export const FlowchartDisplay = ({
   autoActivateSteps = false,
 }: FlowchartDisplayProps) => {
   // Track previous steps for animation comparison
-  const [prevStepsMap, setPrevStepsMap = useState<Map<string, any>>(new Map());
+  const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());
   // Track changed steps to highlight them
-  const [changedStepIds, setChangedStepIds = useState<Set<string>>(new Set());
+  const [changedStepIds, setChangedStepIds] = useState<Set<string>>(new Set());
   // Add state for animated steps display
-  const [visibleSteps, setVisibleSteps = useState<any[]>(steps);
+  const [visibleSteps, setVisibleSteps] = useState<any[]>(steps);
   
   // Create nested steps structure
   const nestedSteps = nestSteps(visibleSteps);
