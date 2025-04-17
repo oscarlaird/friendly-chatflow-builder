@@ -5,7 +5,7 @@ import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 
 interface FlowchartDisplayProps {
   steps: any[];
@@ -30,7 +30,6 @@ export const FlowchartDisplay = ({
   const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());
   // Track changed steps to highlight them
   const [changedStepIds, setChangedStepIds] = useState<Set<string>>(new Set());
-  
   // Add state for animated steps display
   const [visibleSteps, setVisibleSteps] = useState<any[]>(steps);
   
@@ -47,21 +46,26 @@ export const FlowchartDisplay = ({
     const newStepsMap = new Map();
     const newChangedStepIds = new Set<string>();
     
+    // Create a map of current steps by ID or step_number
     steps.forEach(step => {
       const stepId = step.id || `step-${step.step_number}`;
       newStepsMap.set(stepId, step);
       
+      // Check if step exists in previous steps but has changed
       if (prevStepsMap.has(stepId)) {
         const prevStep = prevStepsMap.get(stepId);
+        // Compare relevant properties to detect changes
         if (JSON.stringify(prevStep) !== JSON.stringify(step)) {
           newChangedStepIds.add(stepId);
         }
       }
     });
     
+    // Update the previous steps map for next comparison
     setPrevStepsMap(newStepsMap);
     setChangedStepIds(newChangedStepIds);
     
+    // Clear highlight effect after 2 seconds
     const timer = setTimeout(() => {
       setChangedStepIds(new Set());
     }, 2000);
@@ -92,9 +96,20 @@ export const FlowchartDisplay = ({
         return 'bg-[hsl(var(--dropbox-light-blue))] dark:bg-gray-900/40';
     }
   };
-
+  
+  // Render connection arrows between steps
+  const renderArrow = () => {
+    return (
+      <div className="flex justify-center w-full py-3">
+        <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
+          <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
+        </div>
+      </div>
+    );
+  };
+  
   // Recursive component to render step nodes
-  const renderStepNode = (node: StepNode, index: number, totalSteps: number) => {
+  const renderStepNode = (node: StepNode, index: number, isNested = false) => {
     const hasChildren = node.children && node.children.length > 0;
     const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
@@ -126,16 +141,11 @@ export const FlowchartDisplay = ({
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={compact}
               uniformWidth={true}
             />
           </div>
-          {index < totalSteps - 1 && (
-            <div className="flex justify-center w-full py-3">
-              <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
-                <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
-              </div>
-            </div>
-          )}
+          {index < visibleSteps.length - 1 && !isNested && renderArrow()}
         </motion.div>
       );
     }
@@ -162,37 +172,29 @@ export const FlowchartDisplay = ({
             isUserInputStep={isUserInputStep}
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
+            compact={compact}
             uniformWidth={true}
           />
         </div>
         
-        <div className="flex justify-center w-full py-3">
-          <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
-            <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
-          </div>
-        </div>
+        {renderArrow()}
         
         <div className={cn(
-          "w-[360px] px-5 py-4 rounded-lg border",
+          "w-[360px] px-5 py-4 rounded-lg border border-[hsl(var(--border))]",
           blockStyle
         )}>
           <AnimatePresence>
             {node.children.map((childNode, childIdx) => (
               <div key={`child-${childNode.step.id || childNode.step.step_number}`} 
                    className="flex flex-col items-center w-full">
-                {renderStepNode(childNode, childIdx, node.children.length)}
+                {renderStepNode(childNode, childIdx, true)}
+                {childIdx < node.children.length - 1 && renderArrow()}
               </div>
             ))}
           </AnimatePresence>
         </div>
         
-        {index < totalSteps - 1 && (
-          <div className="flex justify-center w-full py-3">
-            <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
-              <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
-            </div>
-          </div>
-        )}
+        {!isNested && index < visibleSteps.length - 1 && renderArrow()}
       </motion.div>
     );
   };
@@ -205,7 +207,7 @@ export const FlowchartDisplay = ({
       {nestedSteps?.length > 0 && (
         <div className="flex flex-col items-center w-full">
           <AnimatePresence>
-            {nestedSteps.map((node, idx) => renderStepNode(node, idx, nestedSteps.length))}
+            {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>
         </div>
       )}
