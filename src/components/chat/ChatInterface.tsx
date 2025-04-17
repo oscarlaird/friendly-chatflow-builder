@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from '@/hooks/useMessages';
@@ -127,10 +126,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         )}
       </div>
 
-      {/* Desktop view - Adjusted to give more space to workflow */}
+      {/* Desktop view - Adjusted to 50/50 split */}
       <div className="hidden md:block flex-1 overflow-hidden w-full">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          <ResizablePanel defaultSize={30} minSize={20} className="text-sm"> 
+          <ResizablePanel defaultSize={50} minSize={30} className="text-sm"> 
             <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
               <MessageList 
                 dataState={dataState} 
@@ -143,7 +142,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={70} minSize={40}> 
+          <ResizablePanel defaultSize={50} minSize={30}> 
             <Workflow 
               initialSteps={initialWorkflowSteps} 
               chatId={chatId}
