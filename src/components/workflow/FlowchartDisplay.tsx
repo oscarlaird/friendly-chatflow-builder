@@ -161,6 +161,7 @@ export const FlowchartDisplay = ({
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={true}
             />
           </motion.div>
           {index < visibleSteps.length - 1 && renderArrow('down')}
@@ -201,6 +202,7 @@ export const FlowchartDisplay = ({
             isUserInputStep={isUserInputStep}
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
+            compact={true}
           />
           
           {/* Render children in a container with improved visual structure */}

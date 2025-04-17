@@ -139,6 +139,7 @@ export const WorkflowDisplay = ({
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={true}
             />
           </motion.div>
         </motion.div>
@@ -178,12 +179,15 @@ export const WorkflowDisplay = ({
             isUserInputStep={isUserInputStep}
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
+            compact={true}
           />
           
           <div className="p-3">
-            <AnimatePresence>
-              {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
-            </AnimatePresence>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <AnimatePresence>
+                {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -194,7 +198,7 @@ export const WorkflowDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="space-y-1">
+        <div className="flex flex-wrap gap-4 justify-center px-4 py-6">
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>

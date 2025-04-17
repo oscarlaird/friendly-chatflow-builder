@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ListOrdered, FileQuestion, Component, SquareCheck, Check, X, Maximize2, ArrowLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, Maximize2, Check, X } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { getStepIcon } from "./utils/iconUtils";
 import { formatFunctionName } from "./utils/stringUtils";
-import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,6 +24,7 @@ interface WorkflowStepProps {
   isUserInputStep?: boolean;
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
+  compact?: boolean;
 }
 
 export const WorkflowStep = ({ 
@@ -35,6 +35,7 @@ export const WorkflowStep = ({
   isUserInputStep = false,
   userInputs,
   setUserInputs,
+  compact = false,
 }: WorkflowStepProps) => {
   useEffect(() => {
     if (isUserInputStep && userInputs) {
@@ -42,11 +43,9 @@ export const WorkflowStep = ({
     }
   }, [isUserInputStep, userInputs]);
 
-  const [isInputOpen, setIsInputOpen] = useState(autoOpen);
-  const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
   const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
-  const [isUserInputsOpen, setIsUserInputsOpen] = useState(autoOpen);
   const [dataModalOpen, setDataModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalData, setModalData] = useState<Record<string, any>>({});
@@ -76,7 +75,8 @@ export const WorkflowStep = ({
   
   // Update card styling based on whether it's active and running
   const cardStyle = cn(
-    "p-3 w-full max-w-[28rem]", // Fixed width for uniform cards
+    "p-3 w-full", 
+    compact ? "max-w-[260px]" : "max-w-[28rem]", // Fixed width for uniform cards
     isActive && !isDisabled && "border-[hsl(var(--dropbox-blue))] shadow-sm bg-[hsl(var(--dropbox-light-blue))/30]",
     isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
@@ -106,7 +106,7 @@ export const WorkflowStep = ({
   const getStepDescription = () => {
     switch (stepType) {
       case 'function':
-        return step.function_description ? truncateText(step.function_description, 100) : null;
+        return step.function_description ? truncateText(step.function_description, 60) : null;
       case 'for':
       case 'if':
         return null; // We'll use control_description as the main title now
@@ -266,13 +266,81 @@ export const WorkflowStep = ({
       </div>
     );
   };
+
+  // Zapier-like collapsible content view
+  const renderCollapsibleContent = () => {
+    if (!isExpanded) return null;
+
+    return (
+      <div className="space-y-3 pt-3 mt-3 border-t">
+        {/* Input section */}
+        {hasInput && (
+          <div className="space-y-1">
+            <h4 className="text-xs font-medium flex items-center">
+              <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">Input</span>
+            </h4>
+            <div className="max-h-40 overflow-hidden relative rounded-md border bg-muted/10 p-2">
+              <KeyValueDisplay data={truncateDataValues(step.input, 50)} compact={true} />
+            </div>
+          </div>
+        )}
+        
+        {/* Output section */}
+        {hasOutput && (
+          <div className="space-y-1">
+            <h4 className="text-xs font-medium flex items-center">
+              <span className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">Output</span>
+            </h4>
+            <div className="max-h-40 overflow-hidden relative rounded-md border bg-muted/10 p-2">
+              <KeyValueDisplay data={truncateDataValues(step.output, 50)} compact={true} />
+            </div>
+          </div>
+        )}
+        
+        {/* User inputs section */}
+        {hasUserInputs && (
+          <div className="space-y-1">
+            <h4 className="text-xs font-medium flex items-center">
+              <span className="bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">User Inputs</span>
+            </h4>
+            <div className="max-h-40 overflow-hidden relative rounded-md border bg-muted/10 p-2">
+              <KeyValueDisplay 
+                data={truncateDataValues(userInputs || {}, 50)} 
+                setUserInputs={setUserInputs}
+                compact={true}
+                isEditable={true}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Browser events section */}
+        {hasBrowserEvents && stepType === 'function' && (
+          <div className="space-y-1">
+            <h4 className="text-xs font-medium flex items-center">
+              <span className="bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-300 px-1.5 py-0.5 rounded text-[10px] font-medium mr-1.5">Browser Events</span>
+            </h4>
+            <div className="border rounded-sm text-xs overflow-hidden">
+              <ScrollArea className="max-h-32">
+                {browserEvents
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .map((event, index) => (
+                    <BrowserEventItem key={index} event={event} />
+                  ))}
+              </ScrollArea>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
   
   return (
     <>
       <Card className={cardStyle}>
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2">
           <div className={cn(
-            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
+            "flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full font-medium text-xs border",
             isActive && !isDisabled 
               ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
               : isDisabled 
@@ -282,12 +350,12 @@ export const WorkflowStep = ({
             {step.step_number}
           </div>
           
-          <div className="flex-1 space-y-2 overflow-hidden">
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 space-y-1 overflow-hidden">
+            <div className="flex flex-wrap gap-1 items-center justify-between">
+              <div className="flex items-center gap-1.5 min-w-0">
                 {getStepIcon(stepType)}
                 <h3 className={cn(
-                  "font-medium truncate max-w-[180px]",
+                  "font-medium text-xs truncate max-w-[150px]",
                   isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
                   isDisabled && "text-muted-foreground"
                 )}>
@@ -295,50 +363,46 @@ export const WorkflowStep = ({
                 </h3>
               </div>
               
-              {stepType === 'function' && step.browser_required && (
-                <Badge 
-                  variant="outline" 
-                  className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Browser
-                </Badge>
-              )}
-              
-              {isActive && !isDisabled && (
-                <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
-                  Active
-                </Badge>
-              )}
-              
-              {hasIfControlValue && (
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "flex items-center gap-1 text-xs font-normal border",
-                    step.control_value 
-                      ? "bg-green-100 text-green-800 border-green-200" 
-                      : "bg-red-100 text-red-800 border-red-200"
-                  )}
-                >
-                  {step.control_value ? (
-                    <><Check className="h-3 w-3" /> True</>
-                  ) : (
-                    <><X className="h-3 w-3" /> False</>
-                  )}
-                </Badge>
-              )}
-              
-              {hasChildren && ['for', 'if'].includes(stepType) && (
-                <Badge variant="outline" className="text-xs font-normal">
-                  {step.child_count} {step.child_count === 1 ? 'step' : 'steps'}
-                </Badge>
-              )}
+              <div className="flex gap-1">
+                {stepType === 'function' && step.browser_required && (
+                  <Badge 
+                    variant="outline" 
+                    className="flex items-center gap-0.5 text-[9px] py-0 px-1 h-4 font-normal bg-violet-500 text-white border-violet-600"
+                  >
+                    <ExternalLink className="h-2.5 w-2.5" />
+                    Browser
+                  </Badge>
+                )}
+                
+                {isActive && !isDisabled && (
+                  <Badge className="bg-[hsl(var(--dropbox-blue))] text-white text-[9px] py-0 px-1 h-4">
+                    Active
+                  </Badge>
+                )}
+                
+                {hasIfControlValue && (
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      "flex items-center gap-0.5 text-[9px] py-0 px-1 h-4 font-normal border",
+                      step.control_value 
+                        ? "bg-green-100 text-green-800 border-green-200" 
+                        : "bg-red-100 text-red-800 border-red-200"
+                    )}
+                  >
+                    {step.control_value ? (
+                      <><Check className="h-2.5 w-2.5" /> True</>
+                    ) : (
+                      <><X className="h-2.5 w-2.5" /> False</>
+                    )}
+                  </Badge>
+                )}
+              </div>
             </div>
             
             {getStepDescription() && (
               <p className={cn(
-                "text-sm line-clamp-2",
+                "text-[10px] line-clamp-1",
                 isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
               )}>
                 {getStepDescription()}
@@ -346,138 +410,49 @@ export const WorkflowStep = ({
             )}
 
             {hasProgress && (
-              <div className="mt-2 space-y-1">
-                <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <div className="mt-1 space-y-0.5">
+                <div className="flex justify-between items-center text-[9px] text-muted-foreground">
                   <span>Progress</span>
                   <span>{step.n_progress} of {step.n_total}</span>
                 </div>
-                <Progress value={progressValue} className="h-2" />
+                <Progress value={progressValue} className="h-1.5" />
               </div>
             )}
             
-            {/* Display browser agent data if available */}
-            {hasBrowserAgentData && <BrowserAgentDataDisplay />}
-            
-            <div className="space-y-1.5 mt-2">
-              {hasInput && (
-                <Collapsible open={isInputOpen} onOpenChange={setIsInputOpen}>
-                  <div className="flex items-center justify-between">
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isInputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Input
-                    </CollapsibleTrigger>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => openDataModal(`Input for ${getStepTitle()}`, step.input)}
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      <span className="sr-only">View Full Screen</span>
-                    </Button>
-                  </div>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="max-h-60 overflow-hidden relative">
-                      <KeyValueDisplay data={truncateDataValues(step.input, 50)} compact={true} />
-                      {Object.keys(step.input).length > 3 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasControlValue && (
-                <Collapsible open={isControlValueOpen} onOpenChange={setIsControlValueOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isControlValueOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Loop Value
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <KeyValueDisplay data={{ value: step.control_value }} compact={true} />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasBrowserEvents && stepType === 'function' && (
-                <Collapsible open={isBrowserEventsOpen} onOpenChange={setIsBrowserEventsOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {isBrowserEventsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    Browser Events
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="border rounded-sm text-xs overflow-hidden">
-                      <ScrollArea className="max-h-32">
-                        {browserEvents
-                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                          .map((event, index) => (
-                            <BrowserEventItem key={index} event={event} />
-                          ))}
-                      </ScrollArea>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              
-              {hasOutput && (
-                <Collapsible open={isOutputOpen} onOpenChange={setIsOutputOpen}>
-                  <div className="flex items-center justify-between">
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isOutputOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Output
-                    </CollapsibleTrigger>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => openDataModal(`Output from ${getStepTitle()}`, step.output)}
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      <span className="sr-only">View Full Screen</span>
-                    </Button>
-                  </div>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="max-h-60 overflow-hidden relative">
-                      <KeyValueDisplay data={truncateDataValues(step.output, 50)} compact={true} />
-                      {Object.keys(step.output).length > 3 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
+            {/* Display browser agent data if available and expanded */}
+            {isExpanded && hasBrowserAgentData && <BrowserAgentDataDisplay />}
 
-              {hasUserInputs && (
-                <Collapsible open={isUserInputsOpen} onOpenChange={setIsUserInputsOpen}>
-                  <div className="flex items-center justify-between">
-                    <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {isUserInputsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      Input Values
-                    </CollapsibleTrigger>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => openDataModal(`Input Values`, userInputs || {})}
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      <span className="sr-only">View Full Screen</span>
-                    </Button>
-                  </div>
-                  <CollapsibleContent className="pt-1.5">
-                    <div className="max-h-60 overflow-hidden relative">
-                      <KeyValueDisplay 
-                        data={truncateDataValues(userInputs || {}, 50)} 
-                        setUserInputs={setUserInputs}
-                        compact={true}
-                        isEditable={true}
-                      />
-                      {userInputs && Object.keys(userInputs).length > 3 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent h-10 pointer-events-none"></div>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+            {renderCollapsibleContent()}
+            
+            <div className="flex justify-between items-center pt-1 mt-1">
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {isExpanded ? 
+                  <ChevronDown className="h-3 w-3" /> : 
+                  <ChevronRight className="h-3 w-3" />
+                }
+                {isExpanded ? "Collapse" : "Expand"}
+              </button>
+              
+              {(hasInput || hasOutput) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 w-5 p-0"
+                  onClick={() => {
+                    const title = `${getStepTitle()} Details`;
+                    const data = {
+                      ...(hasInput ? { input: step.input } : {}),
+                      ...(hasOutput ? { output: step.output } : {})
+                    };
+                    openDataModal(title, data);
+                  }}
+                >
+                  <Maximize2 className="h-3 w-3" />
+                  <span className="sr-only">View Full Screen</span>
+                </Button>
               )}
             </div>
           </div>
