@@ -100,7 +100,7 @@ export default function WorkflowEditor() {
   return (
     <Layout>
       <div className="h-full flex flex-col">
-        <div className="p-4 border-b flex items-center">
+        <div className="p-2 border-b flex items-center">
           <Button variant="ghost" onClick={handleBack} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -131,11 +131,11 @@ export default function WorkflowEditor() {
             </div>
           ) : (
             <div 
-              className="text-xl font-bold flex-1 cursor-pointer hover:text-blue-600 transition-colors flex items-center" 
+              className="text-base font-semibold flex-1 cursor-pointer hover:text-blue-600 transition-colors flex items-center" 
               onClick={startEditing}
             >
               {selectedChat.title || 'Untitled Workflow'}
-              <Edit className="ml-2 h-4 w-4 opacity-50" />
+              <Edit className="ml-2 h-3.5 w-3.5 opacity-50" />
             </div>
           )}
         </div>
@@ -145,3 +145,4 @@ export default function WorkflowEditor() {
     </Layout>
   );
 }
+
