@@ -37,7 +37,8 @@ export const KeyValueDisplay = ({
     if (!setUserInputs) return;
     
     console.log('Changing data', key, value);
-    const newData = JSON.parse(JSON.stringify(data));
+    // Create a new object to ensure React detects the change
+    const newData = JSON.parse(JSON.stringify(data)); 
     newData[key] = value;
     setUserInputs(newData);
   };

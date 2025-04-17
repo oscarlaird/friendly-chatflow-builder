@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -195,10 +194,16 @@ export const Workflow = ({
       console.log("Displaying steps from selected chat:", selectedChat.steps);
       setWorkflowSteps(selectedChat.steps);
       
-      // Initialize user inputs from selected chat steps
-      const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        setUserInputs(userInputStep.output);
+      // Initialize user inputs from selected chat
+      if (selectedChat.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
+        console.log("Setting user inputs from chat:", selectedChat.user_inputs);
+        setUserInputs(selectedChat.user_inputs);
+      } else {
+        // Try to get user inputs from steps if not available in chat
+        const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
+        if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+          setUserInputs(userInputStep.output);
+        }
       }
     } else if (initialSteps.length > 0) {
       console.log("Displaying initial steps:", initialSteps);
@@ -249,16 +254,31 @@ export const Workflow = ({
     };
   }, [chatId, pastRunMessageId]);
   
-  // Initialize user inputs from the workflow steps or message
-  useEffect(() => {
-    if (workflowSteps && workflowSteps.length > 0) {
-      const userInputStep = workflowSteps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
-        console.log('Setting user inputs from workflow steps:', userInputStep.output);
-        setUserInputs(userInputStep.output);
+  // Handle persisting user inputs to database
+  const handleUserInputChange = async (inputs: Record<string, any>) => {
+    if (!chatId) return;
+    
+    // Update local state immediately
+    setUserInputs(inputs);
+    
+    try {
+      console.log('Saving user inputs to database:', inputs);
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('chats')
+        .update({ 
+          user_inputs: inputs 
+        })
+        .eq('id', chatId);
+      
+      if (error) {
+        console.error('Error saving user inputs:', error);
       }
+    } catch (err) {
+      console.error('Exception saving user inputs:', err);
     }
-  }, [workflowSteps]);
+  };
 
   const handleRunWorkflow = async () => {
     if (!chatId) return;
@@ -371,7 +391,7 @@ export const Workflow = ({
                 browserEvents={browserEvents}
                 compact={compact}
                 userInputs={userInputs}
-                setUserInputs={setUserInputs}
+                setUserInputs={handleUserInputChange}
                 autoActivateSteps={true}
               />
             )}

@@ -66,6 +66,14 @@ const AgentSidePanel = () => {
     }
   }, [workflowSteps, selectedChat]);
   
+  // Initialize user inputs from chat user_inputs if available
+  useEffect(() => {
+    if (selectedChat?.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
+      console.log('Setting user inputs from chat:', selectedChat.user_inputs);
+      setUserInputs(selectedChat.user_inputs);
+    }
+  }, [selectedChat]);
+  
   // Initialize user inputs from a running message if available
   useEffect(() => {
     if (latestRunningMessage?.user_inputs && Object.keys(latestRunningMessage.user_inputs).length > 0) {
@@ -73,6 +81,32 @@ const AgentSidePanel = () => {
       setUserInputs(latestRunningMessage.user_inputs);
     }
   }, [latestRunningMessage]);
+  
+  // Handle saving user inputs to database
+  const handleUpdateUserInputs = async (newInputs: Record<string, any>) => {
+    if (!chatId) return;
+    
+    // Update local state
+    setUserInputs(newInputs);
+    
+    try {
+      console.log('Saving user inputs to database from side panel:', newInputs);
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('chats')
+        .update({ 
+          user_inputs: newInputs 
+        })
+        .eq('id', chatId);
+      
+      if (error) {
+        console.error('Error saving user inputs from side panel:', error);
+      }
+    } catch (err) {
+      console.error('Exception saving user inputs from side panel:', err);
+    }
+  };
   
   // Listen for window messages
   useWindowMessages();
@@ -123,7 +157,7 @@ const AgentSidePanel = () => {
             steps={workflowSteps}
             chatId={chatId || undefined}
             userInputs={userInputs}
-            setUserInputs={setUserInputs}
+            setUserInputs={handleUpdateUserInputs}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
