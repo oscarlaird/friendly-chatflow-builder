@@ -17,17 +17,12 @@ export function WorkflowTemplateDialog({ open, onOpenChange }: WorkflowTemplateD
   const navigate = useNavigate();
 
   const handleCreate = async () => {
-    const newTitle = title.trim() || 'New Workflow';
+    const newTitle = title.trim() || 'Workflow';  // Simplified default title
     const newChat = await createChat(newTitle);
     
     if (newChat) {
-      // Close the dialog
       onOpenChange(false);
-      
-      // Reset the title input
       setTitle('');
-      
-      // Navigate directly to the new workflow editor
       navigate(`/workflow/${newChat.id}`);
     }
   };
@@ -36,22 +31,20 @@ export function WorkflowTemplateDialog({ open, onOpenChange }: WorkflowTemplateD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Workflow</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg">Create New Workflow</DialogTitle>
+          <DialogDescription className="text-sm">
             Give your workflow a name to get started.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Input
-              id="title"
-              placeholder="Workflow Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="col-span-4"
-              autoFocus
-            />
-          </div>
+          <Input
+            id="title"
+            placeholder="Workflow Name"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="text-sm"
+            autoFocus
+          />
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
