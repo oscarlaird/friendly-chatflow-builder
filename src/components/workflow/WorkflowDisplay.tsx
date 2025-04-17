@@ -116,7 +116,7 @@ export const WorkflowDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
+          className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
           initial="initial"
           animate="animate"
           exit="exit"
@@ -125,6 +125,7 @@ export const WorkflowDisplay = ({
           layout
         >
           <motion.div
+            className="w-[280px]" // Fixed width inner container
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
               backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
@@ -140,7 +141,7 @@ export const WorkflowDisplay = ({
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
               compact={true}
-              uniformWidth={true} // Add uniform width prop
+              uniformWidth={true}
             />
           </motion.div>
         </motion.div>
@@ -153,7 +154,7 @@ export const WorkflowDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
+        className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
         initial="initial"
         animate="animate"
         exit="exit"
@@ -164,7 +165,7 @@ export const WorkflowDisplay = ({
         <motion.div 
           className={cn(
             blockStyle, 
-            "rounded-md overflow-hidden border border-gray-200 dark:border-gray-800"
+            "rounded-md overflow-hidden border border-gray-200 dark:border-gray-800 w-[280px]" // Fixed width inner container
           )}
           animate={isChanged ? { 
             boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
@@ -181,11 +182,11 @@ export const WorkflowDisplay = ({
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
             compact={true}
-            uniformWidth={true} // Add uniform width prop
+            uniformWidth={true}
           />
           
           <div className="p-3">
-            <div className="flex flex-col items-center space-y-1"> {/* Updated to vertical alignment with center */}
+            <div className="flex flex-col items-center space-y-1">
               <AnimatePresence>
                 {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
               </AnimatePresence>
@@ -200,7 +201,7 @@ export const WorkflowDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="flex flex-col items-center space-y-1"> {/* Center steps vertically */}
+        <div className="flex flex-col items-center w-full">
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>

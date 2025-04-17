@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -100,7 +101,7 @@ export const FlowchartDisplay = ({
   const renderArrow = (direction: 'down' | 'right') => {
     if (direction === 'down') {
       return (
-        <div className="flex justify-center py-1">
+        <div className="flex justify-center py-1 w-full">
           <div className="w-0.5 h-4 bg-[hsl(var(--dropbox-blue))/40] relative">
             <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))] absolute -bottom-2 -left-[7px]" />
           </div>
@@ -136,7 +137,7 @@ export const FlowchartDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
+          className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
           initial="initial"
           animate="animate"
           exit="exit"
@@ -144,27 +145,29 @@ export const FlowchartDisplay = ({
           transition={{ duration: 0.3 }}
           layout
         >
-          <motion.div
-            animate={isChanged ? { 
-              boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
-              backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
-            } : {}}
-            transition={{ duration: 2, times: [0, 0.5, 1] }}
-            className="flowchart-node"
-          >
-            <WorkflowStep
-              step={node.step}
-              browserEvents={getBrowserEventsForStep(node.step)}
-              autoOpen={node.step.active === true || autoActivateSteps}
-              hasChildren={false}
-              isUserInputStep={isUserInputStep}
-              userInputs={isUserInputStep ? userInputs : undefined}
-              setUserInputs={isUserInputStep ? setUserInputs : undefined}
-              compact={true}
-              uniformWidth={true} // New prop to enforce uniform width
-            />
-          </motion.div>
-          {index < visibleSteps.length - 1 && renderArrow('down')}
+          <div className="flex flex-col items-center w-[280px]"> {/* Fixed width inner container */}
+            <motion.div
+              animate={isChanged ? { 
+                boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
+                backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
+              } : {}}
+              transition={{ duration: 2, times: [0, 0.5, 1] }}
+              className="flowchart-node w-full"
+            >
+              <WorkflowStep
+                step={node.step}
+                browserEvents={getBrowserEventsForStep(node.step)}
+                autoOpen={node.step.active === true || autoActivateSteps}
+                hasChildren={false}
+                isUserInputStep={isUserInputStep}
+                userInputs={isUserInputStep ? userInputs : undefined}
+                setUserInputs={isUserInputStep ? setUserInputs : undefined}
+                compact={true}
+                uniformWidth={true}
+              />
+            </motion.div>
+            {index < visibleSteps.length - 1 && renderArrow('down')}
+          </div>
         </motion.div>
       );
     }
@@ -175,7 +178,7 @@ export const FlowchartDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
+        className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
         initial="initial"
         animate="animate"
         exit="exit"
@@ -186,7 +189,7 @@ export const FlowchartDisplay = ({
         <motion.div 
           className={cn(
             blockStyle, 
-            "rounded-md overflow-hidden border shadow-sm"
+            "rounded-md overflow-hidden border shadow-sm w-[280px]" // Fixed width inner container
           )}
           animate={isChanged ? { 
             boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
@@ -203,7 +206,7 @@ export const FlowchartDisplay = ({
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
             compact={true}
-            uniformWidth={true} // New prop to enforce uniform width
+            uniformWidth={true}
           />
           
           {/* Render children in a container with improved visual structure */}
@@ -229,7 +232,7 @@ export const FlowchartDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="flex flex-col items-center space-y-1">
+        <div className="flex flex-col items-center w-full">
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>
