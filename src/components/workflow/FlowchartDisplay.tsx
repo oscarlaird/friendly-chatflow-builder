@@ -3,7 +3,7 @@ import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion, Reorder } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowRight, MoveUp, MoveDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -227,13 +227,13 @@ export const FlowchartDisplay = ({
   return (
     <div className={cn(
       "flex flex-col items-center w-full max-w-full overflow-hidden p-4 relative",
-      "bg-[#f3f3f3] dark:bg-[#1A1F2C]",
-      "[background-image:radial-gradient(#8E9196_1px,transparent_1px)] dark:[background-image:radial-gradient(#ffffff1a_1px,transparent_1px)]",
+      "bg-white dark:bg-[#1A1F2C]",
+      "[background-image:radial-gradient(#E0E0E0_1px,transparent_1px)] dark:[background-image:radial-gradient(#ffffff1a_1px,transparent_1px)]",
       "[background-size:20px_20px]",
       className
     )}>
       {/* Navigation Controls */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
+      <div className="absolute bottom-8 left-8 flex flex-col gap-2 z-20">
         <Button
           variant="secondary"
           size="icon"
