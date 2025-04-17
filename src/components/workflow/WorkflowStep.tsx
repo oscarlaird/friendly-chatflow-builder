@@ -45,11 +45,11 @@ export const WorkflowStep = ({
     }
   }, [isUserInputStep, userInputs]);
 
-  const [isInputOpen, setIsInputOpen] = useState(autoOpen);
-  const [isOutputOpen, setIsOutputOpen] = useState(autoOpen);
-  const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(autoOpen);
-  const [isControlValueOpen, setIsControlValueOpen] = useState(autoOpen);
-  const [isUserInputsOpen, setIsUserInputsOpen] = useState(autoOpen);
+  const [isInputOpen, setIsInputOpen] = useState(false);
+  const [isOutputOpen, setIsOutputOpen] = useState(false);
+  const [isBrowserEventsOpen, setIsBrowserEventsOpen] = useState(false);
+  const [isControlValueOpen, setIsControlValueOpen] = useState(false);
+  const [isUserInputsOpen, setIsUserInputsOpen] = useState(false);
   const [dataModalOpen, setDataModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalData, setModalData] = useState<Record<string, any>>({});

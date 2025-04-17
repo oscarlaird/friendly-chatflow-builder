@@ -72,6 +72,12 @@ export const FlowchartDisplay = ({
     return () => clearTimeout(timer);
   }, [steps]);
   
+  // Check if a step has changed
+  const hasStepChanged = (step: any) => {
+    const stepId = step.id || `step-${step.step_number}`;
+    return changedStepIds.has(stepId);
+  };
+  
   // Get browser events for a specific step
   const getBrowserEventsForStep = (step: any) => {
     if (step.type !== 'function' || !step.function_name) return [];
@@ -99,7 +105,7 @@ export const FlowchartDisplay = ({
   // Render connection arrows between steps
   const renderArrow = () => {
     return (
-      <div className="flex justify-center w-full py-2">
+      <div className="flex justify-center w-full py-3">
         <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
           <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
         </div>
@@ -112,7 +118,6 @@ export const FlowchartDisplay = ({
     const hasChildren = node.children && node.children.length > 0;
     const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
-    const isChanged = hasStepChanged(node.step);
     
     const variants = {
       initial: { opacity: 0, scale: 0.95 },
@@ -145,7 +150,7 @@ export const FlowchartDisplay = ({
               uniformWidth={true}
             />
           </div>
-          {index < node.children?.length - 1 && renderArrow()}
+          {index < visibleSteps.length - 1 && !isNested && renderArrow()}
         </motion.div>
       );
     }
@@ -180,7 +185,7 @@ export const FlowchartDisplay = ({
         {renderArrow()}
         
         <div className={cn(
-          "w-[320px] p-4 rounded-lg",
+          "w-[360px] px-5 py-4 rounded-lg border border-[hsl(var(--border))]",
           blockStyle
         )}>
           <AnimatePresence>
@@ -201,7 +206,7 @@ export const FlowchartDisplay = ({
   
   return (
     <div className={cn(
-      "flex flex-col items-center w-full max-w-full overflow-hidden",
+      "flex flex-col items-center w-full max-w-full overflow-hidden p-4",
       className
     )}>
       {nestedSteps?.length > 0 && (
