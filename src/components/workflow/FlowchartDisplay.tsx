@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -83,11 +82,11 @@ export const FlowchartDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800';
+        return 'bg-blue-50/30 dark:bg-blue-950/20';
       case 'if':
-        return 'bg-purple-50/50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800';
+        return 'bg-purple-50/30 dark:bg-purple-950/20';
       default:
-        return 'bg-gray-50/50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800';
+        return 'bg-gray-50/30 dark:bg-gray-950/20';
     }
   };
   
@@ -198,9 +197,9 @@ export const FlowchartDisplay = ({
         
         {renderArrow()}
         
-        {/* Render children with a border around them */}
+        {/* Render children with a soft background */}
         <div className={cn(
-          "w-full max-w-[320px] rounded-lg overflow-hidden border-2 p-4 mb-2",
+          "w-full max-w-[320px] rounded-lg overflow-hidden p-4 mb-2",
           blockStyle
         )}>
           <AnimatePresence>
