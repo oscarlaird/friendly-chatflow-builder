@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Eye } from "lucide-react";
@@ -65,7 +64,7 @@ export const WorkflowStep = ({
       case 'done':
         return 'Workflow Complete';
       default:
-        return 'Step';
+        return 'Start Inputs';
     }
   };
 
@@ -99,13 +98,13 @@ export const WorkflowStep = ({
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-2 min-w-0">
                 {getStepIcon(stepType)}
-                <h3 className={cn(
-                  "font-medium truncate",
+                <h4 className={cn(
+                  "font-semibold text-sm",
                   isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
                   isDisabled && "text-muted-foreground"
                 )}>
                   {getStepTitle()}
-                </h3>
+                  </h4>
               </div>
               
               {(hasInput || hasOutput) && (
