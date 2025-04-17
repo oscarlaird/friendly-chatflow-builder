@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types';
-import { CircleCheck, CircleDot, CircleX, Clock } from 'lucide-react';
+import { CircleCheck, CircleDot, CircleX, Clock, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -110,6 +110,10 @@ export const RecentRuns = () => {
     }
   };
 
+  const handleViewAll = () => {
+    navigate('/workflows');
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -118,22 +122,33 @@ export const RecentRuns = () => {
             <CardTitle>Recent Runs</CardTitle>
             <CardDescription>Your workflow execution history</CardDescription>
           </div>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(value) => {
-              setPageSize(Number(value));
-              setCurrentPage(1); // Reset to first page when changing page size
-            }}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Runs per page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5 per page</SelectItem>
-              <SelectItem value="10">10 per page</SelectItem>
-              <SelectItem value="20">20 per page</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Runs per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 per page</SelectItem>
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="20">20 per page</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={handleViewAll}
+            >
+              View All
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

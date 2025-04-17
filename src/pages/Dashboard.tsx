@@ -1,198 +1,115 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useChats } from '@/hooks/useChats';
+
+import { useEffect, useState } from 'react';
+import { Layout } from '@/components/Layout';
+import { RecentRuns } from '@/components/dashboard/RecentRuns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserProfile } from '@/components/ui/user-profile';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { ExtensionStatus } from '@/components/ui/extension-status';
-import { ConnectedApps } from '@/components/ui/ConnectedApps';
+import { FilePlus, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { WorkflowList } from '@/components/workflow/WorkflowList';
 import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
-import { WorkflowGallery } from '@/components/workflow/WorkflowGallery';
-import { RecentRuns } from '@/components/dashboard/RecentRuns';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import '../styles/animations.css';
-
-// Shorter prompts with icons
-const examplePrompts = [
-  { text: "Research companies", icon: <Search className="mr-1 h-3 w-3" />, fullText: "Research companies in Google Sheets, find founders, send LinkedIn requests" },
-  { text: "Transfer data", icon: <FileSpreadsheet className="mr-1 h-3 w-3" />, fullText: "Transfer dashboard data to Google Sheet" },
-  { text: "Update contacts", icon: <RefreshCw className="mr-1 h-3 w-3" />, fullText: "Update Salesforce contacts if they've changed companies" },
-  { text: "Draft responses", icon: <Mail className="mr-1 h-3 w-3" />, fullText: "Draft product query responses in Gmail" }
-];
+import { useChats } from '@/hooks/useChats';
 
 export default function Dashboard() {
-  const [prompt, setPrompt] = useState('');
+  const { user, isLoading: authLoading } = useAuth();
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
-  const { user } = useAuth();
   const { createChat } = useChats();
   const navigate = useNavigate();
 
-  const handleCreateWorkflow = async (initialPrompt?: string) => {
+  const handleTemplateSelect = async (templateId: string | null) => {
     try {
-      const promptText = initialPrompt || prompt;
-      if (!promptText.trim()) return;
-      
+      // Create a blank workflow for now
       const newChat = await createChat('New Workflow');
       
       if (newChat) {
-        navigate(`/workflow/${newChat.id}`);
-        
-        setTimeout(() => {
-          navigate(`/workflow/${newChat.id}?initialPrompt=${encodeURIComponent(promptText)}`);
-        }, 100);
+        console.log('Created new workflow with ID:', newChat.id);
+        setTemplateGalleryOpen(false);
+        navigate(`/workflow/${newChat.id}`, { replace: true });
       }
     } catch (error) {
       console.error('Error creating workflow:', error);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && prompt.trim()) {
-      e.preventDefault();
-      handleCreateWorkflow();
-    }
-  };
+  // Show skeleton if auth is loading
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="p-6 space-y-6">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="h-7 w-40 bg-muted rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="h-7 w-40 bg-muted rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // If not logged in, show login page
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="border-b">
-          <div className="container mx-auto flex items-center justify-between py-4">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">Mill</h1>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <ConnectedApps />
-              <ExtensionStatus />
-              <ThemeToggle />
-              <UserProfile />
-            </div>
-          </div>
-        </header>
+    <Layout>
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
 
-        <div className="relative">
-          <div className="absolute inset-0 -z-10 h-72 w-full animated-gradient-bg"></div>
-
-          <section className="py-24 text-center max-w-3xl mx-auto px-4">
-            <div className="space-y-6 fade-in">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Idea to workflow in seconds.
-              </h1>
-              <p className="text-xl text-muted-foreground">
-                Mill is your workflow builder assistant.
-              </p>
-              
-              <div className="max-w-xl mx-auto mt-12 fade-in delay-100">
-                <div className="enhanced-input-container">
-                  <Input
-                    placeholder="Ask Mill to automate your workflow..."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="enhanced-input"
-                  />
-                  <Button 
-                    size="icon" 
-                    disabled={!prompt.trim()}
-                    onClick={() => handleCreateWorkflow()}
-                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
-                  >
-                    <SendHorizontal className="h-5 w-5" />
-                  </Button>
-                </div>
-                
-                <div className="flex justify-center gap-3 mt-4 fade-in delay-200">
-                  {examplePrompts.map((example, index) => (
-                    <Tooltip key={index}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => handleCreateWorkflow(example.fullText)}
-                          className="prompt-badge-mini"
-                        >
-                          {example.icon}
-                          {example.text}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{example.fullText}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-        
-        {/* Workflows and Gallery Section */}
-        <section className="container mx-auto py-8 px-4 fade-in delay-300">
-          <Tabs defaultValue="my-workflows" className="w-full">
-            <TabsList className="mb-8">
-              <TabsTrigger value="my-workflows">My Workflows</TabsTrigger>
-              <TabsTrigger value="recent-runs">Recent Runs</TabsTrigger>
-              <TabsTrigger value="gallery">Workflow Gallery</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="my-workflows" className="space-y-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">My Workflows</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Recent Workflows</CardTitle>
+              <div className="flex gap-2">
                 <Button 
-                  onClick={() => setTemplateGalleryOpen(true)}
-                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={() => navigate('/workflows')}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  View All
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="gap-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                  onClick={() => setTemplateGalleryOpen(true)}
+                >
+                  <FilePlus className="h-4 w-4" />
                   New Workflow
                 </Button>
               </div>
-              <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
-              
-              <Button 
-                variant="outline" 
-                className="mt-6 mx-auto flex items-center" 
-                onClick={() => navigate('/workflows')}
-              >
-                View all workflows
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </TabsContent>
-            
-            <TabsContent value="recent-runs">
-              <RecentRuns />
-            </TabsContent>
-            
-            <TabsContent value="gallery">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Workflow Gallery</h2>
-              </div>
-              <WorkflowGallery onSelectTemplate={handleCreateWorkflow} />
-            </TabsContent>
-          </Tabs>
-        </section>
-        
+            </CardHeader>
+            <CardContent>
+              <WorkflowList className="grid grid-cols-1 gap-4" />
+            </CardContent>
+          </Card>
+
+          <RecentRuns />
+        </div>
+
         <WorkflowTemplateGallery 
           open={templateGalleryOpen}
           onOpenChange={setTemplateGalleryOpen}
-          onSelectTemplate={async (templateId) => {
-            try {
-              const newChat = await createChat('New Workflow');
-              if (newChat) {
-                setTemplateGalleryOpen(false);
-                navigate(`/workflow/${newChat.id}`);
-              }
-            } catch (error) {
-              console.error('Error creating workflow:', error);
-            }
-          }}
+          onSelectTemplate={handleTemplateSelect}
         />
       </div>
-    </TooltipProvider>
+    </Layout>
   );
 }

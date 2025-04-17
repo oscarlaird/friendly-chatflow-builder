@@ -1,22 +1,24 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, FileText, MoreVertical, Star, Trash, Copy } from 'lucide-react';
+import { Clock, FileText, MoreVertical, Star, Trash, Copy, Edit } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
+import { Input } from '@/components/ui/input';
 
 export function WorkflowList({ className = '' }: { className?: string }) {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [workflowApps, setWorkflowApps] = useState<{[key: string]: string[]}>({});
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -144,6 +146,56 @@ export function WorkflowList({ className = '' }: { className?: string }) {
     }
   };
 
+  const handleRenameWorkflow = (workflowId: string, currentTitle: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setEditingWorkflowId(workflowId);
+    setEditTitle(currentTitle);
+  };
+
+  const saveWorkflowTitle = async (workflowId: string, event: React.MouseEvent | React.KeyboardEvent) => {
+    event.stopPropagation();
+    
+    if (editTitle.trim() === '') {
+      toast.error('Workflow name cannot be empty');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ title: editTitle })
+        .eq('id', workflowId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setWorkflows(workflows.map(w => 
+        w.id === workflowId ? { ...w, title: editTitle } : w
+      ));
+      
+      setEditingWorkflowId(null);
+      toast.success('Workflow renamed');
+    } catch (error) {
+      console.error('Error renaming workflow:', error);
+      toast.error('Failed to rename workflow');
+    }
+  };
+
+  const handleKeyDown = (workflowId: string, e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveWorkflowTitle(workflowId, e);
+    } else if (e.key === 'Escape') {
+      setEditingWorkflowId(null);
+    }
+  };
+
+  const handleWorkflowClick = (workflowId: string) => {
+    if (editingWorkflowId === workflowId) {
+      return; // Prevent navigation when editing
+    }
+    navigate(`/workflow/${workflowId}`);
+  };
+
   if (loading) {
     return (
       <div className={className}>
@@ -176,12 +228,13 @@ export function WorkflowList({ className = '' }: { className?: string }) {
         // Get required apps for this workflow from our state
         const requiredApps = workflowApps[workflow.id] || [];
         const isFavorite = favorites.includes(workflow.id);
+        const isEditing = editingWorkflowId === workflow.id;
         
         return (
           <Card 
             key={workflow.id} 
             className="workflow-card overflow-hidden hover:shadow-md transition-shadow h-[160px] flex flex-col justify-between relative"
-            onClick={() => navigate(`/workflow/${workflow.id}`)}
+            onClick={() => handleWorkflowClick(workflow.id)}
           >
             {/* Favorite indicator */}
             {isFavorite && (
@@ -196,11 +249,43 @@ export function WorkflowList({ className = '' }: { className?: string }) {
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="flex-1 pr-8">
-                  <CardTitle className="text-lg truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
-                  </CardDescription>
+                  {isEditing ? (
+                    <div onClick={(e) => e.stopPropagation()} className="mt-1">
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(workflow.id, e)}
+                        autoFocus
+                        className="h-8"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => saveWorkflowTitle(workflow.id, e)}
+                        >
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingWorkflowId(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <CardTitle className="text-lg truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
+                      <CardDescription className="flex items-center gap-1 mt-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
+                      </CardDescription>
+                    </>
+                  )}
                 </div>
                 
                 {/* Three-dot menu */}
@@ -211,6 +296,10 @@ export function WorkflowList({ className = '' }: { className?: string }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => handleRenameWorkflow(workflow.id, workflow.title || 'Untitled Workflow', e)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Rename workflow
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => toggleFavorite(workflow.id, e)}>
                       <Star className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                       {isFavorite ? 'Remove from favorites' : 'Add to favorites'}

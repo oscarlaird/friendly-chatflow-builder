@@ -6,6 +6,12 @@ import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface FlowchartDisplayProps {
   steps: any[];
