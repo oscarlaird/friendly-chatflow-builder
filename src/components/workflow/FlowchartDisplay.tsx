@@ -1,12 +1,11 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FlowchartDisplayProps {
   steps: any[];
@@ -202,26 +201,19 @@ export const FlowchartDisplay = ({
       </motion.div>
     );
   };
-
+  
   return (
     <div className={cn(
       "flex flex-col items-center w-full max-w-full overflow-hidden p-4",
-      "bg-white dark:bg-[#1A1F2C]",
-      "[background-image:radial-gradient(#E0E0E0_1px,transparent_1px)] dark:[background-image:radial-gradient(#ffffff1a_1px,transparent_1px)]",
-      "[background-size:20px_20px]",
       className
     )}>
-      <div className="w-full h-[calc(100vh-200px)]">
-        <ScrollArea className="h-full">
-          <div className="flex flex-col items-center w-full">
-            {nestedSteps?.length > 0 && (
-              <AnimatePresence>
-                {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
-              </AnimatePresence>
-            )}
-          </div>
-        </ScrollArea>
-      </div>
+      {nestedSteps?.length > 0 && (
+        <div className="flex flex-col items-center w-full">
+          <AnimatePresence>
+            {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };
