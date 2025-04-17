@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -137,7 +136,7 @@ export const FlowchartDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2"
+          className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
           initial="initial"
           animate="animate"
           exit="exit"
@@ -162,6 +161,7 @@ export const FlowchartDisplay = ({
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
               compact={true}
+              uniformWidth={true} // New prop to enforce uniform width
             />
           </motion.div>
           {index < visibleSteps.length - 1 && renderArrow('down')}
@@ -175,7 +175,7 @@ export const FlowchartDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2"
+        className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
         initial="initial"
         animate="animate"
         exit="exit"
@@ -203,6 +203,7 @@ export const FlowchartDisplay = ({
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
             compact={true}
+            uniformWidth={true} // New prop to enforce uniform width
           />
           
           {/* Render children in a container with improved visual structure */}
@@ -228,7 +229,7 @@ export const FlowchartDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="space-y-1">
+        <div className="flex flex-col items-center space-y-1">
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>

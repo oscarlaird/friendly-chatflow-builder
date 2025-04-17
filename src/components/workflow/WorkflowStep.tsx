@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -25,6 +24,7 @@ interface WorkflowStepProps {
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
   compact?: boolean;
+  uniformWidth?: boolean; // New prop to enforce uniform width
 }
 
 export const WorkflowStep = ({ 
@@ -36,6 +36,7 @@ export const WorkflowStep = ({
   userInputs,
   setUserInputs,
   compact = false,
+  uniformWidth = false, // Default to false to maintain backward compatibility
 }: WorkflowStepProps) => {
   useEffect(() => {
     if (isUserInputStep && userInputs) {
@@ -73,10 +74,10 @@ export const WorkflowStep = ({
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
   
-  // Update card styling based on whether it's active and running
+  // Update card styling to support uniform width
   const cardStyle = cn(
     "p-3 w-full", 
-    compact ? "max-w-[260px]" : "max-w-[28rem]", // Fixed width for uniform cards
+    uniformWidth ? "w-[260px]" : (compact ? "max-w-[260px]" : "max-w-[28rem]"), // Fixed width when uniformWidth is true
     isActive && !isDisabled && "border-[hsl(var(--dropbox-blue))] shadow-sm bg-[hsl(var(--dropbox-light-blue))/30]",
     isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
