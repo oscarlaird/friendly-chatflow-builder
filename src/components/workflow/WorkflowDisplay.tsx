@@ -116,7 +116,7 @@ export const WorkflowDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2"
+          className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
           initial="initial"
           animate="animate"
           exit="exit"
@@ -140,6 +140,7 @@ export const WorkflowDisplay = ({
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
               compact={true}
+              uniformWidth={true} // Add uniform width prop
             />
           </motion.div>
         </motion.div>
@@ -152,7 +153,7 @@ export const WorkflowDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2"
+        className="workflow-node mb-2 w-[280px] mx-auto" // Fixed width and center
         initial="initial"
         animate="animate"
         exit="exit"
@@ -180,10 +181,11 @@ export const WorkflowDisplay = ({
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
             compact={true}
+            uniformWidth={true} // Add uniform width prop
           />
           
           <div className="p-3">
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-col items-center space-y-1"> {/* Updated to vertical alignment with center */}
               <AnimatePresence>
                 {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
               </AnimatePresence>
@@ -198,7 +200,7 @@ export const WorkflowDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="flex flex-wrap gap-4 justify-center px-4 py-6">
+        <div className="flex flex-col items-center space-y-1"> {/* Center steps vertically */}
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>
