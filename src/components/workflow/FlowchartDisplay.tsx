@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -98,7 +97,9 @@ export const FlowchartDisplay = ({
   };
   
   // Render connection arrows between steps
-  const renderArrow = () => {
+  const renderArrow = (isLast: boolean) => {
+    if (isLast) return null;
+    
     return (
       <div className="flex justify-center w-full py-3">
         <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
@@ -111,8 +112,8 @@ export const FlowchartDisplay = ({
   // Recursive component to render step nodes
   const renderStepNode = (node: StepNode, index: number, isNested = false) => {
     const hasChildren = node.children && node.children.length > 0;
-    const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
+    const isUserInputStep = node.step.type === 'user_input';
     
     const variants = {
       initial: { opacity: 0, scale: 0.95 },
@@ -145,7 +146,7 @@ export const FlowchartDisplay = ({
               uniformWidth={true}
             />
           </div>
-          {index < visibleSteps.length - 1 && !isNested && renderArrow()}
+          {!isNested && index < visibleSteps.length - 1 && renderArrow(false)}
         </motion.div>
       );
     }
@@ -177,7 +178,7 @@ export const FlowchartDisplay = ({
           />
         </div>
         
-        {renderArrow()}
+        {renderArrow(false)}
         
         <div className={cn(
           "w-[360px] px-5 py-4 rounded-lg border border-[hsl(var(--border))]",
@@ -188,13 +189,13 @@ export const FlowchartDisplay = ({
               <div key={`child-${childNode.step.id || childNode.step.step_number}`} 
                    className="flex flex-col items-center w-full">
                 {renderStepNode(childNode, childIdx, true)}
-                {childIdx < node.children.length - 1 && renderArrow()}
+                {childIdx < node.children.length - 1 && renderArrow(childIdx === node.children.length - 1)}
               </div>
             ))}
           </AnimatePresence>
         </div>
         
-        {!isNested && index < visibleSteps.length - 1 && renderArrow()}
+        {!isNested && index < visibleSteps.length - 1 && renderArrow(index === visibleSteps.length - 1)}
       </motion.div>
     );
   };
