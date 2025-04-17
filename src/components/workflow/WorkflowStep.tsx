@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Eye } from "lucide-react";
@@ -11,6 +10,7 @@ import { truncateText } from "./utils/stringUtils";
 import { Badge } from "@/components/ui/badge";
 import { StepFlowModal } from "./StepFlowModal";
 import { KeyValueDisplay } from "./KeyValueDisplay";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowStepProps {
   step: any;
@@ -22,6 +22,7 @@ interface WorkflowStepProps {
   setUserInputs?: (userInputs: Record<string, any>) => void;
   compact?: boolean;
   uniformWidth?: boolean;
+  chatId?: string;
 }
 
 export const WorkflowStep = ({
@@ -34,6 +35,7 @@ export const WorkflowStep = ({
   setUserInputs,
   compact = false,
   uniformWidth = false,
+  chatId,
 }: WorkflowStepProps) => {
   const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
   
@@ -42,6 +44,28 @@ export const WorkflowStep = ({
   const isDisabled = step.disabled || false;
   const hasInput = step.input && Object.keys(step.input).length > 0;
   const hasOutput = step.output && Object.keys(step.output).length > 0;
+
+  // Handle input changes and save to database
+  const handleInputChange = async (newUserInputs: Record<string, any>) => {
+    if (!chatId || !setUserInputs) return;
+
+    try {
+      // Update local state
+      setUserInputs(newUserInputs);
+      
+      // Save to database
+      const { error } = await supabase
+        .from('chats')
+        .update({ user_inputs: newUserInputs })
+        .eq('id', chatId);
+
+      if (error) {
+        console.error('Error saving user inputs:', error);
+      }
+    } catch (error) {
+      console.error('Error updating user inputs:', error);
+    }
+  };
   
   // Get appropriate background color for control block
   const getControlBlockStyle = (type: string) => {
@@ -69,7 +93,7 @@ export const WorkflowStep = ({
         return 'Start Inputs';
     }
   };
-
+  
   // Card styling based on step state
   const cardStyle = cn(
     "p-3 w-full",
@@ -149,13 +173,13 @@ export const WorkflowStep = ({
             </div>
           </div>
 
-          {/* Show inline KeyValueDisplay for user input steps */}
+          {/* Show editable KeyValueDisplay for user input steps */}
           {isUserInputStep && step.output && (
             <div className="mt-2">
               <KeyValueDisplay
                 data={step.output}
                 isEditable={true}
-                setUserInputs={setUserInputs}
+                setUserInputs={handleInputChange}
                 compact={true}
               />
             </div>
