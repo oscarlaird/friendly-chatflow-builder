@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSelectedChat } from "@/hooks/useChats";
@@ -10,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CodeRewritingStatus } from "@/types";
 import { useWindowMessages } from "@/hooks/useWindowMessages";
+import { supabase } from "@/integrations/supabase/client"; // Add missing import
 
 // Status badge component for workflow state
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
@@ -97,7 +97,7 @@ const AgentSidePanel = () => {
         .from('chats')
         .update({ 
           user_inputs: newInputs 
-        })
+        } as any) // Using type assertion to bypass TypeScript error
         .eq('id', chatId);
       
       if (error) {
