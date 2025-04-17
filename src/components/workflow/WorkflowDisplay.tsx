@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
@@ -82,11 +83,11 @@ export const WorkflowDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-blue-50/10 dark:bg-blue-950/10';
+        return 'bg-purple-100/30 dark:bg-purple-900/30';
       case 'if':
-        return 'bg-purple-50/10 dark:bg-purple-950/10';
+        return 'bg-blue-100/30 dark:bg-blue-900/30';
       default:
-        return 'bg-gray-50/10 dark:bg-gray-950/10';
+        return 'bg-gray-50 dark:bg-gray-900/40';
     }
   };
   
@@ -97,7 +98,7 @@ export const WorkflowDisplay = ({
   };
   
   // Recursive component to render step nodes
-  const renderStepNode = (node: StepNode, index: number, isNested = false) => {
+  const renderStepNode = (node: StepNode, index: number) => {
     const hasChildren = node.children && node.children.length > 0;
     const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
@@ -115,7 +116,7 @@ export const WorkflowDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-4 w-full flex justify-center"
+          className="workflow-node mb-2"
           initial="initial"
           animate="animate"
           exit="exit"
@@ -124,7 +125,6 @@ export const WorkflowDisplay = ({
           layout
         >
           <motion.div
-            className="w-[320px]"  // Fixed width
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
               backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
@@ -139,8 +139,6 @@ export const WorkflowDisplay = ({
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
-              compact={true}
-              uniformWidth={true}
             />
           </motion.div>
         </motion.div>
@@ -153,7 +151,7 @@ export const WorkflowDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-6 w-full flex flex-col items-center"
+        className="workflow-node mb-2"
         initial="initial"
         animate="animate"
         exit="exit"
@@ -161,41 +159,33 @@ export const WorkflowDisplay = ({
         transition={{ duration: 0.3 }}
         layout
       >
-        <div className="w-[320px] mb-4">
-          <motion.div
-            animate={isChanged ? { 
-              boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
-              backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
-            } : {}}
-            transition={{ duration: 2, times: [0, 0.5, 1] }}
-          >
-            <WorkflowStep
-              step={node.step}
-              browserEvents={getBrowserEventsForStep(node.step)}
-              autoOpen={node.step.active === true || autoActivateSteps}
-              hasChildren={true}
-              isUserInputStep={isUserInputStep}
-              userInputs={isUserInputStep ? userInputs : undefined}
-              setUserInputs={isUserInputStep ? setUserInputs : undefined}
-              compact={true}
-              uniformWidth={true}
-            />
-          </motion.div>
-        </div>
-        
-        {/* Render children in a container with subtle background */}
-        <div className={cn(
-          "w-[320px] p-4 rounded-lg overflow-hidden",
-          blockStyle
-        )}>
-          <AnimatePresence>
-            {node.children.map((childNode, childIdx) => (
-              <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="w-full">
-                {renderStepNode(childNode, childIdx, true)}
-              </div>
-            ))}
-          </AnimatePresence>
-        </div>
+        <motion.div 
+          className={cn(
+            blockStyle, 
+            "rounded-md overflow-hidden border border-gray-200 dark:border-gray-800"
+          )}
+          animate={isChanged ? { 
+            boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
+            backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
+          } : {}}
+          transition={{ duration: 2, times: [0, 0.5, 1] }}
+        >
+          <WorkflowStep
+            step={node.step}
+            browserEvents={getBrowserEventsForStep(node.step)}
+            autoOpen={node.step.active === true || autoActivateSteps}
+            hasChildren={true}
+            isUserInputStep={isUserInputStep}
+            userInputs={isUserInputStep ? userInputs : undefined}
+            setUserInputs={isUserInputStep ? setUserInputs : undefined}
+          />
+          
+          <div className="p-3">
+            <AnimatePresence>
+              {node.children.map((childNode, childIdx) => renderStepNode(childNode, childIdx))}
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </motion.div>
     );
   };
@@ -204,7 +194,7 @@ export const WorkflowDisplay = ({
     <div className={`${className || ''} w-full max-w-full overflow-hidden`}>      
       {/* Display workflow steps using the nested structure */}
       {nestedSteps?.length > 0 ? (
-        <div className="flex flex-col items-center w-full">
+        <div className="space-y-1">
           <AnimatePresence>
             {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
           </AnimatePresence>

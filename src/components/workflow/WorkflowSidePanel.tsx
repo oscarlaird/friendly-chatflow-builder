@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,7 +29,7 @@ const WorkflowStepCard = ({
 
   // Styling based on status
   const cardStyle = cn(
-    "p-3 mb-3 transition-all duration-300 w-[260px] mx-auto", // Fixed width for consistency
+    "p-3 mb-3 transition-all duration-300",
     status === 'previous' && "opacity-50 scale-95",
     status === 'current' && "border-primary shadow-sm bg-primary/5",
     status === 'next' && "opacity-50 scale-95",
@@ -151,10 +152,10 @@ export const WorkflowSidePanel = ({
   return (
     <div className="h-full flex flex-col p-3">
       <ScrollArea className="flex-1">
-        <div className="space-y-4 flex flex-col items-center"> {/* Center all steps */}
+        <div className="space-y-4">
           {/* Previous step (if exists) */}
           {currentIndex > 0 && (
-            <div className="relative pl-4 w-[280px] mx-auto"> {/* Fixed width container */}
+            <div className="relative pl-4">
               <div className="absolute left-0 top-1/2 h-full -translate-y-1/2 w-0.5 bg-muted-foreground/30" />
               <ChevronLeft className="absolute left-0 top-3 h-4 w-4 text-muted-foreground -translate-x-1/2 bg-background rounded-full p-0.5" />
               <WorkflowStepCard 
@@ -174,7 +175,7 @@ export const WorkflowSidePanel = ({
           
           {/* Next step (if exists) */}
           {currentIndex < steps.length - 1 && (
-            <div className="relative pl-4 w-[280px] mx-auto"> {/* Fixed width container */}
+            <div className="relative pl-4">
               <div className="absolute left-0 top-1/2 h-full -translate-y-1/2 w-0.5 bg-muted-foreground/30" />
               <ChevronRight className="absolute left-0 top-3 h-4 w-4 text-muted-foreground -translate-x-1/2 bg-background rounded-full p-0.5" />
               <WorkflowStepCard 
@@ -186,9 +187,8 @@ export const WorkflowSidePanel = ({
         </div>
       </ScrollArea>
       
-      {/* Navigation controls */}
       {steps.length > 1 && (
-        <div className="flex justify-between items-center pt-3 border-t mt-3 w-[280px] mx-auto"> {/* Fixed width controls */}
+        <div className="flex justify-between items-center pt-3 border-t mt-3">
           <button 
             onClick={handlePrevStep}
             disabled={currentIndex <= 0}
