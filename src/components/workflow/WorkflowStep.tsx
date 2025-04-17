@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Eye } from "lucide-react";
@@ -9,6 +10,7 @@ import { formatFunctionName } from "./utils/stringUtils";
 import { truncateText } from "./utils/stringUtils";
 import { Badge } from "@/components/ui/badge";
 import { StepFlowModal } from "./StepFlowModal";
+import { KeyValueDisplay } from "./KeyValueDisplay";
 
 interface WorkflowStepProps {
   step: any;
@@ -82,77 +84,94 @@ export const WorkflowStep = ({
   return (
     <>
       <Card className={cardStyle}>
-        <div className="flex items-start gap-3">
-          <div className={cn(
-            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
-            isActive && !isDisabled 
-              ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
-              : isDisabled 
-                ? "bg-muted text-muted-foreground border-muted" 
-                : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
-          )}>
-            {step.step_number}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-2 min-w-0">
-                {getStepIcon(stepType)}
-                <h4 className={cn(
-                  "font-semibold text-sm",
-                  isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
-                  isDisabled && "text-muted-foreground"
-                )}>
-                  {getStepTitle()}
-                  </h4>
-              </div>
-              
-              {(hasInput || hasOutput) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => setIsFlowModalOpen(true)}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span className="sr-only">View Flow</span>
-                </Button>
-              )}
-              
-              {stepType === 'function' && step.browser_required && (
-                <Badge 
-                  variant="outline" 
-                  className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
-                >
-                  Browser
-                </Badge>
-              )}
-              
-              {isActive && !isDisabled && (
-                <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
-                  Active
-                </Badge>
-              )}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <div className={cn(
+              "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-sm border",
+              isActive && !isDisabled 
+                ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
+                : isDisabled 
+                  ? "bg-muted text-muted-foreground border-muted" 
+                  : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
+            )}>
+              {step.step_number}
             </div>
             
-            {step.function_description && (
-              <p className={cn(
-                "text-xs mt-1 text-muted-foreground line-clamp-2",
-                isDisabled && "text-muted-foreground/70"
-              )}>
-                {truncateText(step.function_description, 100)}
-              </p>
-            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  {getStepIcon(stepType)}
+                  <h4 className={cn(
+                    "font-semibold text-sm",
+                    isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
+                    isDisabled && "text-muted-foreground"
+                  )}>
+                    {getStepTitle()}
+                  </h4>
+                </div>
+                
+                {!isUserInputStep && (hasInput || hasOutput) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setIsFlowModalOpen(true)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="sr-only">View Flow</span>
+                  </Button>
+                )}
+                
+                {stepType === 'function' && step.browser_required && (
+                  <Badge 
+                    variant="outline" 
+                    className="flex items-center gap-1 text-xs font-normal bg-violet-500 text-white border-violet-600"
+                  >
+                    Browser
+                  </Badge>
+                )}
+                
+                {isActive && !isDisabled && (
+                  <Badge className="bg-[hsl(var(--dropbox-blue))] text-white">
+                    Active
+                  </Badge>
+                )}
+              </div>
+              
+              {step.function_description && (
+                <p className={cn(
+                  "text-xs mt-1 text-muted-foreground line-clamp-2",
+                  isDisabled && "text-muted-foreground/70"
+                )}>
+                  {truncateText(step.function_description, 100)}
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* Show inline KeyValueDisplay for user input steps */}
+          {isUserInputStep && step.output && (
+            <div className="mt-2">
+              <KeyValueDisplay
+                data={step.output}
+                isEditable={true}
+                setUserInputs={setUserInputs}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
       </Card>
 
-      <StepFlowModal
-        isOpen={isFlowModalOpen}
-        onClose={() => setIsFlowModalOpen(false)}
-        step={step}
-        title={getStepTitle()}
-      />
+      {/* Modal for non-input steps */}
+      {!isUserInputStep && (
+        <StepFlowModal
+          isOpen={isFlowModalOpen}
+          onClose={() => setIsFlowModalOpen(false)}
+          step={step}
+          title={getStepTitle()}
+        />
+      )}
     </>
   );
 };
