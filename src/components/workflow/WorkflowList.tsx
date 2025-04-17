@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import { OAuthIcon, OAuthProviderType } from '@/components/ui/oauth-icons';
 import { Input } from '@/components/ui/input';
+import { truncateText } from '../workflow/utils/stringUtils';
 
 export function WorkflowList({ className = '', limit }: { className?: string, limit?: number }) {
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -286,7 +286,9 @@ export function WorkflowList({ className = '', limit }: { className?: string, li
                     </form>
                   ) : (
                     <>
-                      <CardTitle className="text-lg truncate">{workflow.title || 'Untitled Workflow'}</CardTitle>
+                      <CardTitle className="text-lg truncate">
+                        {truncateText(workflow.title || 'Untitled Workflow', 35)}
+                      </CardTitle>
                       <CardDescription className="flex items-center gap-1 mt-1">
                         <Clock className="h-3.5 w-3.5" />
                         <span>{formatDistanceToNow(new Date(workflow.created_at), { addSuffix: true })}</span>
