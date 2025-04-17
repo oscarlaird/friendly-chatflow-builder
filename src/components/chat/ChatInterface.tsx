@@ -79,14 +79,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-background">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="font-medium truncate">{selectedChat?.title || 'Workflow'}</h2>
-        </div>
-      </div>
+    
       
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
