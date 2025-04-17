@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
@@ -25,6 +24,8 @@ interface WorkflowStepProps {
   isUserInputStep?: boolean;
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
+  compact?: boolean;
+  uniformWidth?: boolean;
 }
 
 export const WorkflowStep = ({ 
@@ -35,6 +36,8 @@ export const WorkflowStep = ({
   isUserInputStep = false,
   userInputs,
   setUserInputs,
+  compact = false,
+  uniformWidth = false,
 }: WorkflowStepProps) => {
   useEffect(() => {
     if (isUserInputStep && userInputs) {
