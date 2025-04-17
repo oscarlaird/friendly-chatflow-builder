@@ -5,7 +5,7 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { WorkflowList } from '@/components/workflow/WorkflowList';
 import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useChats } from '@/hooks/useChats';
 
 export default function Workflows() {
@@ -37,20 +37,11 @@ export default function Workflows() {
     }
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
-
   return (
     <Layout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Button variant="ghost" onClick={handleBack} className="mr-2">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold">Workflows</h1>
-          </div>
+          <h1 className="text-2xl font-bold">Workflows</h1>
           <Button 
             onClick={() => setTemplateGalleryOpen(true)}
             className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"

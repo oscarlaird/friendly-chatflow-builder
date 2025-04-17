@@ -288,14 +288,11 @@ export const useSelectedChat = (chatId: string | null) => {
   
   // Update selectedChat whenever chatId changes
   useEffect(() => {
-    if (!chatId) {
+    if (!chatId || !user) {
       setSelectedChat(null);
       setCodeRewritingStatus('thinking');
       return;
     }
-
-    // Don't require user to be logged in initially, to fix page refresh
-    // This allows the workflow page to load on refresh before auth is ready
 
     // Initial fetch from cache or database
     const fetchSelectedChat = async () => {
@@ -327,7 +324,8 @@ export const useSelectedChat = (chatId: string | null) => {
         }
       } catch (error: any) {
         console.error('Error fetching selected chat:', error);
-        // Don't clear selectedChat on error - this helps when refreshing page
+        setSelectedChat(null);
+        setCodeRewritingStatus('thinking');
       }
     };
 
@@ -366,7 +364,7 @@ export const useSelectedChat = (chatId: string | null) => {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [chatId]);
+  }, [chatId, user]);
 
   // Return memoized values to prevent unnecessary re-renders
   return useMemo(() => ({

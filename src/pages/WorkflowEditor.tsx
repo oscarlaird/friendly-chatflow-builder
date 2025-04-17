@@ -6,10 +6,7 @@ import { ChatInterface } from '@/components/chat/ChatInterface';
 import { useSelectedChat } from '@/hooks/useChats';
 import { useMessages } from '@/hooks/useMessages';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Check } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { ArrowLeft } from 'lucide-react';
 
 export default function WorkflowEditor() {
   const { id } = useParams();
@@ -18,8 +15,6 @@ export default function WorkflowEditor() {
   const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitle, setEditTitle] = useState('');
   
   // Handle sending the initial prompt
   useEffect(() => {
@@ -36,48 +31,8 @@ export default function WorkflowEditor() {
     }
   }, [initialPrompt, id, sendMessage, navigate]);
 
-  useEffect(() => {
-    if (selectedChat?.title) {
-      setEditTitle(selectedChat.title);
-    }
-  }, [selectedChat]);
-
   const handleBack = () => {
-    navigate('/workflows');
-  };
-
-  const handleEditTitle = () => {
-    setIsEditingTitle(true);
-  };
-
-  const handleSaveTitle = async () => {
-    if (!id || editTitle.trim() === '') return;
-    
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ title: editTitle })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      setIsEditingTitle(false);
-      toast.success('Workflow renamed');
-    } catch (error) {
-      console.error('Error updating title:', error);
-      toast.error('Failed to update title');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSaveTitle();
-    } else if (e.key === 'Escape') {
-      setIsEditingTitle(false);
-      if (selectedChat?.title) {
-        setEditTitle(selectedChat.title);
-      }
-    }
+    navigate('/');
   };
 
   // Show loading state while chat is being fetched
@@ -108,33 +63,6 @@ export default function WorkflowEditor() {
   return (
     <Layout>
       <div className="h-full flex flex-col">
-        <div className="flex items-center px-4 py-2 border-b">
-          <Button variant="ghost" onClick={handleBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          
-          {isEditingTitle ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-                className="max-w-md"
-              />
-              <Button size="icon" onClick={handleSaveTitle}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div 
-              className="text-lg font-semibold cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors"
-              onClick={handleEditTitle}
-            >
-              {selectedChat.title || 'Untitled Workflow'}
-            </div>
-          )}
-        </div>
         <ChatInterface chatId={id} />
       </div>
     </Layout>
