@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -97,8 +98,9 @@ export const FlowchartDisplay = ({
   };
   
   // Render connection arrows between steps
-  const renderArrow = (isLast: boolean) => {
-    if (isLast) return null;
+  const renderArrow = (isLast: boolean, currentStep?: any) => {
+    // Check if this is the last step or if it's a 'done' type step
+    if (isLast || (currentStep && currentStep.type === 'done')) return null;
     
     return (
       <div className="flex justify-center w-full py-3">
@@ -146,7 +148,7 @@ export const FlowchartDisplay = ({
               uniformWidth={true}
             />
           </div>
-          {!isNested && index < visibleSteps.length - 1 && renderArrow(false)}
+          {!isNested && index < visibleSteps.length - 1 && renderArrow(false, node.step)}
         </motion.div>
       );
     }
@@ -178,7 +180,7 @@ export const FlowchartDisplay = ({
           />
         </div>
         
-        {renderArrow(false)}
+        {renderArrow(false, node.step)}
         
         <div className={cn(
           "w-[360px] px-5 py-4 rounded-lg border border-[hsl(var(--border))]",
@@ -189,13 +191,13 @@ export const FlowchartDisplay = ({
               <div key={`child-${childNode.step.id || childNode.step.step_number}`} 
                    className="flex flex-col items-center w-full">
                 {renderStepNode(childNode, childIdx, true)}
-                {childIdx < node.children.length - 1 && renderArrow(childIdx === node.children.length - 1)}
+                {childIdx < node.children.length - 1 && renderArrow(childIdx === node.children.length - 1, childNode.step)}
               </div>
             ))}
           </AnimatePresence>
         </div>
         
-        {!isNested && index < visibleSteps.length - 1 && renderArrow(index === visibleSteps.length - 1)}
+        {!isNested && index < visibleSteps.length - 1 && renderArrow(index === visibleSteps.length - 1, node.step)}
       </motion.div>
     );
   };
