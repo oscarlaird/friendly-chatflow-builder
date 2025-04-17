@@ -232,27 +232,7 @@ export const FlowchartDisplay = ({
       "[background-size:20px_20px]",
       className
     )}>
-      {/* Navigation Controls */}
-      <div className="absolute bottom-8 left-8 flex flex-col gap-2 z-20">
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => handleScroll('up')}
-          className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <MoveUp className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => handleScroll('down')}
-          className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <MoveDown className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Scrollable Container */}
+      
       <div 
         ref={scrollContainerRef}
         className="flex flex-col items-center w-full h-full overflow-y-auto"
