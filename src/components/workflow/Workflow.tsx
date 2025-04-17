@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Play, Loader2, Eye, ChevronLeft } from 'lucide-react';
 import { WorkflowDisplay } from './WorkflowDisplay';
@@ -26,7 +27,6 @@ interface WorkflowProps {
   className?: string;
   pastRunMessageId?: string | null;
   onClosePastRun?: () => void;
-  hideHeader?: boolean;
 }
 
 // Add new component for screenshot preview
@@ -152,7 +152,6 @@ export const Workflow = ({
   className = '',
   pastRunMessageId,
   onClosePastRun,
-  hideHeader = false,  // New prop to hide header
 }: WorkflowProps) => {
   const [workflowSteps, setWorkflowSteps] = useState<any[]>(steps.length > 0 ? steps : initialSteps);
   const [browserEvents, setBrowserEvents] = useState<Record<string, any[]>>({});
@@ -286,69 +285,67 @@ export const Workflow = ({
 
   return (
     <div className={cn("flex flex-col h-full overflow-hidden", className)}>
-      {!hideHeader && (
-        <div className={cn(
-          "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
-          bgColor
-        )}>
-          <div className="flex items-center gap-2">
-            {pastRunMessage && (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={onClosePastRun}
-                  className="h-8 w-8"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <div className="flex flex-col">
-                  <h2 className="text-lg font-semibold">Past Run</h2>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{formatDistanceToNow(new Date(pastRunMessage.created_at), { addSuffix: true })}</span>
-                    <span>•</span>
-                    <span className="capitalize">{pastRunMessage.code_run_state?.replace('_', ' ')}</span>
-                  </div>
-                </div>
-              </>
-            )}
-            {!pastRunMessage && (
-              <>
-                <h2 className="text-lg font-semibold">Workflow</h2>
-                {requiredApps.length > 0 && !loadingApps && (
-                  <AppIntegrationIcons apps={requiredApps} />
-                )}
-              </>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {!pastRunMessage && (
-              <>
-                <StatusBadge status={codeRewritingStatus} />
-                <Button 
-                  size="sm" 
-                  className="gap-1 ml-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]" 
-                  onClick={handleRunWorkflow} 
-                  disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
-                >
-                  <Play className="h-4 w-4" />
-                  Run
-                </Button>
-              </>
-            )}
-            {pastRunMessage && (
+      <div className={cn(
+        "p-3 border-b flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0",
+        bgColor
+      )}>
+        <div className="flex items-center gap-2">
+          {pastRunMessage && (
+            <>
               <Button 
-                variant="secondary"
-                size="sm" 
+                variant="ghost" 
+                size="icon"
                 onClick={onClosePastRun}
+                className="h-8 w-8"
               >
-                Close Past Run
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            )}
-          </div>
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold">Past Run</h2>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(pastRunMessage.created_at), { addSuffix: true })}</span>
+                  <span>•</span>
+                  <span className="capitalize">{pastRunMessage.code_run_state?.replace('_', ' ')}</span>
+                </div>
+              </div>
+            </>
+          )}
+          {!pastRunMessage && (
+            <>
+              <h2 className="text-lg font-semibold">Workflow</h2>
+              {requiredApps.length > 0 && !loadingApps && (
+                <AppIntegrationIcons apps={requiredApps} />
+              )}
+            </>
+          )}
         </div>
-      )}
+        
+        <div className="flex items-center gap-2">
+          {!pastRunMessage && (
+            <>
+              <StatusBadge status={codeRewritingStatus} />
+              <Button 
+                size="sm" 
+                className="gap-1 ml-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]" 
+                onClick={handleRunWorkflow} 
+                disabled={codeRewritingStatus !== 'done' || !workflowSteps || workflowSteps.length === 0}
+              >
+                <Play className="h-4 w-4" />
+                Run
+              </Button>
+            </>
+          )}
+          {pastRunMessage && (
+            <Button 
+              variant="secondary"
+              size="sm" 
+              onClick={onClosePastRun}
+            >
+              Close Past Run
+            </Button>
+          )}
+        </div>
+      </div>
       
       {/* Add Screenshot preview below header if extension is installed */}
       { runningMessage && (

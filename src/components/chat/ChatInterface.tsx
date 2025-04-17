@@ -11,7 +11,7 @@ import { useSelectedChat } from '@/hooks/useChats';
 import { useWindowMessages } from '@/hooks/useWindowMessages';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, GitBranch } from 'lucide-react';
+import { MessageCircle, GitBranch, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ChatInterfaceProps {
@@ -26,6 +26,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
   const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Initialize the window message handler
   useWindowMessages();
@@ -33,6 +34,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);
   const initialWorkflowSteps = currentChat?.steps as any[] || [];
+
+  // Find the running message if any
+  const runningMessage = Object.values(dataState.messages).find(
+    msg => msg.type === 'code_run' && msg.code_run_state === 'running'
+  );
 
   // Handle viewing past run
   const handleViewPastRun = (messageId: string) => {
@@ -58,6 +64,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     }
   };
 
+  // Handle back navigation
+  const handleBack = () => {
+    navigate('/');
+  };
+
   if (!chatId) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -69,7 +80,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
-      {/* Remove the top header with back and workflow name */}
+      <div className="flex items-center justify-between px-3 py-2 border-b bg-background">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="font-medium truncate">{selectedChat?.title || 'Workflow'}</h2>
+        </div>
+      </div>
       
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
@@ -104,7 +122,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               chatId={chatId}
               pastRunMessageId={pastRunMessageId}
               onClosePastRun={handleClosePastRun}
-              hideHeader={true}
             />
           </div>
         )}
@@ -132,7 +149,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               chatId={chatId}
               pastRunMessageId={pastRunMessageId}
               onClosePastRun={handleClosePastRun}
-              hideHeader={true}
               className="flowchart-style" 
             />
           </ResizablePanel>
@@ -141,4 +157,3 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     </div>
   );
 };
-
