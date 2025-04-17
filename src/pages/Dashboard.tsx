@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
@@ -152,7 +153,7 @@ export default function Dashboard() {
                   New Workflow
                 </Button>
               </div>
-              <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
+              <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" limit={5} />
               
               <Button 
                 variant="outline" 

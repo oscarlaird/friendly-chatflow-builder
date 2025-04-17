@@ -6,7 +6,10 @@ import { ChatInterface } from '@/components/chat/ChatInterface';
 import { useSelectedChat } from '@/hooks/useChats';
 import { useMessages } from '@/hooks/useMessages';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit, Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 export default function WorkflowEditor() {
   const { id } = useParams();
@@ -15,6 +18,16 @@ export default function WorkflowEditor() {
   const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  
+  // Set up editing state when selectedChat changes
+  useEffect(() => {
+    if (selectedChat?.title) {
+      setEditTitle(selectedChat.title);
+    }
+  }, [selectedChat]);
   
   // Handle sending the initial prompt
   useEffect(() => {
@@ -33,6 +46,30 @@ export default function WorkflowEditor() {
 
   const handleBack = () => {
     navigate('/');
+  };
+  
+  const startEditing = () => {
+    setIsEditing(true);
+    setEditTitle(selectedChat?.title || 'Untitled Workflow');
+  };
+  
+  const saveTitle = async () => {
+    if (!id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ title: editTitle })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setIsEditing(false);
+      toast.success('Workflow renamed');
+    } catch (error) {
+      console.error('Error updating workflow title:', error);
+      toast.error('Failed to rename workflow');
+    }
   };
 
   // Show loading state while chat is being fetched
@@ -63,6 +100,46 @@ export default function WorkflowEditor() {
   return (
     <Layout>
       <div className="h-full flex flex-col">
+        <div className="p-4 border-b flex items-center">
+          <Button variant="ghost" onClick={handleBack} className="mr-2">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          
+          {isEditing ? (
+            <div className="flex items-center flex-1">
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="mr-2"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    saveTitle();
+                  } else if (e.key === 'Escape') {
+                    setIsEditing(false);
+                    setEditTitle(selectedChat.title || 'Untitled Workflow');
+                  }
+                }}
+              />
+              <Button 
+                size="sm" 
+                onClick={saveTitle}
+                className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div 
+              className="text-xl font-bold flex-1 cursor-pointer hover:text-blue-600 transition-colors flex items-center" 
+              onClick={startEditing}
+            >
+              {selectedChat.title || 'Untitled Workflow'}
+              <Edit className="ml-2 h-4 w-4 opacity-50" />
+            </div>
+          )}
+        </div>
+        
         <ChatInterface chatId={id} />
       </div>
     </Layout>
