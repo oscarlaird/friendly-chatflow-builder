@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowRight, MoveUp, MoveDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FlowchartDisplayProps {
   steps: any[];
@@ -232,20 +233,15 @@ export const FlowchartDisplay = ({
       "[background-size:20px_20px]",
       className
     )}>
-      
-      <div 
-        ref={scrollContainerRef}
-        className="flex flex-col items-center w-full h-full overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
-      >
-        {nestedSteps?.length > 0 && (
-          <div className="flex flex-col items-center w-full">
+      <ScrollArea className="w-full h-[calc(100vh-200px)]">
+        <div className="flex flex-col items-center w-full">
+          {nestedSteps?.length > 0 && (
             <AnimatePresence>
               {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
             </AnimatePresence>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
