@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -94,12 +95,6 @@ export const FlowchartDisplay = ({
       default:
         return 'bg-[hsl(var(--dropbox-light-blue))] dark:bg-gray-900/40';
     }
-  };
-  
-  // Check if a step has changed
-  const hasStepChanged = (step: any) => {
-    const stepId = step.id || `step-${step.step_number}`;
-    return changedStepIds.has(stepId);
   };
   
   // Render connection arrows between steps
