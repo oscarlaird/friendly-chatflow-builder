@@ -83,11 +83,11 @@ export const FlowchartDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-[hsl(var(--dropbox-light-blue))] border-purple-300 dark:border-purple-800';
+        return 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800';
       case 'if':
-        return 'bg-[hsl(var(--dropbox-light-blue))] border-blue-300 dark:border-blue-800';
+        return 'bg-purple-50/50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800';
       default:
-        return 'bg-[hsl(var(--dropbox-light-blue))] dark:bg-gray-900/40';
+        return 'bg-gray-50/50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800';
     }
   };
   
@@ -98,28 +98,18 @@ export const FlowchartDisplay = ({
   };
   
   // Render connection arrows between steps
-  const renderArrow = (direction: 'down' | 'right') => {
-    if (direction === 'down') {
-      return (
-        <div className="flex justify-center py-1 w-full">
-          <div className="w-0.5 h-4 bg-[hsl(var(--dropbox-blue))/40] relative">
-            <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))] absolute -bottom-2 -left-[7px]" />
-          </div>
+  const renderArrow = () => {
+    return (
+      <div className="flex justify-center py-3 w-full">
+        <div className="flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 p-1">
+          <ArrowDown className="h-5 w-5 text-blue-500" />
         </div>
-      );
-    } else {
-      return (
-        <div className="flex items-center px-1">
-          <div className="h-0.5 w-4 bg-[hsl(var(--dropbox-blue))/40] relative">
-            <ArrowRight className="h-4 w-4 text-[hsl(var(--dropbox-blue))] absolute -right-2 -top-[7px]" />
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
   };
   
   // Recursive component to render step nodes
-  const renderStepNode = (node: StepNode, index: number) => {
+  const renderStepNode = (node: StepNode, index: number, isNested = false) => {
     const hasChildren = node.children && node.children.length > 0;
     const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
@@ -137,7 +127,7 @@ export const FlowchartDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
+          className="flowchart-node w-full flex flex-col items-center mb-2"
           initial="initial"
           animate="animate"
           exit="exit"
@@ -145,29 +135,27 @@ export const FlowchartDisplay = ({
           transition={{ duration: 0.3 }}
           layout
         >
-          <div className="flex flex-col items-center w-[280px]"> {/* Fixed width inner container */}
-            <motion.div
-              animate={isChanged ? { 
-                boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
-                backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
-              } : {}}
-              transition={{ duration: 2, times: [0, 0.5, 1] }}
-              className="flowchart-node w-full"
-            >
-              <WorkflowStep
-                step={node.step}
-                browserEvents={getBrowserEventsForStep(node.step)}
-                autoOpen={node.step.active === true || autoActivateSteps}
-                hasChildren={false}
-                isUserInputStep={isUserInputStep}
-                userInputs={isUserInputStep ? userInputs : undefined}
-                setUserInputs={isUserInputStep ? setUserInputs : undefined}
-                compact={true}
-                uniformWidth={true}
-              />
-            </motion.div>
-            {index < visibleSteps.length - 1 && renderArrow('down')}
-          </div>
+          <motion.div
+            className="w-full max-w-[320px]"
+            animate={isChanged ? { 
+              boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
+              backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
+            } : {}}
+            transition={{ duration: 2, times: [0, 0.5, 1] }}
+          >
+            <WorkflowStep
+              step={node.step}
+              browserEvents={getBrowserEventsForStep(node.step)}
+              autoOpen={node.step.active === true || autoActivateSteps}
+              hasChildren={false}
+              isUserInputStep={isUserInputStep}
+              userInputs={isUserInputStep ? userInputs : undefined}
+              setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={compact}
+              uniformWidth={true}
+            />
+          </motion.div>
+          {index < node.children?.length - 1 && renderArrow()}
         </motion.div>
       );
     }
@@ -178,7 +166,7 @@ export const FlowchartDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
+        className="flowchart-node w-full flex flex-col items-center mb-4"
         initial="initial"
         animate="animate"
         exit="exit"
@@ -186,44 +174,46 @@ export const FlowchartDisplay = ({
         transition={{ duration: 0.3 }}
         layout
       >
-        <motion.div 
-          className={cn(
-            blockStyle, 
-            "rounded-md overflow-hidden border shadow-sm w-[280px]" // Fixed width inner container
-          )}
-          animate={isChanged ? { 
-            boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
-            backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
-          } : {}}
-          transition={{ duration: 2, times: [0, 0.5, 1] }}
-        >
-          <WorkflowStep
-            step={node.step}
-            browserEvents={getBrowserEventsForStep(node.step)}
-            autoOpen={node.step.active === true || autoActivateSteps}
-            hasChildren={true}
-            isUserInputStep={isUserInputStep}
-            userInputs={isUserInputStep ? userInputs : undefined}
-            setUserInputs={isUserInputStep ? setUserInputs : undefined}
-            compact={true}
-            uniformWidth={true}
-          />
-          
-          {/* Render children in a container with improved visual structure */}
-          <div className="p-3">
-            <div className="pl-6 border-l-2 border-[hsl(var(--dropbox-blue))/30]">
-              <AnimatePresence>
-                {node.children.map((childNode, childIdx) => (
-                  <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="relative">
-                    {childIdx > 0 && renderArrow('down')}
-                    {renderStepNode(childNode, childIdx)}
-                  </div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        </motion.div>
-        {index < visibleSteps.length - 1 && renderArrow('down')}
+        <div className="w-full max-w-[320px] mb-2">
+          <motion.div
+            animate={isChanged ? { 
+              boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
+              backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
+            } : {}}
+            transition={{ duration: 2, times: [0, 0.5, 1] }}
+          >
+            <WorkflowStep
+              step={node.step}
+              browserEvents={getBrowserEventsForStep(node.step)}
+              autoOpen={node.step.active === true || autoActivateSteps}
+              hasChildren={true}
+              isUserInputStep={isUserInputStep}
+              userInputs={isUserInputStep ? userInputs : undefined}
+              setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={compact}
+              uniformWidth={true}
+            />
+          </motion.div>
+        </div>
+        
+        {renderArrow()}
+        
+        {/* Render children with a border around them */}
+        <div className={cn(
+          "w-full max-w-[320px] rounded-lg overflow-hidden border-2 p-4 mb-2",
+          blockStyle
+        )}>
+          <AnimatePresence>
+            {node.children.map((childNode, childIdx) => (
+              <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="w-full">
+                {renderStepNode(childNode, childIdx, true)}
+                {childIdx < node.children.length - 1 && renderArrow()}
+              </div>
+            ))}
+          </AnimatePresence>
+        </div>
+        
+        {!isNested && index < visibleSteps.length - 1 && renderArrow()}
       </motion.div>
     );
   };

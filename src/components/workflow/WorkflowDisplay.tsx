@@ -83,11 +83,11 @@ export const WorkflowDisplay = ({
   const getControlBlockStyle = (type: string) => {
     switch (type) {
       case 'for':
-        return 'bg-[hsl(var(--dropbox-light-blue))] border-purple-300 dark:border-purple-800';
+        return 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800';
       case 'if':
-        return 'bg-[hsl(var(--dropbox-light-blue))] border-blue-300 dark:border-blue-800';
+        return 'bg-purple-50/50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800';
       default:
-        return 'bg-[hsl(var(--dropbox-light-blue))] dark:bg-gray-900/40';
+        return 'bg-gray-50/50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800';
     }
   };
   
@@ -98,7 +98,7 @@ export const WorkflowDisplay = ({
   };
   
   // Recursive component to render step nodes
-  const renderStepNode = (node: StepNode, index: number) => {
+  const renderStepNode = (node: StepNode, index: number, isNested = false) => {
     const hasChildren = node.children && node.children.length > 0;
     const isUserInputStep = node.step.type === 'user_input';
     const stepId = node.step.id || `step-${node.step.step_number}`;
@@ -116,7 +116,7 @@ export const WorkflowDisplay = ({
       return (
         <motion.div 
           key={`node-${stepId}`}
-          className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
+          className="workflow-node mb-4 w-full flex justify-center"
           initial="initial"
           animate="animate"
           exit="exit"
@@ -125,7 +125,7 @@ export const WorkflowDisplay = ({
           layout
         >
           <motion.div
-            className="w-[280px]" // Fixed width inner container
+            className="w-full max-w-[320px]"
             animate={isChanged ? { 
               boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
               backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
@@ -154,7 +154,7 @@ export const WorkflowDisplay = ({
     return (
       <motion.div 
         key={`node-${stepId}`}
-        className="workflow-node mb-2 w-full flex justify-center" // Full width container with flex center
+        className="workflow-node mb-6 w-full flex flex-col items-center"
         initial="initial"
         animate="animate"
         exit="exit"
@@ -162,41 +162,41 @@ export const WorkflowDisplay = ({
         transition={{ duration: 0.3 }}
         layout
       >
-        <motion.div 
-          className={cn(
-            blockStyle, 
-            "rounded-md overflow-hidden border shadow-sm w-[280px]" // Fixed width inner container
-          )}
-          animate={isChanged ? { 
-            boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
-            backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
-          } : {}}
-          transition={{ duration: 2, times: [0, 0.5, 1] }}
-        >
-          <WorkflowStep
-            step={node.step}
-            browserEvents={getBrowserEventsForStep(node.step)}
-            autoOpen={node.step.active === true || autoActivateSteps}
-            hasChildren={true}
-            isUserInputStep={isUserInputStep}
-            userInputs={isUserInputStep ? userInputs : undefined}
-            setUserInputs={isUserInputStep ? setUserInputs : undefined}
-            compact={true}
-            uniformWidth={true}
-          />
-          
-          <div className="p-3">
-            <div className="pl-6 border-l-2 border-[hsl(var(--dropbox-blue))/30]">
-              <AnimatePresence>
-                {node.children.map((childNode, childIdx) => (
-                  <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="relative">
-                    {renderStepNode(childNode, childIdx)}
-                  </div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        </motion.div>
+        <div className="w-full max-w-[320px] mb-4">
+          <motion.div
+            animate={isChanged ? { 
+              boxShadow: ['0 0 0px rgba(59, 130, 246, 0)', '0 0 15px rgba(59, 130, 246, 0.7)', '0 0 0px rgba(59, 130, 246, 0)'],
+              backgroundColor: ['transparent', 'rgba(59, 130, 246, 0.1)', 'transparent']
+            } : {}}
+            transition={{ duration: 2, times: [0, 0.5, 1] }}
+          >
+            <WorkflowStep
+              step={node.step}
+              browserEvents={getBrowserEventsForStep(node.step)}
+              autoOpen={node.step.active === true || autoActivateSteps}
+              hasChildren={true}
+              isUserInputStep={isUserInputStep}
+              userInputs={isUserInputStep ? userInputs : undefined}
+              setUserInputs={isUserInputStep ? setUserInputs : undefined}
+              compact={true}
+              uniformWidth={true}
+            />
+          </motion.div>
+        </div>
+        
+        {/* Render children in a bordered container with improved visual structure */}
+        <div className={cn(
+          "w-full max-w-[320px] p-4 rounded-lg border-2 overflow-hidden",
+          blockStyle
+        )}>
+          <AnimatePresence>
+            {node.children.map((childNode, childIdx) => (
+              <div key={`child-${childNode.step.id || childNode.step.step_number}`} className="w-full">
+                {renderStepNode(childNode, childIdx, true)}
+              </div>
+            ))}
+          </AnimatePresence>
+        </div>
       </motion.div>
     );
   };

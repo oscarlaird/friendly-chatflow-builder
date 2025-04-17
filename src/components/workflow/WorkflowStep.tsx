@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronRight, ExternalLink, ZoomIn } from "lucide-react";
+import { ZoomIn } from "lucide-react";
 import { KeyValueDisplay } from "./KeyValueDisplay";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { truncateText } from "./utils/stringUtils";
+import { ExternalLink } from "lucide-react";
 
 interface WorkflowStepProps {
   step: any;
@@ -68,18 +69,18 @@ export const WorkflowStep = ({
     ? Math.min(100, (step.n_progress / step.n_total) * 100) 
     : 0;
   
-  // Update card styling to support uniform width
+  // Update card styling to support uniform width and height
   const cardStyle = cn(
-    "p-3 w-full", 
-    uniformWidth ? "w-[260px]" : (compact ? "max-w-[260px]" : "max-w-[28rem]"),
-    isActive && !isDisabled && "border-[hsl(var(--dropbox-blue))] shadow-sm bg-[hsl(var(--dropbox-light-blue))/30]",
+    "p-3 w-full h-[100px] flex flex-col", 
+    uniformWidth ? "w-full" : (compact ? "max-w-[320px]" : "max-w-[28rem]"),
+    isActive && !isDisabled && "border-blue-500 shadow-sm bg-blue-50/30 dark:bg-blue-900/10",
     isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
     hasChildren && (
       stepType === 'for' 
-        ? "rounded-t-md border-purple-300" 
+        ? "rounded-md border-blue-300" 
         : stepType === 'if' 
-          ? "rounded-t-md border-blue-300" 
+          ? "rounded-md border-purple-300" 
           : ""
     )
   );
@@ -193,21 +194,21 @@ export const WorkflowStep = ({
           <div className="p-4 rounded-md border bg-muted/10 flex justify-center">
             <div className="max-w-sm">
               <Card className={cn(
-                "p-3 shadow-md border-[hsl(var(--dropbox-blue))] bg-[hsl(var(--dropbox-light-blue))/30]"
+                "p-3 shadow-md border-blue-500 bg-blue-50/30 dark:bg-blue-900/20"
               )}>
                 <div className="flex items-start gap-2">
-                  <div className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]">
+                  <div className="flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-blue-500 text-white border-blue-500">
                     {step.step_number}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       {getStepIcon(stepType)}
-                      <h3 className="font-medium text-xs text-[hsl(var(--dropbox-blue))]">
+                      <h3 className="font-medium text-sm text-blue-700 dark:text-blue-300">
                         {getStepTitle()}
                       </h3>
                     </div>
                     {getStepDescription() && (
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {getStepDescription()}
                       </p>
                     )}
@@ -305,72 +306,74 @@ export const WorkflowStep = ({
   return (
     <>
       <Card className={cardStyle}>
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 h-full">
           <div className={cn(
-            "flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full font-medium text-xs border",
+            "flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full font-medium text-xs border",
             isActive && !isDisabled 
-              ? "bg-[hsl(var(--dropbox-blue))] text-white border-[hsl(var(--dropbox-blue))]" 
+              ? "bg-blue-500 text-white border-blue-500" 
               : isDisabled 
                 ? "bg-muted text-muted-foreground border-muted" 
-                : "bg-[hsl(var(--dropbox-light-blue))] text-[hsl(var(--dropbox-blue))] border-[hsl(var(--dropbox-blue))/20]"
+                : "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
           )}>
             {step.step_number}
           </div>
           
-          <div className="flex-1 min-w-0 space-y-1 overflow-hidden">
-            <div className="flex flex-wrap gap-1 items-center justify-between">
-              <div className="flex items-center gap-1.5 min-w-0">
-                {getStepIcon(stepType)}
-                <h3 className={cn(
-                  "font-medium text-xs truncate max-w-[150px]",
-                  isActive && !isDisabled && "text-[hsl(var(--dropbox-blue))]",
-                  isDisabled && "text-muted-foreground"
-                )}>
-                  {getStepTitle()}
-                </h3>
+          <div className="flex-1 min-w-0 space-y-1 overflow-hidden flex flex-col justify-between h-full">
+            <div>
+              <div className="flex flex-wrap gap-1 items-center justify-between">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  {getStepIcon(stepType)}
+                  <h3 className={cn(
+                    "font-medium text-sm truncate max-w-[180px]",
+                    isActive && !isDisabled && "text-blue-700 dark:text-blue-300",
+                    isDisabled && "text-muted-foreground"
+                  )}>
+                    {getStepTitle()}
+                  </h3>
+                </div>
+                
+                <div className="flex gap-1">
+                  {stepType === 'function' && step.browser_required && (
+                    <Badge 
+                      variant="outline" 
+                      className="flex items-center gap-0.5 text-[9px] py-0 px-2 h-5 font-normal bg-violet-500 text-white border-violet-600"
+                    >
+                      <ExternalLink className="h-2.5 w-2.5 mr-0.5" />
+                      Browser
+                    </Badge>
+                  )}
+                  
+                  {isActive && !isDisabled && (
+                    <Badge className="bg-blue-500 text-white text-[9px] py-0 px-2 h-5">
+                      Active
+                    </Badge>
+                  )}
+                  
+                  {hasIfControlValue && (
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "flex items-center gap-0.5 text-[9px] py-0 px-2 h-5 font-normal border",
+                        step.control_value 
+                          ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" 
+                          : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
+                      )}
+                    >
+                      {step.control_value ? "True" : "False"}
+                    </Badge>
+                  )}
+                </div>
               </div>
               
-              <div className="flex gap-1">
-                {stepType === 'function' && step.browser_required && (
-                  <Badge 
-                    variant="outline" 
-                    className="flex items-center gap-0.5 text-[9px] py-0 px-1 h-4 font-normal bg-violet-500 text-white border-violet-600"
-                  >
-                    <ExternalLink className="h-2.5 w-2.5" />
-                    Browser
-                  </Badge>
-                )}
-                
-                {isActive && !isDisabled && (
-                  <Badge className="bg-[hsl(var(--dropbox-blue))] text-white text-[9px] py-0 px-1 h-4">
-                    Active
-                  </Badge>
-                )}
-                
-                {hasIfControlValue && (
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "flex items-center gap-0.5 text-[9px] py-0 px-1 h-4 font-normal border",
-                      step.control_value 
-                        ? "bg-green-100 text-green-800 border-green-200" 
-                        : "bg-red-100 text-red-800 border-red-200"
-                    )}
-                  >
-                    {step.control_value ? "True" : "False"}
-                  </Badge>
-                )}
-              </div>
+              {getStepDescription() && (
+                <p className={cn(
+                  "text-xs line-clamp-1 mt-1",
+                  isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
+                )}>
+                  {getStepDescription()}
+                </p>
+              )}
             </div>
-            
-            {getStepDescription() && (
-              <p className={cn(
-                "text-[10px] line-clamp-1",
-                isDisabled ? "text-muted-foreground/70" : "text-muted-foreground"
-              )}>
-                {getStepDescription()}
-              </p>
-            )}
 
             {hasProgress && (
               <div className="mt-1 space-y-0.5">
@@ -384,11 +387,11 @@ export const WorkflowStep = ({
             
             {/* Show view details button if the step has input, output, or browser events */}
             {(hasInput || hasOutput || hasBrowserEvents || hasUserInputs) && (
-              <div className="flex justify-end mt-1">
+              <div className="flex justify-end mt-auto">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                  className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
                   onClick={() => setDetailsModalOpen(true)}
                 >
                   <ZoomIn className="h-3 w-3 mr-1" />
