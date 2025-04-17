@@ -1,11 +1,11 @@
+
 import { useState, useEffect, useRef } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowDown, ArrowRight, MoveUp, MoveDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FlowchartDisplayProps {
@@ -202,46 +202,26 @@ export const FlowchartDisplay = ({
       </motion.div>
     );
   };
-  
-  // Add scroll position state
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'up' | 'down') => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const scrollAmount = 200; // Adjust scroll amount as needed
-    
-    const newPosition = direction === 'up' 
-      ? container.scrollTop - scrollAmount 
-      : container.scrollTop + scrollAmount;
-      
-    container.scrollTo({
-      top: newPosition,
-      behavior: 'smooth'
-    });
-    
-    setScrollPosition(newPosition);
-  };
 
   return (
     <div className={cn(
-      "flex flex-col items-center w-full max-w-full overflow-hidden p-4 relative",
+      "flex flex-col items-center w-full max-w-full overflow-hidden p-4",
       "bg-white dark:bg-[#1A1F2C]",
       "[background-image:radial-gradient(#E0E0E0_1px,transparent_1px)] dark:[background-image:radial-gradient(#ffffff1a_1px,transparent_1px)]",
       "[background-size:20px_20px]",
       className
     )}>
-      <ScrollArea className="w-full h-[calc(100vh-200px)]">
-        <div className="flex flex-col items-center w-full">
-          {nestedSteps?.length > 0 && (
-            <AnimatePresence>
-              {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
-            </AnimatePresence>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="w-full h-[calc(100vh-200px)]">
+        <ScrollArea className="h-full">
+          <div className="flex flex-col items-center w-full">
+            {nestedSteps?.length > 0 && (
+              <AnimatePresence>
+                {nestedSteps.map((node, idx) => renderStepNode(node, idx))}
+              </AnimatePresence>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 };
