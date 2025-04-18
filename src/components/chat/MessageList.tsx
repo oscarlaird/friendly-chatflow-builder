@@ -40,18 +40,12 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   }, [message.content]);
   
   return (
-    <div
-      className={`flex ${
-        message.role === 'user' ? 'justify-end' : 'justify-start'
-      } mb-4 w-full`}
-    >
-      <div
-        className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
-          message.role === 'user'
-            ? 'bg-primary text-primary-foreground mr-0'
-            : 'bg-muted ml-0'
-        } ${highlight ? 'ring-2 ring-accent' : ''}`}
-      >
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
+      <div className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
+        message.role === 'user'
+          ? 'bg-primary text-primary-foreground mr-0'
+          : 'bg-muted ml-0'
+      } ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
@@ -470,7 +464,7 @@ export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListPr
       ) : (
         <div className="flex flex-col items-center w-full">
           <div className="w-full max-w-full">
-            <IntroMessage />
+            {messageList.length === 0 && <IntroMessage />}
             {messageList.length === 0 ? (
               <div className="flex justify-center mt-6">
                 <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
