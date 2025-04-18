@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -21,6 +20,7 @@ export default function WorkflowEditor() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
+  const [initialPromptSent, setInitialPromptSent] = useState(false);
   
   // Set up editing state when selectedChat changes
   useEffect(() => {
@@ -29,20 +29,21 @@ export default function WorkflowEditor() {
     }
   }, [selectedChat]);
   
-  // Handle sending the initial prompt
+  // Handle sending the initial prompt - only once
   useEffect(() => {
-    if (initialPrompt && id && sendMessage) {
+    if (initialPrompt && id && sendMessage && !initialPromptSent) {
       // Send the initial prompt as a user message
       sendMessage(initialPrompt, 'user', 'text_message')
         .then(() => {
           // Remove the initialPrompt from the URL after sending
           navigate(`/workflow/${id}`, { replace: true });
+          setInitialPromptSent(true);
         })
         .catch(error => {
           console.error('Error sending initial prompt:', error);
         });
     }
-  }, [initialPrompt, id, sendMessage, navigate]);
+  }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
     navigate('/');
@@ -145,4 +146,3 @@ export default function WorkflowEditor() {
     </Layout>
   );
 }
-

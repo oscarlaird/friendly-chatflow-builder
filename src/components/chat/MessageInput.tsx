@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const submittingRef = useRef(false); // Use a ref to track submission state
 
   // Auto-focus the textarea when component mounts
   useEffect(() => {
@@ -23,15 +25,19 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
   const handleSubmit = async (e: React.FormEvent, type: 'text_message' | 'code_run' = 'text_message') => {
     e.preventDefault();
     
-    if ((!message.trim() && type === 'text_message') || isSubmitting || disabled) return;
+    // Check the ref first to prevent multiple submissions
+    if (submittingRef.current || (!message.trim() && type === 'text_message') || disabled) return;
     
+    // Set both the state and ref
     setIsSubmitting(true);
+    submittingRef.current = true;
     
     try {
       await onSendMessage(message, type);
       setMessage('');
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false; // Reset the ref
       
       // Re-focus the textarea after sending
       if (textareaRef.current) {

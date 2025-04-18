@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from '@/hooks/useMessages';
@@ -51,8 +52,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     setPastRunMessageId(null);
   };
 
-  const handleSendMessage = async (content: string, type: 'text_message' | 'code_run' = 'text_message') => {
+  const handleSendMessage = async (content: string, type: 'text_message' | 'code_run' = 'text_message', userInputs?: any) => {
     if (!chatId) return;
+    
+    // Prevent multiple submissions
+    if (sending) return;
     
     setSending(true);
     try {
