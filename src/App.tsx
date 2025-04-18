@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound';
 import AuthCallback from './pages/AuthCallback';
 import AgentSidePanel from './pages/AgentSidePanel';
 import Index from './pages/Index';
+import Landing from './pages/Landing';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -22,7 +23,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/app" element={<Dashboard />} />
             <Route path="/workflows" element={<Workflows />} />
             <Route path="/workflow/:id" element={<WorkflowEditor />} />
             <Route path="/settings" element={<Settings />} />
@@ -30,6 +31,7 @@ function App() {
             <Route path="/auth-callback" element={<AuthCallback />} />
             <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
             <Route path="/old-home" element={<Index />} />
+            <Route path="/" element={<Landing />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="top-right" />
