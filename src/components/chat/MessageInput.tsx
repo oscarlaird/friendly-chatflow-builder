@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,6 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
     setIsSubmitting(true);
     
     try {
-      // Ensure we only call onSendMessage once
       await onSendMessage(message, type);
       setMessage('');
     } finally {
