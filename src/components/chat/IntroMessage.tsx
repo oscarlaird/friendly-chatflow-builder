@@ -1,85 +1,126 @@
-import React from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Icons } from '@/components/ui/icons';
+import { OAuthIcon } from '@/components/ui/oauth-icons';
 import { 
-  FileSpreadsheet, 
-  BrainCircuit,
+  Globe2, 
+  BookOpenCheck,
   Chrome,
-  Github,
-  Twitter,
-  Facebook,
-  Linkedin,
-  Slack,
-  Trello,
-  Figma,
-  Code,           // Instead of Vscode
-  ClipboardList,  // Instead of Notion
-  Briefcase      // Instead of Jira
+  ExternalLink,
+  LayoutPanelLeft
 } from 'lucide-react';
 
-export const IntroMessage = () => {
+const StreamingMessage = ({ content, delay }: { content: string, delay: number }) => {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex <= content.length) {
+        setDisplayedContent(content.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        setIsComplete(true);
+        clearInterval(interval);
+      }
+    }, 30); // Adjust speed of typing
+
+    return () => clearInterval(interval);
+  }, [content]);
+
   return (
-    <div className="flex justify-start mb-4 w-full">
-      <Card className="max-w-[85%] p-5 shadow-md border-l-4 border-l-primary">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-10 w-10 rounded-full ring-3 ring-primary flex items-center justify-center bg-primary/10">
-            <div className="relative w-6 h-6">
-              {/* Geometric logo - overlapping shapes */}
-              <div className="absolute top-0 left-0 w-4 h-4 bg-primary/80 rounded-sm transform rotate-45"></div>
-              <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary/90 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-white transform -translate-x-1/2 -translate-y-1/2 rotate-12"></div>
-            </div>
-          </div>
-          <p className="text-xl font-semibold text-primary">I am Mill, your AI assistant</p>
-        </div>
-        
-        <p className="text-lg mb-5">You can teach me to do your job</p>
-        
-        <div className="mb-5">
-          <p className="text-lg font-medium mb-3">I excel at:</p>
-          <ul className="list-disc pl-6 space-y-4">
-            <li className="flex items-center gap-3">
-              <span className="text-lg">Using websites</span>
-              <div className="flex items-center gap-2">
-                <Chrome size={22} />
-                <Github size={22} />
-                <Twitter size={22} />
-                <Facebook size={22} />
-                <Linkedin size={22} />
-              </div>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="text-lg">Working with spreadsheets</span>
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet size={22} />
-              </div>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="text-lg">Using professional tools</span>
-              <div className="flex items-center gap-2">
-                <Slack size={22} />
-                <Trello size={22} />
-                <Briefcase size={22} />
-                <Figma size={22} />
-                <Code size={22} />
-                <ClipboardList size={22} />
-              </div>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="text-lg">Thinking (I'm smarter than you think!)</span>
-              <BrainCircuit size={22} />
-            </li>
-          </ul>
-        </div>
-        
-        <div className="mb-4">
-          <p className="text-lg font-medium mb-2">What do you want me to do? (Try to be detailed)</p>
-        </div>
-        
-        <p className="text-lg mt-4 text-primary">
-          Afterwards I'll ask some follow up questions and allow you to share your screen to demonstrate your task.
-        </p>
-      </Card>
+    <div className={`transition-opacity duration-500 ${isComplete ? 'opacity-100' : 'opacity-90'}`}>
+      {displayedContent}
+    </div>
+  );
+};
+
+const IntroMessageOne = () => (
+  <Card className="max-w-[85%] p-5 bg-gradient-to-br from-slate-50 to-slate-100 border-l-4 border-l-primary mb-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-full bg-primary/10">
+        <Globe2 className="h-6 w-6 text-primary" />
+      </div>
+      <StreamingMessage 
+        content="I can interact with websites and SaaS tools" 
+        delay={0} 
+      />
+    </div>
+    <div className="grid grid-cols-4 sm:grid-cols-7 gap-4 mt-4 items-center">
+      <Chrome className="h-6 w-6 text-blue-500" title="Chrome" />
+      <Icons.salesforce className="h-6 w-6 text-[#00A1E0]" title="Salesforce" />
+      <Icons.linkedin className="h-6 w-6 text-[#0A66C2]" title="LinkedIn" />
+      <Icons.google className="h-6 w-6 text-[#4285F4]" title="Google" />
+      <Icons.yahoo className="h-6 w-6 text-[#6001D2]" title="Yahoo" />
+      <Icons.bloomberg className="h-6 w-6 text-black" title="Bloomberg" />
+      <Icons.hackernews className="h-6 w-6 text-[#FF6600]" title="Hacker News" />
+    </div>
+  </Card>
+);
+
+const IntroMessageTwo = () => (
+  <Card className="max-w-[85%] p-5 bg-gradient-to-br from-slate-50 to-slate-100 border-l-4 border-l-green-500 mb-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-full bg-green-500/10">
+        <BookOpenCheck className="h-6 w-6 text-green-500" />
+      </div>
+      <StreamingMessage 
+        content="I can integrate directly with these tools" 
+        delay={1500}
+      />
+    </div>
+    <div className="flex gap-6 mt-4 items-center">
+      <div className="flex items-center gap-2">
+        <OAuthIcon provider="google_sheets" size={24} />
+        <span className="text-sm font-medium">Google Sheets</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <OAuthIcon provider="gmail" size={24} />
+        <span className="text-sm font-medium">Gmail</span>
+      </div>
+    </div>
+  </Card>
+);
+
+const IntroMessageThree = () => (
+  <Card className="max-w-[85%] p-5 bg-gradient-to-br from-slate-50 to-slate-100 border-l-4 border-l-blue-500">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 rounded-full bg-blue-500/10">
+        <LayoutPanelLeft className="h-6 w-6 text-blue-500" />
+      </div>
+      <StreamingMessage 
+        content="I can build and run workflows in a new browser window" 
+        delay={3000}
+      />
+    </div>
+    <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+      <ExternalLink className="h-4 w-4" />
+      <span>I'll handle your tasks in a dedicated browser window</span>
+    </div>
+  </Card>
+);
+
+export const IntroMessage = () => {
+  const [showSecond, setShowSecond] = useState(false);
+  const [showThird, setShowThird] = useState(false);
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => setShowSecond(true), 2000);
+    const timer2 = setTimeout(() => setShowThird(true), 4000);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col items-start space-y-2 animate-fade-in">
+      <IntroMessageOne />
+      {showSecond && <IntroMessageTwo />}
+      {showThird && <IntroMessageThree />}
     </div>
   );
 };
