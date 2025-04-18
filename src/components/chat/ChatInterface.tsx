@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from '@/hooks/useMessages';
@@ -19,6 +20,7 @@ interface ChatInterfaceProps {
 
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
+  const { chats } = useChats(); // Properly destructure chats from useChats
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || '');
   const [sending, setSending] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
