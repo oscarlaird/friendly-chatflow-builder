@@ -24,12 +24,10 @@ interface MessageListProps {
 }
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
-  // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   const previousContentRef = useRef(message.content);
   
-  // Highlight content only when it changes from previous render
   useEffect(() => {
     if (contentRef.current && message.content !== previousContentRef.current) {
       setHighlight(true);
@@ -40,18 +38,12 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   }, [message.content]);
   
   return (
-    <div
-      className={`flex ${
-        message.role === 'user' ? 'justify-end' : 'justify-start'
-      } mb-4 w-full`}
-    >
-      <div
-        className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
-          message.role === 'user'
-            ? 'bg-primary text-primary-foreground mr-0'
-            : 'bg-muted ml-0'
-        } ${highlight ? 'ring-2 ring-accent' : ''}`}
-      >
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
+      <div className={`max-w-[85%] ${
+        message.role === 'user'
+          ? 'bg-primary text-primary-foreground p-4 rounded-lg'
+          : 'bg-background p-6 rounded-lg border w-full'
+      } ${highlight ? 'ring-2 ring-accent' : ''}`}>
         <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
