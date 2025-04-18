@@ -27,6 +27,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
   const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Lock to prevent multiple submissions for suggested prompts
+  const isProcessingPromptRef = { current: false };
 
   // Initialize the window message handler
   useWindowMessages();
@@ -55,15 +58,20 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const handleSendMessage = async (content: string, type: 'text_message' | 'code_run' = 'text_message', userInputs?: any) => {
     if (!chatId) return;
     
-    // Prevent multiple submissions
-    if (sending) return;
+    // Prevent multiple submissions - check both the sending state and the ref
+    if (sending || isProcessingPromptRef.current) return;
     
+    // Set both state and ref for locking
     setSending(true);
+    isProcessingPromptRef.current = true;
+    
     try {
       // Send user message with the specified type
-      await sendMessage(content, 'user', type);
+      await sendMessage(content, 'user', type, userInputs);
     } finally {
+      // Release both locks
       setSending(false);
+      isProcessingPromptRef.current = false;
     }
   };
 

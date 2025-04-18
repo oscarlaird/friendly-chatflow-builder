@@ -26,7 +26,9 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
     e.preventDefault();
     
     // Check the ref first to prevent multiple submissions
-    if (submittingRef.current || (!message.trim() && type === 'text_message') || disabled) return;
+    if (submittingRef.current || (!message.trim() && type === 'text_message') || disabled) {
+      return;
+    }
     
     // Set both the state and ref
     setIsSubmitting(true);
@@ -36,13 +38,16 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
       await onSendMessage(message, type);
       setMessage('');
     } finally {
-      setIsSubmitting(false);
-      submittingRef.current = false; // Reset the ref
-      
-      // Re-focus the textarea after sending
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
+      // Introduce a small delay to prevent double submissions
+      setTimeout(() => {
+        setIsSubmitting(false);
+        submittingRef.current = false; // Reset the ref
+        
+        // Re-focus the textarea after sending
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 300);
     }
   };
 

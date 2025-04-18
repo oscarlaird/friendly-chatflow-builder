@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { ChatInterface } from '@/components/chat/ChatInterface';
@@ -21,6 +22,7 @@ export default function WorkflowEditor() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [initialPromptSent, setInitialPromptSent] = useState(false);
+  const initialPromptInProcessRef = useRef(false);
   
   // Set up editing state when selectedChat changes
   useEffect(() => {
@@ -31,7 +33,11 @@ export default function WorkflowEditor() {
   
   // Handle sending the initial prompt - only once
   useEffect(() => {
-    if (initialPrompt && id && sendMessage && !initialPromptSent) {
+    // Use both state and ref to ensure we don't send duplicates
+    if (initialPrompt && id && sendMessage && !initialPromptSent && !initialPromptInProcessRef.current) {
+      // Mark that we're processing the initial prompt
+      initialPromptInProcessRef.current = true;
+      
       // Send the initial prompt as a user message
       sendMessage(initialPrompt, 'user', 'text_message')
         .then(() => {
@@ -41,6 +47,10 @@ export default function WorkflowEditor() {
         })
         .catch(error => {
           console.error('Error sending initial prompt:', error);
+        })
+        .finally(() => {
+          // Reset the processing flag when done
+          initialPromptInProcessRef.current = false;
         });
     }
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
