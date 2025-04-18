@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageList } from '@/components/chat/MessageList';
 import { MessageInput } from '@/components/chat/MessageInput';
@@ -8,8 +9,7 @@ import { MillCapabilities } from '@/components/chat/MillCapabilities';
 import { WorkflowDisplay } from '@/components/workflow/WorkflowDisplay';
 import { useChats } from '@/hooks/useChats';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -18,18 +18,18 @@ interface ChatInterfaceProps {
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const { user } = useAuth();
   const { dataState, loading, sendMessage, refreshMessages } = useMessages(chatId);
-  const { chats, setChats, createChat, codeRewritingStatus } = useChats();
+  const { chats, createChat } = useChats();
   const [isNewChat, setIsNewChat] = useState(false);
   const [isWorkflowVisible, setIsWorkflowVisible] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Function to handle the selection of a capability from MillCapabilities
   const handleSelectCapability = async (message: string) => {
     if (sendMessage) {
-      await sendMessage(message, 'user', 'text_message');
+      await sendMessage(message, 'text_message');
     }
   };
 
@@ -89,13 +89,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       )}
 
       {/* Message Input */}
-      <MessageInput onSendMessage={handleSendMessage} disabled={codeRewritingStatus === 'thinking'} />
+      <MessageInput 
+        onSendMessage={handleSendMessage} 
+        disabled={false}
+      />
       
       {/* Workflow Display */}
       {isWorkflowVisible && selectedMessageId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg p-4 max-w-4xl max-h-[80vh] overflow-auto">
-            <WorkflowDisplay messageId={selectedMessageId} onClose={handleCloseWorkflow} />
+          <div className="bg-white rounded-lg p-4 max-w-4xl max-h-[80vh] overflow-auto dark:bg-gray-800">
+            <WorkflowDisplay 
+              id={selectedMessageId} 
+              onClose={handleCloseWorkflow} 
+            />
           </div>
         </div>
       )}
