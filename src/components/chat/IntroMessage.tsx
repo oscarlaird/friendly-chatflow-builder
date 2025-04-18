@@ -49,13 +49,13 @@ const IntroMessageOne = () => (
       />
     </div>
     <div className="grid grid-cols-4 sm:grid-cols-7 gap-4 mt-4 items-center">
-      <Chrome className="h-6 w-6 text-blue-500" title="Chrome" />
-      <Icons.salesforce className="h-6 w-6 text-[#00A1E0]" title="Salesforce" />
-      <Icons.linkedin className="h-6 w-6 text-[#0A66C2]" title="LinkedIn" />
-      <Icons.google className="h-6 w-6 text-[#4285F4]" title="Google" />
-      <Icons.yahoo className="h-6 w-6 text-[#6001D2]" title="Yahoo" />
-      <Icons.bloomberg className="h-6 w-6 text-black" title="Bloomberg" />
-      <Icons.hackernews className="h-6 w-6 text-[#FF6600]" title="Hacker News" />
+      <Chrome className="h-6 w-6 text-blue-500" aria-label="Chrome" />
+      <Icons.salesforce className="h-6 w-6 text-[#00A1E0]" aria-label="Salesforce" />
+      <Icons.linkedin className="h-6 w-6 text-[#0A66C2]" aria-label="LinkedIn" />
+      <Icons.google className="h-6 w-6 text-[#4285F4]" aria-label="Google" />
+      <Icons.yahoo className="h-6 w-6 text-[#6001D2]" aria-label="Yahoo" />
+      <Icons.bloomberg className="h-6 w-6 text-black" aria-label="Bloomberg" />
+      <Icons.hackernews className="h-6 w-6 text-[#FF6600]" aria-label="Hacker News" />
     </div>
   </Card>
 );
