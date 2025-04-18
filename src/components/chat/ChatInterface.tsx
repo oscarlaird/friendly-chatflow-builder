@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from '@/hooks/useMessages';
@@ -20,9 +19,9 @@ interface ChatInterfaceProps {
 
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { dataState, loading, sendMessage } = useMessages(chatId);
-  const { chats } = useChats();
-  const { selectedChat } = useSelectedChat(chatId || '');
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || '');
   const [sending, setSending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
   const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
@@ -88,6 +87,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     );
   }
 
+  // Determine if input should be disabled:
+  // - While sending a message
+  // - While streaming intro messages
+  // - While workflow is being built (codeRewritingStatus !== 'done')
+  // - If there's no chatId
+  const isInputDisabled = sending || isStreaming || codeRewritingStatus !== 'done' || !chatId;
+
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
@@ -114,10 +120,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
             <MessageList 
               dataState={dataState} 
-              loading={loading} 
+              loading={loading}
               onViewPastRun={handleViewPastRun}
             />
-            <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
+            <MessageInput 
+              onSendMessage={handleSendMessage} 
+              disabled={isInputDisabled}
+            />
           </div>
         ) : (
           <div className="h-full overflow-hidden w-full">
@@ -141,7 +150,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 loading={loading}
                 onViewPastRun={handleViewPastRun}
               />
-              <MessageInput onSendMessage={handleSendMessage} disabled={sending || !chatId} />
+              <MessageInput 
+                onSendMessage={handleSendMessage} 
+                disabled={isInputDisabled}
+              />
             </div>
           </ResizablePanel>
           
