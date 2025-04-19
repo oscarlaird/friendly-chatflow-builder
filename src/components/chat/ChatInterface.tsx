@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
@@ -13,7 +13,6 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, GitBranch, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
 
 interface ChatInterfaceProps {
   chatId: string | null;
@@ -28,22 +27,12 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [activeView, setActiveView] = useState<'chat' | 'workflow'>(isMobile ? 'chat' : 'chat');
   const [pastRunMessageId, setPastRunMessageId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuth();
   
   // Lock to prevent multiple submissions for suggested prompts
   const isProcessingPromptRef = { current: false };
 
   // Initialize the window message handler
   useWindowMessages();
-
-  // Ensure we're authenticated when accessing chat interface directly
-  useEffect(() => {
-    if (!user && chatId) {
-      // Store current path for redirect after auth
-      navigate(`/auth?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true });
-    }
-  }, [user, chatId, navigate, location]);
 
   // Find the current chat in the chats array to get initial steps
   const currentChat = chats.find(chat => chat.id === chatId);
@@ -88,7 +77,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate('/app');
+    navigate('/');
   };
 
   if (!chatId) {
@@ -102,6 +91,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   // For smaller screens, use tabs to switch between views
   return (
     <div className="flex flex-col h-full overflow-hidden w-full">
+    
+      
       <div className="md:hidden border-b">
         <Tabs defaultValue={activeView} value={activeView} onValueChange={(value) => setActiveView(value as 'chat' | 'workflow')}>
           <TabsList className="w-full">

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { useSelectedChat } from '@/hooks/useChats';
@@ -10,39 +10,19 @@ import { ArrowLeft, Edit, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function WorkflowEditor() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { user, loading: authLoading } = useAuth();
   const initialPrompt = searchParams.get('initialPrompt');
   const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
-  const location = useLocation();
   
-  // Adding a loading state for chat to handle the removed loading property
-  const [chatLoading, setChatLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [initialPromptSent, setInitialPromptSent] = useState(false);
   const initialPromptInProcessRef = useRef(false);
-  
-  // Update chat loading state when selectedChat changes
-  useEffect(() => {
-    if (selectedChat) {
-      setChatLoading(false);
-    }
-  }, [selectedChat]);
-  
-  // Authentication check
-  useEffect(() => {
-    if (!authLoading && !user) {
-      // If not authenticated, redirect to auth page with return path
-      navigate(`/auth?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true });
-    }
-  }, [user, authLoading, navigate, location]);
   
   // Set up editing state when selectedChat changes
   useEffect(() => {
@@ -61,7 +41,7 @@ export default function WorkflowEditor() {
       // Send the initial prompt as a user message
       sendMessage(initialPrompt, 'user', 'text_message')
         .then(() => {
-          // Remove the initialPrompt from the URL after sending, but keep the workflow ID
+          // Remove the initialPrompt from the URL after sending
           navigate(`/workflow/${id}`, { replace: true });
           setInitialPromptSent(true);
         })
@@ -76,7 +56,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/app');  // Direct to /app instead of landing page
+    navigate('/');
   };
   
   const startEditing = () => {
@@ -103,8 +83,8 @@ export default function WorkflowEditor() {
     }
   };
 
-  // Show loading state while authentication and chat are being checked
-  if (authLoading || (codeRewritingStatus === 'thinking' && !selectedChat) || chatLoading) {
+  // Show loading state while chat is being fetched
+  if (codeRewritingStatus === 'thinking' && !selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -114,7 +94,7 @@ export default function WorkflowEditor() {
     );
   }
 
-  if (!selectedChat && !chatLoading) {
+  if (!selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">

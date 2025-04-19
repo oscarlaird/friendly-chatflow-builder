@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat/ChatList';
@@ -36,11 +37,10 @@ const Index = () => {
   // Function to update both state and URL without localStorage
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
-    // Keep navigation within /old-home route
-    navigate(`/old-home?chatId=${chatId}`, { replace: true });
+    navigate(`/?chatId=${chatId}`, { replace: true });
   };
   
-  // Handle initial load - use URL param
+  // Handle initial load - only use URL param, remove localStorage logic
   useEffect(() => {
     if (!chatsLoading && chats.length > 0) {
       // Check URL parameter
@@ -57,12 +57,9 @@ const Index = () => {
       const sortedChats = [...chats].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-      
-      if (sortedChats.length > 0) {
-        handleSelectChat(sortedChats[0].id);
-      }
+      handleSelectChat(sortedChats[0].id);
     }
-  }, [chats, chatsLoading, chatIdFromUrl, navigate]);
+  }, [chats, chatsLoading]);
 
   if (loading) {
     return (

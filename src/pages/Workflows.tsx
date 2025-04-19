@@ -1,28 +1,17 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { WorkflowList } from '@/components/workflow/WorkflowList';
 import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
 import { Plus } from 'lucide-react';
 import { useChats } from '@/hooks/useChats';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function Workflows() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const { createChat } = useChats();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const location = useLocation();
-
-  // Authentication check
-  useEffect(() => {
-    if (!authLoading && !user) {
-      // If not authenticated, redirect to auth page with return path
-      navigate(`/auth?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true });
-    }
-  }, [user, authLoading, navigate, location]);
 
   const handleTemplateSelect = async (templateId: string | null) => {
     try {
@@ -47,18 +36,6 @@ export default function Workflows() {
       console.error('Error creating workflow:', error);
     }
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated (will redirect)
-  if (!user) return null;
 
   return (
     <Layout>
