@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,10 +36,11 @@ const Index = () => {
   // Function to update both state and URL without localStorage
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
+    // Keep navigation within /old-home route
     navigate(`/old-home?chatId=${chatId}`, { replace: true });
   };
   
-  // Handle initial load - only use URL param, remove localStorage logic
+  // Handle initial load - use URL param
   useEffect(() => {
     if (!chatsLoading && chats.length > 0) {
       // Check URL parameter
@@ -62,7 +62,7 @@ const Index = () => {
         handleSelectChat(sortedChats[0].id);
       }
     }
-  }, [chats, chatsLoading, chatIdFromUrl]);
+  }, [chats, chatsLoading, chatIdFromUrl, navigate]);
 
   if (loading) {
     return (

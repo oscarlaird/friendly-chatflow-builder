@@ -55,7 +55,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/app');  // Changed from '/' to '/app' to avoid going to landing page
+    navigate('/app');  // Direct to /app instead of landing page
   };
   
   const startEditing = () => {
