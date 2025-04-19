@@ -14,15 +14,27 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
+    if (!loading && !user) {
+      // Store current path for redirect after auth
+      navigate(`/auth?returnTo=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate, location]);
   
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
+  // Don't render anything if not authenticated (will redirect)
   if (!user) return null;
   
   return (
