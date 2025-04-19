@@ -10,7 +10,7 @@ import { useChats } from '@/hooks/useChats';
 
 export default function Workflows() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
-  const { createChat, loading: chatsLoading } = useChats();
+  const { createChat } = useChats();
   const navigate = useNavigate();
 
   const handleTemplateSelect = async (templateId: string | null) => {
@@ -22,8 +22,15 @@ export default function Workflows() {
         console.log('Created new workflow with ID:', newChat.id);
         setTemplateGalleryOpen(false);
         
-        // Navigate to the workflow editor with the new ID
-        navigate(`/workflow/${newChat.id}`);
+        // Directly navigate to the workflow editor with the new ID
+        // Use replace: true to avoid navigation history issues
+        navigate(`/workflow/${newChat.id}`, { replace: true });
+        
+        // Force a small delay to ensure the navigation completes
+        // This prevents the app from redirecting back to workflows
+        setTimeout(() => {
+          console.log('Navigation should be complete to:', `/workflow/${newChat.id}`);
+        }, 100);
       }
     } catch (error) {
       console.error('Error creating workflow:', error);
@@ -44,13 +51,7 @@ export default function Workflows() {
           </Button>
         </div>
         
-        {chatsLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading workflows...</p>
-          </div>
-        ) : (
-          <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
-        )}
+        <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
         
         <WorkflowTemplateGallery 
           open={templateGalleryOpen}

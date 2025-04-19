@@ -56,7 +56,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/workflows');
+    navigate('/');
   };
   
   const startEditing = () => {
@@ -84,11 +84,11 @@ export default function WorkflowEditor() {
   };
 
   // Show loading state while chat is being fetched
-  if (!selectedChat && codeRewritingStatus === 'thinking') {
+  if (codeRewritingStatus === 'thinking' && !selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <p>Loading workflow...</p>
+          <p>Loading...</p>
         </div>
       </Layout>
     );
@@ -98,13 +98,11 @@ export default function WorkflowEditor() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="mb-4">Workflow not found</p>
-            <Button variant="outline" onClick={handleBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Workflows
-            </Button>
-          </div>
+          <p>Chat not found</p>
+          <Button variant="outline" onClick={handleBack} className="ml-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
         </div>
       </Layout>
     );
