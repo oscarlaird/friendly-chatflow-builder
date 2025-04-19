@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -41,7 +40,7 @@ export default function WorkflowEditor() {
       // Send the initial prompt as a user message
       sendMessage(initialPrompt, 'user', 'text_message')
         .then(() => {
-          // Remove the initialPrompt from the URL after sending
+          // Remove the initialPrompt from the URL after sending, but keep the workflow ID
           navigate(`/workflow/${id}`, { replace: true });
           setInitialPromptSent(true);
         })
@@ -56,7 +55,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/app');  // Changed from '/' to '/app' to avoid going to landing page
   };
   
   const startEditing = () => {
