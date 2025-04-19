@@ -158,7 +158,7 @@ export const Workflow = ({
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   
   const { dataState, sendMessage } = useMessages(chatId || null);
-  const { selectedChat, codeRewritingStatus, loading } = useSelectedChat(chatId || null);
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
   const { requiredApps, missingConnections, allAppsConnected, loading: loadingApps } = useRequiredApps(chatId);
 
   // Find the current running message if any
@@ -172,22 +172,45 @@ export const Workflow = ({
   // Background color based on whether viewing past run
   const bgColor = pastRunMessage ? 'bg-muted/30' : 'bg-background';
   
-  // Update workflowSteps and userInputs when selectedChat changes
+  // Update workflowSteps when pastRunMessage changes or running message updates
   useEffect(() => {
-    if (selectedChat) {
-      console.log('Setting workflow steps from chat:', selectedChat.steps);
-      if (selectedChat.steps) {
-        setWorkflowSteps(selectedChat.steps);
-      }
+    if (pastRunMessage && pastRunMessage.steps) {
+      console.log("Displaying steps from past run message:", pastRunMessage.steps);
+      setWorkflowSteps(pastRunMessage.steps);
       
-      // Initialize user inputs from chat
-      if (selectedChat.user_inputs) {
-        console.log('Setting user inputs from chat:', selectedChat.user_inputs);
-        setUserInputs(selectedChat.user_inputs);
+      // If past run had user inputs, show them
+      if (pastRunMessage.user_inputs && Object.keys(pastRunMessage.user_inputs).length > 0) {
+        setUserInputs(pastRunMessage.user_inputs);
       }
+    } else if (runningMessage && runningMessage.steps) {
+      console.log("Displaying steps from running message:", runningMessage.steps);
+      setWorkflowSteps(runningMessage.steps);
+      
+      // If running message has user inputs, show them
+      if (runningMessage.user_inputs && Object.keys(runningMessage.user_inputs).length > 0) {
+        setUserInputs(runningMessage.user_inputs);
+      }
+    } else if (selectedChat && selectedChat.steps) {
+      console.log("Displaying steps from selected chat:", selectedChat.steps);
+      setWorkflowSteps(selectedChat.steps);
+      
+      // Initialize user inputs from selected chat
+      if (selectedChat.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
+        console.log("Setting user inputs from chat:", selectedChat.user_inputs);
+        setUserInputs(selectedChat.user_inputs);
+      } else {
+        // Try to get user inputs from steps if not available in chat
+        const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
+        if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+          setUserInputs(userInputStep.output);
+        }
+      }
+    } else if (initialSteps.length > 0) {
+      console.log("Displaying initial steps:", initialSteps);
+      setWorkflowSteps(initialSteps);
     }
-  }, [selectedChat]);
-
+  }, [pastRunMessage, runningMessage, selectedChat, initialSteps]);
+  
   // Set up real-time subscription for messages
   useEffect(() => {
     if (!chatId) return;
@@ -368,9 +391,8 @@ export const Workflow = ({
                 browserEvents={browserEvents}
                 compact={compact}
                 userInputs={userInputs}
-                setUserInputs={setUserInputs}
+                setUserInputs={handleUserInputChange}
                 autoActivateSteps={true}
-                chatId={chatId}
               />
             )}
           </div>

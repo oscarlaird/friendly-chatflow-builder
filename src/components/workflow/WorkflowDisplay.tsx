@@ -5,7 +5,6 @@ import { BrowserEvent } from "@/types";
 import { nestSteps, StepNode } from "./utils/nestingUtils";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowDisplayProps {
   steps: any[];
@@ -15,7 +14,6 @@ interface WorkflowDisplayProps {
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
   autoActivateSteps?: boolean;
-  chatId?: string;
 }
 
 export const WorkflowDisplay = ({ 
@@ -26,7 +24,6 @@ export const WorkflowDisplay = ({
   userInputs,
   setUserInputs,
   autoActivateSteps = false,
-  chatId,
 }: WorkflowDisplayProps) => {
   // Track previous steps for animation comparison
   const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());
@@ -100,36 +97,6 @@ export const WorkflowDisplay = ({
     return changedStepIds.has(stepId);
   };
   
-  // Handle input changes and save to database
-  const handleUserInputChange = async (newInputs: Record<string, any>) => {
-    if (!chatId) return;
-    
-    try {
-      // Update local state through the parent component
-      if (setUserInputs) {
-        setUserInputs(newInputs);
-      }
-
-      console.log('Saving workflow steps with updated inputs to database:', newInputs);
-      
-      // Update the steps in the database with the new inputs
-      // Use explicit type cast to match the expected Supabase types
-      const { error } = await supabase
-        .from('chats')
-        .update({ 
-          user_inputs: newInputs 
-        } as any)
-        .eq('id', chatId);
-
-      if (error) {
-        console.error('Error saving user inputs:', error);
-        throw error;
-      }
-    } catch (err) {
-      console.error('Exception updating workflow inputs:', err);
-    }
-  };
-  
   // Recursive component to render step nodes
   const renderStepNode = (node: StepNode, index: number) => {
     const hasChildren = node.children && node.children.length > 0;
@@ -172,7 +139,6 @@ export const WorkflowDisplay = ({
               isUserInputStep={isUserInputStep}
               userInputs={isUserInputStep ? userInputs : undefined}
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
-              chatId={chatId}
             />
           </motion.div>
         </motion.div>
@@ -212,7 +178,6 @@ export const WorkflowDisplay = ({
             isUserInputStep={isUserInputStep}
             userInputs={isUserInputStep ? userInputs : undefined}
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
-            chatId={chatId}
           />
           
           <div className="p-3">
