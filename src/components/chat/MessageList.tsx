@@ -41,12 +41,11 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-6 w-full`}>
-      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 transition-colors duration-300  ${
-        message.role === 'user'
-          ? 'bg-muted text-black-foreground mr-0'
-          : 'bg-white ml-0'
-      } ${highlight ? '' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden text-base">
+      <div className={`${message.role === 'user' 
+        ? 'max-w-[85%] bg-muted text-black-foreground mr-0' 
+        : 'w-full bg-background border border-border'
+      } rounded-3xl px-4 py-2.5 transition-colors duration-300`}>
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden prose dark:prose-invert max-w-none text-base">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
@@ -347,7 +346,7 @@ const CodeRunMessageBubble = ({
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={cn(
-        "w-full max-w-[95%] p-4 transition-colors duration-300 rounded-3xl",
+        "w-full p-4 transition-colors duration-300 rounded-3xl bg-background border border-border",
         highlight ? 'ring-2 ring-accent' : ''
       )}>
         <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
