@@ -14,15 +14,28 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
+      // Save the current location to session storage before redirecting
+      sessionStorage.setItem('intendedRoute', location.pathname + location.search);
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate, location]);
   
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
+  // Don't render content until we know the user is authenticated
   if (!user) return null;
   
   return (
