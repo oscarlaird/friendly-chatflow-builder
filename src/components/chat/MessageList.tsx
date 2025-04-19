@@ -41,7 +41,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
-      <div className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
+      <div className={`max-w-[80%] rounded-3xl p-4 transition-colors duration-300 ${
         message.role === 'user'
           ? 'bg-primary text-primary-foreground mr-0'
           : 'bg-muted ml-0'
@@ -347,7 +347,7 @@ const CodeRunMessageBubble = ({
   return (
     <div className="flex justify-center mb-4 w-full">
       <Card className={cn(
-        "w-full max-w-[95%] p-4 transition-colors duration-300",
+        "w-full max-w-[95%] p-4 transition-colors duration-300 rounded-3xl",
         highlight ? 'ring-2 ring-accent' : ''
       )}>
         <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
