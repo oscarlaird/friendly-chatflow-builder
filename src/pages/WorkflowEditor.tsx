@@ -17,15 +17,24 @@ export default function WorkflowEditor() {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const initialPrompt = searchParams.get('initialPrompt');
-  const { selectedChat, codeRewritingStatus, loading: chatLoading } = useSelectedChat(id || '');
+  const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Adding a loading state for chat to handle the removed loading property
+  const [chatLoading, setChatLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [initialPromptSent, setInitialPromptSent] = useState(false);
   const initialPromptInProcessRef = useRef(false);
+  
+  // Update chat loading state when selectedChat changes
+  useEffect(() => {
+    if (selectedChat) {
+      setChatLoading(false);
+    }
+  }, [selectedChat]);
   
   // Authentication check
   useEffect(() => {
