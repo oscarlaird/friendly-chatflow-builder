@@ -1,58 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
-import { Card } from '@/components/ui/card';
-import { IntroMessage } from './IntroMessage';
-import ReactMarkdown from 'react-markdown';
-import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
-import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, Clock, AlertTriangle, Eye } from 'lucide-react';
+import { Message } from '@/types';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ConnectAppMessage } from './ConnectAppMessage';
-import { formatDistanceToNow } from 'date-fns';
+import { Check, Clock, ExternalLink, Eye, Pause, Play, Square, XSquare, UserCog, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { IntroMessage } from './IntroMessage';
+import { ConnectAppMessage } from './ConnectAppMessage';
+import { MessageBubble } from './MessageBubble';
 
-// Define the interface for MessageList props
 interface MessageListProps {
-  dataState: DataState;
+  dataState: {
+    messages: Record<string, Message>;
+    coderunEvents: Record<string, any>;
+    browserEvents: Record<string, any>;
+  };
   loading: boolean;
   onViewPastRun?: (messageId: string) => void;
 }
-
-const TextMessageBubble = ({ message }: { message: Message }) => {
-  // Add a ref to track content changes for highlighting
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [highlight, setHighlight] = useState(false);
-  const previousContentRef = useRef(message.content);
-  
-  // Highlight content only when it changes from previous render
-  useEffect(() => {
-    if (contentRef.current && message.content !== previousContentRef.current) {
-      setHighlight(true);
-      const timer = setTimeout(() => setHighlight(false), 1000);
-      previousContentRef.current = message.content;
-      return () => clearTimeout(timer);
-    }
-  }, [message.content]);
-  
-  return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
-      <div className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
-        message.role === 'user'
-          ? 'bg-primary text-primary-foreground mr-0'
-          : 'bg-muted ml-0'
-      } ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
-          <ReactMarkdown>{message.content}</ReactMarkdown>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const CodeRunStateIndicator = ({ state }: { state?: 'running' | 'paused' | 'stopped' | 'aborted' | 'finished' | 'waiting_for_user' | 'window_closed' }) => {
   if (!state) return null;
@@ -269,7 +236,7 @@ const CodeRunMessageBubble = ({
   onViewPastRun
 }: { 
   message: Message; 
-  browserEvents: Record<string, BrowserEvent>;
+  browserEvents: Record<string, any>;
   onViewPastRun?: (messageId: string) => void;
 }) => {
   // Determine if this is a recent message (created in the last 5 seconds)
@@ -441,7 +408,6 @@ export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListPr
     const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
     
     if (hasNewMessages && lastMessageRef.current) {
-      // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       });
@@ -450,35 +416,30 @@ export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListPr
     prevMessageCountRef.current = currentMessageCount;
   }, [dataState.messages]);
 
-  // Sort messages by created_at once instead of re-sorting on every render
+  // Sort messages by created_at
   const messageList = Object.values(dataState.messages).sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 
   return (
-    <ScrollArea className="h-full px-2 py-6" ref={scrollAreaRef}>
+    <ScrollArea className="h-full px-4 py-6" ref={scrollAreaRef}>
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
         <div className="flex flex-col items-center w-full">
-          <div className="w-full max-w-full">
+          <div className="w-full max-w-3xl">
             {messageList.length === 0 && <IntroMessage />}
-            {messageList.length === 0 ? (
-              <div className="flex justify-center mt-6">
-                <p className="text-muted-foreground text-sm">Send a message to start the conversation</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-stretch w-full">
+            {messageList.length > 0 && (
+              <div className="flex flex-col items-stretch w-full gap-6">
                 {messageList.map((message, index) => (
                   <div 
                     key={message.id}
                     ref={index === messageList.length - 1 ? lastMessageRef : undefined}
                   >
-                    {/* Message bubble components */}
                     {message.type === 'text_message' && (
-                      <TextMessageBubble message={message} />
+                      <MessageBubble message={message} />
                     )}
                     {message.type === 'code_run' && (
                       <CodeRunMessageBubble 

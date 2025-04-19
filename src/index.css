@@ -253,6 +253,36 @@
     min-width: auto;
     max-width: fit-content;
   }
+
+  /* Chat specific styles */
+  .chat-message {
+    @apply transition-opacity;
+  }
+
+  .chat-message-user {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .chat-message-assistant {
+    @apply bg-muted;
+  }
+
+  .chat-message-container {
+    @apply flex flex-col gap-6 w-full max-w-3xl mx-auto;
+  }
+
+  /* Message markdown styles */
+  .prose {
+    @apply text-foreground;
+  }
+
+  .prose p {
+    @apply mb-0 leading-normal;
+  }
+
+  .prose code {
+    @apply px-1.5 py-0.5 rounded bg-muted/50 text-sm;
+  }
 }
 
 /* Animation for active workflow steps */
