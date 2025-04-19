@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -15,6 +16,7 @@ interface FlowchartDisplayProps {
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
   autoActivateSteps?: boolean;
+  chatId?: string;
 }
 
 export const FlowchartDisplay = ({ 
@@ -25,6 +27,7 @@ export const FlowchartDisplay = ({
   userInputs,
   setUserInputs,
   autoActivateSteps = false,
+  chatId,
 }: FlowchartDisplayProps) => {
   // Track previous steps for animation comparison
   const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());

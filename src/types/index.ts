@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email?: string;
@@ -103,6 +102,7 @@ export interface WorkflowDisplayProps {
   userInputs?: Record<string, any>;
   setUserInputs?: (inputs: Record<string, any>) => void;
   autoActivateSteps?: boolean;
+  chatId?: string;
 }
 
 export type CodeRewritingStatus = 'thinking' | 'rewriting_code' | 'done';
