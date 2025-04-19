@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -105,3 +106,11 @@ export interface WorkflowDisplayProps {
 }
 
 export type CodeRewritingStatus = 'thinking' | 'rewriting_code' | 'done';
+
+// Adding interface for the return type of useSelectedChat hook
+export interface SelectedChatHookResult {
+  selectedChat: Chat | null;
+  codeRewritingStatus: CodeRewritingStatus;
+  loading: boolean;
+}
+

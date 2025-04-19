@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Chat, CodeRewritingStatus } from '@/types';
+import { Chat, CodeRewritingStatus, SelectedChatHookResult } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -269,10 +268,11 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
   }
 };
 
-// Simplified hook to subscribe to a specific chat's updates
-export const useSelectedChat = (chatId: string | null) => {
+// Updated useSelectedChat to explicitly include the loading property in its return type
+export const useSelectedChat = (chatId: string | null): SelectedChatHookResult => {
   const [codeRewritingStatus, setCodeRewritingStatus] = useState<CodeRewritingStatus>('thinking');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [loading, setLoading] = useState(true); // Make sure this exists
   const { user } = useAuth();
   const channelRef = useRef<any>(null);
   const lastChatIdRef = useRef<string | null>(null);
@@ -291,8 +291,12 @@ export const useSelectedChat = (chatId: string | null) => {
     if (!chatId || !user) {
       setSelectedChat(null);
       setCodeRewritingStatus('thinking');
+      setLoading(false); // Set loading to false if no chatId or user
       return;
     }
+
+    // Set loading to true at the beginning of the fetch
+    setLoading(true);
 
     // Initial fetch from cache or database
     const fetchSelectedChat = async () => {
@@ -326,6 +330,9 @@ export const useSelectedChat = (chatId: string | null) => {
         console.error('Error fetching selected chat:', error);
         setSelectedChat(null);
         setCodeRewritingStatus('thinking');
+      } finally {
+        // Set loading to false when fetch is complete, regardless of outcome
+        setLoading(false);
       }
     };
 
@@ -366,9 +373,10 @@ export const useSelectedChat = (chatId: string | null) => {
     };
   }, [chatId, user]);
 
-  // Return memoized values to prevent unnecessary re-renders
+  // Return memoized values to prevent unnecessary re-renders, now including loading
   return useMemo(() => ({
     selectedChat,
-    codeRewritingStatus
-  }), [selectedChat, codeRewritingStatus]);
+    codeRewritingStatus,
+    loading
+  }), [selectedChat, codeRewritingStatus, loading]);
 };
