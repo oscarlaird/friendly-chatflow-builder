@@ -4,12 +4,15 @@ import { Message } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Check, Clock, ExternalLink, Eye, Pause, Play, Square, XSquare, UserCog, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { IntroMessage } from './IntroMessage';
 import { ConnectAppMessage } from './ConnectAppMessage';
 import { MessageBubble } from './MessageBubble';
+import ReactMarkdown from 'react-markdown';
+import { toast } from '@/hooks/use-toast';
 
 interface MessageListProps {
   dataState: {
