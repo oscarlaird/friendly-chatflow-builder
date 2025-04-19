@@ -14,14 +14,26 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
+      // Save the current path to return after login
+      const currentPath = location.pathname + location.search;
+      sessionStorage.setItem('redirectPath', currentPath);
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate, location]);
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
   
   if (!user) return null;
   

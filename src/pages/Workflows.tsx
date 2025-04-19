@@ -22,15 +22,8 @@ export default function Workflows() {
         console.log('Created new workflow with ID:', newChat.id);
         setTemplateGalleryOpen(false);
         
-        // Directly navigate to the workflow editor with the new ID
-        // Use replace: true to avoid navigation history issues
-        navigate(`/workflow/${newChat.id}`, { replace: true });
-        
-        // Force a small delay to ensure the navigation completes
-        // This prevents the app from redirecting back to workflows
-        setTimeout(() => {
-          console.log('Navigation should be complete to:', `/workflow/${newChat.id}`);
-        }, 100);
+        // Navigate to the workflow editor with the new ID
+        navigate(`/workflow/${newChat.id}`);
       }
     } catch (error) {
       console.error('Error creating workflow:', error);

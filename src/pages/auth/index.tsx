@@ -10,7 +10,11 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      // Get the saved path to redirect to after login
+      const redirectPath = sessionStorage.getItem('redirectPath') || '/';
+      // Clear it from storage
+      sessionStorage.removeItem('redirectPath');
+      navigate(redirectPath);
     }
   }, [user, loading, navigate]);
 
@@ -23,7 +27,7 @@ const AuthPage = () => {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return null; // Don't redirect, let the useEffect handle it
   }
 
   return (

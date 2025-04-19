@@ -15,7 +15,7 @@ export default function WorkflowEditor() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const initialPrompt = searchParams.get('initialPrompt');
-  const { selectedChat, codeRewritingStatus } = useSelectedChat(id || '');
+  const { selectedChat, codeRewritingStatus, loading: chatLoading } = useSelectedChat(id || '');
   const { sendMessage } = useMessages(id);
   const navigate = useNavigate();
   
@@ -56,7 +56,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/workflows');
   };
   
   const startEditing = () => {
@@ -84,11 +84,22 @@ export default function WorkflowEditor() {
   };
 
   // Show loading state while chat is being fetched
+  if (chatLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <p>Loading workflow...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show loading state for code rewriting
   if (codeRewritingStatus === 'thinking' && !selectedChat) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <p>Loading...</p>
+          <p>Processing workflow...</p>
         </div>
       </Layout>
     );
@@ -98,10 +109,10 @@ export default function WorkflowEditor() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <p>Chat not found</p>
+          <p>Workflow not found</p>
           <Button variant="outline" onClick={handleBack} className="ml-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            Back to Workflows
           </Button>
         </div>
       </Layout>
