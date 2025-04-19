@@ -1,63 +1,35 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserEvent, CoderunEvent, DataState, Message } from '@/types';
 import { Card } from '@/components/ui/card';
 import { IntroMessage } from './IntroMessage';
 import ReactMarkdown from 'react-markdown';
+import { WorkflowDisplay } from '../workflow/WorkflowDisplay';
+import { Badge } from '@/components/ui/badge';
+import { Play, Pause, Square, ChevronDown, ExternalLink, Check, UserCog, XSquare, Clock, AlertTriangle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MicOff, VolumeX, Volume2, Copy, ThumbsUp, ThumbsDown, ArrowDown } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ConnectAppMessage } from './ConnectAppMessage';
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-const MessageControls = ({ message }: { message: Message }) => {
-  const [isReading, setIsReading] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
-      toast({
-        title: "Copied to clipboard",
-        description: "Message content has been copied to your clipboard",
-      });
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
-
-  const handleReadAloud = () => {
-    setIsReading(!isReading);
-    // TODO: Implement text-to-speech functionality
-    toast({
-      title: isReading ? "Stopped reading" : "Started reading",
-      description: isReading ? "Text-to-speech stopped" : "Reading message aloud",
-    });
-  };
-
-  return (
-    <div className="flex items-center gap-2 mt-2">
-      <Button variant="ghost" size="sm" onClick={handleCopy}>
-        <Copy className="h-4 w-4 mr-1" />
-        Copy
-      </Button>
-      <Button variant="ghost" size="sm">
-        <ThumbsUp className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm">
-        <ThumbsDown className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={handleReadAloud}>
-        {isReading ? <VolumeX className="h-4 w-4 mr-1" /> : <Volume2 className="h-4 w-4 mr-1" />}
-        {isReading ? 'Stop' : 'Read aloud'}
-      </Button>
-    </div>
-  );
-};
+// Define the interface for MessageList props
+interface MessageListProps {
+  dataState: DataState;
+  loading: boolean;
+  onViewPastRun?: (messageId: string) => void;
+}
 
 const TextMessageBubble = ({ message }: { message: Message }) => {
+  // Add a ref to track content changes for highlighting
   const contentRef = useRef<HTMLDivElement>(null);
   const [highlight, setHighlight] = useState(false);
   const previousContentRef = useRef(message.content);
-
+  
+  // Highlight content only when it changes from previous render
   useEffect(() => {
     if (contentRef.current && message.content !== previousContentRef.current) {
       setHighlight(true);
@@ -66,20 +38,17 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
       return () => clearTimeout(timer);
     }
   }, [message.content]);
-
+  
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
-      <div className={`max-w-[80%] space-y-2 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-        <div className={`rounded-lg p-4 transition-colors duration-300 ${
-          message.role === 'user'
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted'
-        } ${highlight ? 'ring-2 ring-accent' : ''}`}>
-          <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-          </div>
+      <div className={`max-w-[80%] rounded-lg p-4 transition-colors duration-300 ${
+        message.role === 'user'
+          ? 'bg-primary text-primary-foreground mr-0'
+          : 'bg-muted ml-0'
+      } ${highlight ? 'ring-2 ring-accent' : ''}`}>
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
-        {message.role === 'assistant' && <MessageControls message={message} />}
       </div>
     </div>
   );

@@ -326,29 +326,9 @@
 /* Enhanced textbox styling */
 .enhanced-input-container {
   @apply flex items-end gap-2 mt-8 mb-6 rounded-lg border bg-background p-2 shadow-md;
+  min-height: 60px;
 }
 
 .enhanced-input {
   @apply border-0 bg-transparent shadow-none focus-visible:ring-0 text-base py-3;
-}
-
-/* Chat interface specific styles */
-.message-bubble {
-  @apply max-w-[80%] rounded-lg p-4 relative;
-}
-
-.user-message {
-  @apply bg-primary text-primary-foreground ml-auto;
-}
-
-.assistant-message {
-  @apply bg-muted mr-auto;
-}
-
-.message-controls {
-  @apply flex items-center gap-2 mt-2 opacity-0 transition-opacity group-hover:opacity-100;
-}
-
-.read-aloud-button {
-  @apply px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors;
 }
