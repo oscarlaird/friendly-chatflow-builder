@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email?: string;
@@ -113,4 +114,3 @@ export interface SelectedChatHookResult {
   codeRewritingStatus: CodeRewritingStatus;
   loading: boolean;
 }
-

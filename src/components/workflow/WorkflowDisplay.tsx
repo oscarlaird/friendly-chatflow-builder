@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -112,11 +113,12 @@ export const WorkflowDisplay = ({
       console.log('Saving workflow steps with updated inputs to database:', newInputs);
       
       // Update the steps in the database with the new inputs
+      // Use explicit type cast to match the expected Supabase types
       const { error } = await supabase
         .from('chats')
         .update({ 
-          user_inputs: newInputs
-        })
+          user_inputs: newInputs 
+        } as any)
         .eq('id', chatId);
 
       if (error) {
