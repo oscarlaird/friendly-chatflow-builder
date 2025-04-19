@@ -40,13 +40,13 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
   }, [message.content]);
   
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 w-full`}>
-      <div className={`max-w-[80%] rounded-3xl p-4 transition-colors duration-300 ${
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-6 w-full`}>
+      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 transition-colors duration-300  ${
         message.role === 'user'
-          ? 'bg-primary text-primary-foreground mr-0'
-          : 'bg-muted ml-0'
-      } ${highlight ? 'ring-2 ring-accent' : ''}`}>
-        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden chat-text-sm">
+          ? 'bg-muted text-black-foreground mr-0'
+          : 'bg-white ml-0'
+      } ${highlight ? '' : ''}`}>
+        <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden text-base">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       </div>
