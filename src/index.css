@@ -1,4 +1,8 @@
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer components {
   .chat-bubble-user {
     @apply bg-neutral-100 text-black;
