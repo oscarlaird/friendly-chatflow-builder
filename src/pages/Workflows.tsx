@@ -53,14 +53,15 @@ export default function Workflows() {
         const newChat = await createChat(template.title);
         
         if (newChat) {
-          // Update the chat with template data
+          // Update the chat with template data and set requires_code_rewrite: false
           const { error: updateError } = await supabase
             .from('chats')
             .update({
               script: template.script,
               steps: template.steps,
               apps: template.apps,
-              requires_browser: template.requires_browser
+              requires_browser: template.requires_browser,
+              requires_code_rewrite: false, // <-- fix: always FALSE from template
             })
             .eq('id', newChat.id);
             
@@ -120,3 +121,4 @@ export default function Workflows() {
     </Layout>
   );
 }
+

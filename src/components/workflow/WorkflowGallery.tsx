@@ -13,7 +13,7 @@ interface Template {
   icon: string;
   instructions: string;
   script: string | null;
-  steps: any; // Changed from any[] to any to support Json type from Supabase
+  steps: any; // compatible with Supabase JSON
   requires_browser: boolean;
   apps: string[] | null;
   created_at: string;
@@ -74,7 +74,16 @@ export function WorkflowGallery({ onSelectTemplate }: WorkflowGalleryProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {templates.map((template) => (
-        <Card key={template.id} className="overflow-hidden card-hover">
+        <Card
+          key={template.id}
+          className="overflow-hidden card-hover cursor-pointer transition-shadow hover:shadow-lg focus:ring-2 focus:ring-blue-500"
+          tabIndex={0}
+          onClick={() => onSelectTemplate(template)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') onSelectTemplate(template);
+          }}
+          aria-label={`Use the ${template.title} template`}
+        >
           <CardHeader className="pb-2">
             <div className="text-3xl mb-2">{template.icon || '📝'}</div>
             <CardTitle>{template.title}</CardTitle>
@@ -83,8 +92,9 @@ export function WorkflowGallery({ onSelectTemplate }: WorkflowGalleryProps) {
           <CardFooter>
             <Button 
               variant="ghost" 
-              className="w-full justify-between mt-2"
-              onClick={() => onSelectTemplate(template)}
+              className="w-full justify-between mt-2 pointer-events-none"
+              tabIndex={-1}
+              aria-hidden="true"
             >
               Use template
               <ArrowRight className="h-4 w-4" />
@@ -95,3 +105,4 @@ export function WorkflowGallery({ onSelectTemplate }: WorkflowGalleryProps) {
     </div>
   );
 }
+

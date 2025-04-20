@@ -408,6 +408,7 @@ export type Database = {
           id: string
           instructions: string | null
           requires_browser: boolean
+          requires_code_rewrite: boolean | null
           script: string | null
           steps: Json | null
           title: string
@@ -420,6 +421,7 @@ export type Database = {
           id?: string
           instructions?: string | null
           requires_browser?: boolean
+          requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
           title: string
@@ -432,6 +434,7 @@ export type Database = {
           id?: string
           instructions?: string | null
           requires_browser?: boolean
+          requires_code_rewrite?: boolean | null
           script?: string | null
           steps?: Json | null
           title?: string
