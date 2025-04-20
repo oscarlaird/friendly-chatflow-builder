@@ -15,6 +15,7 @@ interface FlowchartDisplayProps {
   userInputs?: Record<string, any>;
   setUserInputs?: (userInputs: Record<string, any>) => void;
   autoActivateSteps?: boolean;
+  chatId?: string;
 }
 
 export const FlowchartDisplay = ({ 
@@ -25,6 +26,7 @@ export const FlowchartDisplay = ({
   userInputs,
   setUserInputs,
   autoActivateSteps = false,
+  chatId,
 }: FlowchartDisplayProps) => {
   // Track previous steps for animation comparison
   const [prevStepsMap, setPrevStepsMap] = useState<Map<string, any>>(new Map());
@@ -137,6 +139,7 @@ export const FlowchartDisplay = ({
         >
           <div className="w-[320px]">
             <WorkflowStep
+              steps={steps}
               step={node.step}
               browserEvents={getBrowserEventsForStep(node.step)}
               autoOpen={node.step.active === true || autoActivateSteps}
@@ -146,6 +149,8 @@ export const FlowchartDisplay = ({
               setUserInputs={isUserInputStep ? setUserInputs : undefined}
               compact={compact}
               uniformWidth={true}
+              chatId={chatId}
+              hasChanged={hasStepChanged(node.step)}
             />
           </div>
           {!isNested && index < visibleSteps.length - 1 && renderArrow(false, node.step)}
@@ -168,6 +173,7 @@ export const FlowchartDisplay = ({
       >
         <div className="w-[320px]">
           <WorkflowStep
+            steps={steps}
             step={node.step}
             browserEvents={getBrowserEventsForStep(node.step)}
             autoOpen={node.step.active === true || autoActivateSteps}
@@ -177,6 +183,7 @@ export const FlowchartDisplay = ({
             setUserInputs={isUserInputStep ? setUserInputs : undefined}
             compact={compact}
             uniformWidth={true}
+            hasChanged={hasStepChanged(node.step)}
           />
         </div>
         

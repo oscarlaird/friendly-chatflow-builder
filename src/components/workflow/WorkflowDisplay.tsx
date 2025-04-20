@@ -132,6 +132,7 @@ export const WorkflowDisplay = ({
             transition={{ duration: 2, times: [0, 0.5, 1] }}
           >
             <WorkflowStep
+              steps={steps}
               step={node.step}
               browserEvents={getBrowserEventsForStep(node.step)}
               autoOpen={node.step.active === true || autoActivateSteps}
@@ -171,6 +172,7 @@ export const WorkflowDisplay = ({
           transition={{ duration: 2, times: [0, 0.5, 1] }}
         >
           <WorkflowStep
+            steps={steps}
             step={node.step}
             browserEvents={getBrowserEventsForStep(node.step)}
             autoOpen={node.step.active === true || autoActivateSteps}

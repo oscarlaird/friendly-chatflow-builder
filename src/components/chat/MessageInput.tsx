@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,13 +13,43 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const submittingRef = useRef(false); // Use a ref to track submission state
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-focus the textarea when component mounts
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
+    
+    // Cleanup any existing timeouts on unmount
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+      }
+    };
   }, []);
+
+  // Focus restoration helper
+  const focusTextarea = () => {
+    if (textareaRef.current) {
+      // Try multiple times with increasing delays to ensure focus is captured
+      textareaRef.current.focus();
+      
+      // First retry after a short delay
+      setTimeout(() => {
+        if (textareaRef.current && document.activeElement !== textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 50);
+      
+      // Second retry after a longer delay
+      focusTimeoutRef.current = setTimeout(() => {
+        if (textareaRef.current && document.activeElement !== textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 300);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent, type: 'text_message' | 'code_run' = 'text_message') => {
     e.preventDefault();
@@ -43,10 +72,8 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
         setIsSubmitting(false);
         submittingRef.current = false; // Reset the ref
         
-        // Re-focus the textarea after sending
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-        }
+        // Re-focus the textarea after sending using our enhanced focus method
+        focusTextarea();
       }, 300);
     }
   };
@@ -60,29 +87,53 @@ export const MessageInput = ({ onSendMessage, disabled }: MessageInputProps) => 
   };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e)} className="p-4 border-t bg-background">
-      <div className="flex items-end gap-2">
+    <form onSubmit={(e) => handleSubmit(e)} className="p-4 bg-background ">
+      <div className={`flex items-center gap-2 bg-muted rounded-lg px-4 py-2 ${message.split('\n').length > 1 ? 'items-start' : ''}`}>
         <Textarea
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="min-h-[60px] resize-none"
+          onBlur={() => {
+            // Try to re-capture focus if the textarea loses it
+            setTimeout(() => {
+              // Only refocus if no other input element has focus
+              if (document.activeElement?.tagName !== "INPUT" && 
+                  document.activeElement?.tagName !== "TEXTAREA" &&
+                  document.activeElement?.tagName !== "SELECT" &&
+                  !isSubmitting) {
+                focusTextarea();
+              }
+            }, 100);
+          }}
+          placeholder="Build your workflow..."
+          className="min-h-[40px] resize-none border-0 bg-transparent p-2 focus-visible:ring-0 focus-visible:ring-offset-0"
+          style={{
+            maxHeight: `${Math.min(5 * 24, Math.max(30, (message.split('\n').length) * 24))}px`,
+            height: `${Math.min(5 * 24, Math.max(30, (message.split('\n').length) * 24))}px`,
+            overflow: 'auto'
+          }}
           disabled={disabled || isSubmitting}
         />
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!message.trim() || disabled || isSubmitting}
-          className="h-10 w-10"
-        >
-          <SendHorizontal className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1 mt-1">
+          <Button 
+            type="button" 
+            size="icon" 
+            variant="ghost"
+            className="h-8 w-8 rounded-full"
+          >
+            {/* <Plus className="h-4 w-4 text-muted-foreground" /> */}
+          </Button>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={!message.trim() || disabled || isSubmitting}
+            className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90"
+          >
+            <SendHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground mt-2">
-        Press Enter to send, Shift+Enter for new line
-      </p>
     </form>
   );
 };

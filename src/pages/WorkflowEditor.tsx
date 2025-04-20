@@ -56,7 +56,7 @@ export default function WorkflowEditor() {
   }, [initialPrompt, id, sendMessage, navigate, initialPromptSent]);
 
   const handleBack = () => {
-    navigate('/workflows');
+    navigate('/');
   };
   
   const startEditing = () => {

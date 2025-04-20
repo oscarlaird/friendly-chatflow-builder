@@ -29,64 +29,64 @@ interface WorkflowProps {
 }
 
 // Add new component for screenshot preview
-const ScreenshotPreview = ({ chatId }: { chatId?: string }) => {
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<string>("16/9");
-  const screenshotInterval = useRef<NodeJS.Timeout | null>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+// const ScreenshotPreview = ({ chatId }: { chatId?: string }) => {
+//   const [screenshot, setScreenshot] = useState<string | null>(null);
+//   const [aspectRatio, setAspectRatio] = useState<string>("16/9");
+//   const screenshotInterval = useRef<NodeJS.Timeout | null>(null);
+//   const imgRef = useRef<HTMLImageElement>(null);
   
-  useEffect(() => {
-    // Listen for screenshot responses
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'AGENT_SCREENSHOT_RESPONSE' && 
-          event.data.payload?.screenshot) {
-        setScreenshot(event.data.payload.screenshot);
-      }
-    };
+//   useEffect(() => {
+//     // Listen for screenshot responses
+//     const handleMessage = (event: MessageEvent) => {
+//       if (event.data.type === 'AGENT_SCREENSHOT_RESPONSE' && 
+//           event.data.payload?.screenshot) {
+//         setScreenshot(event.data.payload.screenshot);
+//       }
+//     };
     
-    window.addEventListener('message', handleMessage);
+//     window.addEventListener('message', handleMessage);
     
-    // Request screenshots every 300ms if we have a chatId
-    if (chatId) {
-      screenshotInterval.current = setInterval(() => {
-        window.postMessage({
-          type: 'REQUEST_AGENT_SCREENSHOT',
-          payload: { roomId: chatId }
-        }, '*');
-      }, 300);
-    }
+//     // Request screenshots every 300ms if we have a chatId
+//     if (chatId) {
+//       screenshotInterval.current = setInterval(() => {
+//         window.postMessage({
+//           type: 'REQUEST_AGENT_SCREENSHOT',
+//           payload: { roomId: chatId }
+//         }, '*');
+//       }, 300);
+//     }
     
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      if (screenshotInterval.current) {
-        clearInterval(screenshotInterval.current);
-      }
-    };
-  }, [chatId]);
+//     return () => {
+//       window.removeEventListener('message', handleMessage);
+//       if (screenshotInterval.current) {
+//         clearInterval(screenshotInterval.current);
+//       }
+//     };
+//   }, [chatId]);
   
-  // Detect the aspect ratio once the image loads
-  const handleImageLoad = () => {
-    if (imgRef.current) {
-      const { naturalWidth, naturalHeight } = imgRef.current;
-      setAspectRatio(`${naturalWidth}/${naturalHeight}`);
-    }
-  };
+//   // Detect the aspect ratio once the image loads
+//   const handleImageLoad = () => {
+//     if (imgRef.current) {
+//       const { naturalWidth, naturalHeight } = imgRef.current;
+//       setAspectRatio(`${naturalWidth}/${naturalHeight}`);
+//     }
+//   };
   
-  if (!screenshot) return null;
+//   if (!screenshot) return null;
   
-  return (
-    <div className="mt-2 rounded-md overflow-hidden border border-border">
-      <img 
-        ref={imgRef}
-        src={screenshot} 
-        alt="Agent Screenshot" 
-        className="w-full h-auto object-contain max-h-50"
-        style={{ aspectRatio, maxWidth: "100%" }}
-        onLoad={handleImageLoad}
-      />
-    </div>
-  );
-};
+//   return (
+//     <div className="mt-2 rounded-md overflow-hidden border border-border">
+//       <img 
+//         ref={imgRef}
+//         src={screenshot} 
+//         alt="Agent Screenshot" 
+//         className="w-full h-auto object-contain max-h-50"
+//         style={{ aspectRatio, maxWidth: "100%" }}
+//         onLoad={handleImageLoad}
+//       />
+//     </div>
+//   );
+// };
 
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
@@ -174,23 +174,25 @@ export const Workflow = ({
   
   // Update workflowSteps when pastRunMessage changes or running message updates
   useEffect(() => {
-    if (pastRunMessage && pastRunMessage.steps) {
-      console.log("Displaying steps from past run message:", pastRunMessage.steps);
-      setWorkflowSteps(pastRunMessage.steps);
+    // if (pastRunMessage && pastRunMessage.steps) {
+    //   console.log("Displaying steps from past run message:", pastRunMessage.steps);
+    //   setWorkflowSteps(pastRunMessage.steps);
       
-      // If past run had user inputs, show them
-      if (pastRunMessage.user_inputs && Object.keys(pastRunMessage.user_inputs).length > 0) {
-        setUserInputs(pastRunMessage.user_inputs);
-      }
-    } else if (runningMessage && runningMessage.steps) {
-      console.log("Displaying steps from running message:", runningMessage.steps);
-      setWorkflowSteps(runningMessage.steps);
+    //   // If past run had user inputs, show them
+    //   if (pastRunMessage.user_inputs && Object.keys(pastRunMessage.user_inputs).length > 0) {
+    //     setUserInputs(pastRunMessage.user_inputs);
+    //   }
+    // } else if (runningMessage && runningMessage.steps) {
+    //   console.log("Displaying steps from running message:", runningMessage.steps);
+    //   setWorkflowSteps(runningMessage.steps);
       
-      // If running message has user inputs, show them
-      if (runningMessage.user_inputs && Object.keys(runningMessage.user_inputs).length > 0) {
-        setUserInputs(runningMessage.user_inputs);
-      }
-    } else if (selectedChat && selectedChat.steps) {
+    //   // If running message has user inputs, show them
+    //   if (runningMessage.user_inputs && Object.keys(runningMessage.user_inputs).length > 0) {
+    //     setUserInputs(runningMessage.user_inputs);
+    //   }
+    // } else 
+    
+    if (selectedChat && selectedChat.steps) {
       console.log("Displaying steps from selected chat:", selectedChat.steps);
       setWorkflowSteps(selectedChat.steps);
       
@@ -209,10 +211,12 @@ export const Workflow = ({
       console.log("Displaying initial steps:", initialSteps);
       setWorkflowSteps(initialSteps);
     }
+    
   }, [pastRunMessage, runningMessage, selectedChat, initialSteps]);
   
   // Set up real-time subscription for messages
   useEffect(() => {
+  
     if (!chatId) return;
     
     // Subscribe to real-time updates for messages
@@ -256,13 +260,14 @@ export const Workflow = ({
   
   // Handle persisting user inputs to database
   const handleUserInputChange = async (inputs: Record<string, any>) => {
+ 
     if (!chatId) return;
     
     // Update local state immediately
     setUserInputs(inputs);
     
     try {
-      console.log('Saving user inputs to database:', inputs);
+     
       
       // Save to Supabase - FIX: Use type assertion to bypass TypeScript error
       const { error } = await supabase
@@ -302,7 +307,7 @@ export const Workflow = ({
       console.error("Error running workflow:", error);
     }
   };
-
+  
   return (
     <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       <div className={cn(
@@ -367,16 +372,6 @@ export const Workflow = ({
         </div>
       </div>
       
-      {/* Add Screenshot preview below header if extension is installed */}
-      { runningMessage && (
-        <div className="px-3 py-2 border-b">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Eye className="h-3.5 w-3.5" />
-            <span>Live Preview</span>
-          </div>
-          <ScreenshotPreview chatId={chatId} />
-        </div>
-      )}
 
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
@@ -393,6 +388,7 @@ export const Workflow = ({
                 userInputs={userInputs}
                 setUserInputs={handleUserInputChange}
                 autoActivateSteps={true}
+                chatId={chatId}
               />
             )}
           </div>

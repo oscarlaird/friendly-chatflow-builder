@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Eye } from "lucide-react";
@@ -14,6 +13,7 @@ import { KeyValueDisplay } from "./KeyValueDisplay";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowStepProps {
+  steps: any[];
   step: any;
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
@@ -24,9 +24,11 @@ interface WorkflowStepProps {
   compact?: boolean;
   uniformWidth?: boolean;
   chatId?: string;
+  hasChanged?: boolean;
 }
 
 export const WorkflowStep = ({
+steps,
   step,
   browserEvents = [],
   autoOpen = false,
@@ -37,6 +39,7 @@ export const WorkflowStep = ({
   compact = false,
   uniformWidth = false,
   chatId,
+  hasChanged = false,
 }: WorkflowStepProps) => {
   const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
   
@@ -48,20 +51,25 @@ export const WorkflowStep = ({
 
   // Handle input changes and save to database
   const handleInputChange = async (newUserInputs: Record<string, any>) => {
+   
     if (!chatId || !setUserInputs) return;
-
+    
     try {
       // Update local state
-      setUserInputs(newUserInputs);
       
+      
+      setUserInputs(newUserInputs);
+     
       // Save to database - update type annotation to fix error
+      const new_steps=[...steps]
+      new_steps[0].output=newUserInputs
       const { error } = await supabase
         .from('chats')
         .update({ 
-          user_inputs: newUserInputs 
+          steps: new_steps
         } as any) // Using type assertion to bypass TypeScript error temporarily
         .eq('id', chatId);
-
+        
       if (error) {
         console.error('Error saving user inputs:', error);
       }
@@ -99,13 +107,14 @@ export const WorkflowStep = ({
   
   // Card styling based on step state
   const cardStyle = cn(
-    "p-3 w-full",
+    "p-3 w-full relative",
     uniformWidth && "max-w-[28rem]",
     isActive && !isDisabled && "border-[hsl(var(--dropbox-blue))] shadow-sm bg-[hsl(var(--dropbox-light-blue))/30]",
     isActive && step.type === 'function' && "animate-border-pulse",
     isDisabled && "opacity-60 bg-muted/20",
     hasChildren && "rounded-t-md",
-    hasChildren && getControlBlockStyle(stepType)
+    hasChildren && getControlBlockStyle(stepType),
+    hasChanged && "ring-2 ring-[hsl(var(--dropbox-blue))] animate-pulse"
   );
 
   return (

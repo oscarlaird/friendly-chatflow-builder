@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 
 export function useExtensionStatus() {
-  const [isExtensionInstalled, setIsExtensionInstalled] = useState<boolean | null>(null);
+  const [isExtensionInstalled, setIsExtensionInstalled] = useState<boolean | null>(false);
 
+
+  console.log("21DEBUGU useExtensionStatus", isExtensionInstalled)
   useEffect(() => {
     // Set up message listener for extension detection
     const handleMessage = (event: MessageEvent) => {
@@ -18,17 +20,17 @@ export function useExtensionStatus() {
     window.postMessage({ type: 'CHECK_EXTENSION' }, '*');
 
     // Set a timeout to mark extension as not installed if no response received
-    const timeout = setTimeout(() => {
-      if (isExtensionInstalled === null) {
-        setIsExtensionInstalled(false);
-      }
-    }, 1000);
+    // const timeout = setTimeout(() => {
+    //   if (isExtensionInstalled === null) {
+    //     setIsExtensionInstalled(false);
+    //   }
+    // }, 1000);
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      clearTimeout(timeout);
+      // clearTimeout(timeout);
     };
-  }, [isExtensionInstalled]);
+  }, []);
 
   return { isExtensionInstalled, setIsExtensionInstalled };
 }

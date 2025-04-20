@@ -48,15 +48,17 @@ const AgentSidePanel = () => {
   
   // Initialize user inputs from workflow steps
   useEffect(() => {
-    if (workflowSteps && workflowSteps.length > 0) {
-      const userInputStep = workflowSteps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        console.log('Setting user inputs in AgentSidePanel:', userInputStep.output);
-        if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
-          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
-        }
-      }
-    } else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
+    // if (workflowSteps && workflowSteps.length > 0) {
+    //   const userInputStep = workflowSteps.find(step => step.type === 'user_input');
+    //   if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+    //     console.log('Setting user inputs in AgentSidePanel:', userInputStep.output);
+    //     if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
+    //       setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
+    //     }
+    //   }
+    // } else
+    
+    if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
       const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
       if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
         if (Object.keys(userInputs).length === 0) {

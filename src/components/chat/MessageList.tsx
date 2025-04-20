@@ -43,7 +43,7 @@ const TextMessageBubble = ({ message }: { message: Message }) => {
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-6 w-full`}>
       <div className={`${message.role === 'user' 
         ? 'max-w-[85%] bg-muted text-black-foreground mr-0' 
-        : 'w-full bg-background border border-border'
+        : 'w-full bg-background '
       } rounded-3xl px-4 py-2.5 transition-colors duration-300`}>
         <div ref={contentRef} className="whitespace-pre-wrap break-words overflow-hidden prose dark:prose-invert max-w-none text-base">
           <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -172,7 +172,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
             disabled={isUpdating}
           >
             <Pause className="h-3.5 w-3.5 mr-1" />
-            Pause
+            
           </Button>
           <Button 
             variant="outline" 
@@ -181,7 +181,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
             disabled={isUpdating}
           >
             <Square className="h-3.5 w-3.5 mr-1" />
-            Stop
+           
           </Button>
         </>
       ) : state === 'paused' ? (
@@ -193,7 +193,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
             disabled={isUpdating}
           >
             <Play className="h-3.5 w-3.5 mr-1" />
-            Resume
+            
           </Button>
           <Button 
             variant="outline" 
@@ -202,7 +202,7 @@ const CodeRunControls = ({ message }: { message: Message }) => {
             disabled={isUpdating}
           >
             <Square className="h-3.5 w-3.5 mr-1" />
-            Stop
+            
           </Button>
         </>
       ) : state === 'waiting_for_user' ? (
@@ -351,7 +351,7 @@ const CodeRunMessageBubble = ({
       )}>
         <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium">Code Run</h3>
+            <h3 className="text-sm font-medium"> Run</h3>
             {isRunning && (
               <ElapsedTimeDisplay createdAt={message.created_at} />
             )}
@@ -384,7 +384,7 @@ const CodeRunMessageBubble = ({
                 title="Jump to Window"
               >
                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                Jump to Window
+                
               </Button>
             )}
             <CodeRunStateIndicator state={message.code_run_state} />
@@ -433,36 +433,46 @@ export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListPr
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(Object.keys(dataState.messages).length);
+  const prevMessagesContentRef = useRef<string>('');
   
-  // Auto-scroll when new messages are added
+  // Sort messages by created_at
+  const messageList = Object.values(dataState.messages).sort((a, b) => 
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  
+  // Create a content hash to detect changes in message content
+  const messagesContentHash = JSON.stringify(
+    messageList.map(msg => ({ id: msg.id, content: msg.content }))
+  );
+  
+  // Auto-scroll when new messages are added or existing messages change
   useEffect(() => {
     const currentMessageCount = Object.keys(dataState.messages).length;
     const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
+    const contentChanged = messagesContentHash !== prevMessagesContentRef.current;
     
-    if (hasNewMessages && lastMessageRef.current) {
+    // Scroll to bottom when new messages are added or message content changes
+    if ((hasNewMessages || contentChanged) && lastMessageRef.current) {
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       });
     }
     
+    // Update references for the next comparison
     prevMessageCountRef.current = currentMessageCount;
-  }, [dataState.messages]);
-
-  // Sort messages by created_at once instead of re-sorting on every render
-  const messageList = Object.values(dataState.messages).sort((a, b) => 
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+    prevMessagesContentRef.current = messagesContentHash;
+  }, [messagesContentHash, dataState.messages]);
 
   return (
-    <ScrollArea className="h-full px-2 py-6" ref={scrollAreaRef}>
+    <ScrollArea className="h-full px-2 py-6 pb-2" ref={scrollAreaRef}>
       {loading ? (
         <div className="flex items-center justify-center h-20">
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       ) : (
         <div className="flex flex-col items-center w-full">
-          <div className="w-full max-w-full">
+          <div className="w-full max-w-full mb-20">
             {messageList.length === 0 && <IntroMessage />}
             {messageList.length === 0 ? (
               <div className="flex justify-center mt-6">
@@ -496,7 +506,7 @@ export const MessageList = ({ dataState, loading, onViewPastRun }: MessageListPr
                 ))}
               </div>
             )}
-            <div ref={lastMessageRef} />
+            <div ref={lastMessageRef} className="h-4" />
           </div>
         </div>
       )}
