@@ -403,6 +403,7 @@ export type Database = {
         Row: {
           apps: string[] | null
           created_at: string | null
+          description: string | null
           icon: string | null
           id: string
           instructions: string | null
@@ -414,6 +415,7 @@ export type Database = {
         Insert: {
           apps?: string[] | null
           created_at?: string | null
+          description?: string | null
           icon?: string | null
           id?: string
           instructions?: string | null
@@ -425,6 +427,7 @@ export type Database = {
         Update: {
           apps?: string[] | null
           created_at?: string | null
+          description?: string | null
           icon?: string | null
           id?: string
           instructions?: string | null

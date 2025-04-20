@@ -8,6 +8,7 @@ import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateG
 import { Plus } from 'lucide-react';
 import { useChats } from '@/hooks/useChats';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Workflows() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
@@ -21,17 +22,71 @@ export default function Workflows() {
       return;
     }
 
-    try {
-      const newChat = await createChat('New Workflow');
-      
-      if (newChat) {
-        console.log('Created new workflow with ID:', newChat.id);
-        setTemplateGalleryOpen(false);
+    if (!templateId) {
+      try {
+        const newChat = await createChat('New Workflow');
         
-        navigate(`/workflow/${newChat.id}`);
+        if (newChat) {
+          console.log('Created new workflow with ID:', newChat.id);
+          setTemplateGalleryOpen(false);
+          
+          navigate(`/workflow/${newChat.id}`);
+        }
+      } catch (error) {
+        console.error('Error creating workflow:', error);
+      }
+      return;
+    }
+    
+    try {
+      // Fetch the template details
+      const { data: template, error } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+        
+      if (error) throw error;
+      
+      if (template) {
+        // Create a new chat with the template title
+        const newChat = await createChat(template.title);
+        
+        if (newChat) {
+          // Update the chat with template data
+          const { error: updateError } = await supabase
+            .from('chats')
+            .update({
+              script: template.script,
+              steps: template.steps,
+              apps: template.apps,
+              requires_browser: template.requires_browser
+            })
+            .eq('id', newChat.id);
+            
+          if (updateError) throw updateError;
+          
+          // If template has instructions, create an initial message
+          if (template.instructions) {
+            const { error: messageError } = await supabase
+              .from('messages')
+              .insert({
+                chat_id: newChat.id,
+                content: template.instructions,
+                role: 'assistant',
+                type: 'text_message',
+                uid: user.id
+              });
+              
+            if (messageError) throw messageError;
+          }
+          
+          setTemplateGalleryOpen(false);
+          navigate(`/workflow/${newChat.id}`);
+        }
       }
     } catch (error) {
-      console.error('Error creating workflow:', error);
+      console.error('Error creating workflow from template:', error);
     }
   };
 

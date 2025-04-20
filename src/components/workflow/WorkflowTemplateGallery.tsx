@@ -1,36 +1,24 @@
 
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Table2, Users, Database } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Template {
   id: string;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon: string;
+  instructions: string;
+  script: string | null;
+  steps: any[] | null;
+  requires_browser: boolean;
+  apps: string[] | null;
+  created_at: string;
 }
-
-const templates: Template[] = [
-  {
-    id: 'instagram',
-    title: 'Instagram Messaging from Sheet',
-    description: 'Automatically send Instagram messages using data from a spreadsheet',
-    icon: Table2,
-  },
-  {
-    id: 'research',
-    title: 'Research Companies',
-    description: 'Gather and analyze company information from multiple sources',
-    icon: Users,
-  },
-  {
-    id: 'salesforce',
-    title: 'Update Salesforce CRM',
-    description: 'Bulk update contacts and leads in Salesforce',
-    icon: Database,
-  },
-];
 
 interface WorkflowTemplateGalleryProps {
   open: boolean;
@@ -43,6 +31,39 @@ export function WorkflowTemplateGallery({
   onOpenChange,
   onSelectTemplate,
 }: WorkflowTemplateGalleryProps) {
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchTemplates() {
+      if (!open) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('templates')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        setTemplates(data || []);
+      } catch (error: any) {
+        console.error('Error fetching templates:', error);
+        toast({
+          title: 'Error fetching templates',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTemplates();
+  }, [open, toast]);
+
   // Prevent gallery from closing automatically when template is selected
   const handleTemplateSelect = async (templateId: string | null) => {
     // Don't close the dialog here - let the parent component handle it
@@ -81,25 +102,35 @@ export function WorkflowTemplateGallery({
             </div>
           </Button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates.map((template) => (
-              <Card
-                key={template.id}
-                className="cursor-pointer hover:bg-accent transition-colors"
-                onClick={() => handleTemplateSelect(template.id)}
-              >
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <template.icon className="h-5 w-5" />
-                    <CardTitle className="text-base">{template.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{template.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="flex justify-center items-center h-40">
+              <p className="text-muted-foreground">No templates available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {templates.map((template) => (
+                <Card
+                  key={template.id}
+                  className="cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() => handleTemplateSelect(template.id)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <div className="text-xl">{template.icon || '📝'}</div>
+                      <CardTitle className="text-base">{template.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{template.description || 'No description available'}</CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
