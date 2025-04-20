@@ -14,7 +14,7 @@ interface Template {
   icon: string;
   instructions: string;
   script: string | null;
-  steps: any[] | null;
+  steps: any; // Changed from any[] to any to support Json type from Supabase
   requires_browser: boolean;
   apps: string[] | null;
   created_at: string;
