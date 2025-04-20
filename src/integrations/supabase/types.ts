@@ -399,6 +399,42 @@ export type Database = {
         }
         Relationships: []
       }
+      templates: {
+        Row: {
+          apps: string[] | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          instructions: string | null
+          requires_browser: boolean
+          script: string | null
+          steps: Json | null
+          title: string
+        }
+        Insert: {
+          apps?: string[] | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          instructions?: string | null
+          requires_browser?: boolean
+          script?: string | null
+          steps?: Json | null
+          title: string
+        }
+        Update: {
+          apps?: string[] | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          instructions?: string | null
+          requires_browser?: boolean
+          script?: string | null
+          steps?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
