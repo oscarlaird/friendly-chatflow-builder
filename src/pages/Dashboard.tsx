@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
@@ -35,10 +34,17 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const handleCreateWorkflow = async (initialPrompt?: string) => {
+    const promptText = initialPrompt || prompt;
+    if (!promptText.trim()) return;
+
+    if (!user) {
+      // Save the prompt to sessionStorage before redirecting
+      sessionStorage.setItem('pendingPrompt', promptText);
+      navigate('/auth');
+      return;
+    }
+    
     try {
-      const promptText = initialPrompt || prompt;
-      if (!promptText.trim()) return;
-      
       const newChat = await createChat('New Workflow');
       
       if (newChat) {
@@ -71,10 +77,24 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center space-x-3">
-              <ConnectedApps />
-              <ExtensionStatus />
-              <ThemeToggle />
-              <UserProfile />
+              {user ? (
+                <>
+                  <ConnectedApps />
+                  <ExtensionStatus />
+                  <ThemeToggle />
+                  <UserProfile />
+                </>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <ThemeToggle />
+                  <Button 
+                    onClick={() => navigate('/auth')}
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -133,50 +153,52 @@ export default function Dashboard() {
           </section>
         </div>
         
-        {/* Workflows and Gallery Section */}
-        <section className="container mx-auto py-8 px-4 fade-in delay-300">
-          <Tabs defaultValue="my-workflows" className="w-full">
-            <TabsList className="mb-8">
-              <TabsTrigger value="my-workflows">My Workflows</TabsTrigger>
-              <TabsTrigger value="recent-runs">Recent Runs</TabsTrigger>
-              <TabsTrigger value="gallery">Workflow Gallery</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="my-workflows" className="space-y-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">My Workflows</h2>
-                <Button 
-                  onClick={() => setTemplateGalleryOpen(true)}
-                  className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Workflow
-                </Button>
-              </div>
-              <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" limit={5} />
+        {/* Only show workflows section if user is logged in */}
+        {user && (
+          <section className="container mx-auto py-8 px-4 fade-in delay-300">
+            <Tabs defaultValue="my-workflows" className="w-full">
+              <TabsList className="mb-8">
+                <TabsTrigger value="my-workflows">My Workflows</TabsTrigger>
+                <TabsTrigger value="recent-runs">Recent Runs</TabsTrigger>
+                <TabsTrigger value="gallery">Workflow Gallery</TabsTrigger>
+              </TabsList>
               
-              <Button 
-                variant="outline" 
-                className="mt-6 mx-auto flex items-center" 
-                onClick={() => navigate('/workflows')}
-              >
-                View all workflows
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </TabsContent>
-            
-            <TabsContent value="recent-runs">
-              <RecentRuns />
-            </TabsContent>
-            
-            <TabsContent value="gallery">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Workflow Gallery</h2>
-              </div>
-              <WorkflowGallery onSelectTemplate={handleCreateWorkflow} />
-            </TabsContent>
-          </Tabs>
-        </section>
+              <TabsContent value="my-workflows" className="space-y-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">My Workflows</h2>
+                  <Button 
+                    onClick={() => setTemplateGalleryOpen(true)}
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Workflow
+                  </Button>
+                </div>
+                <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" limit={5} />
+                
+                <Button 
+                  variant="outline" 
+                  className="mt-6 mx-auto flex items-center" 
+                  onClick={() => navigate('/workflows')}
+                >
+                  View all workflows
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </TabsContent>
+              
+              <TabsContent value="recent-runs">
+                <RecentRuns />
+              </TabsContent>
+              
+              <TabsContent value="gallery">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Workflow Gallery</h2>
+                </div>
+                <WorkflowGallery onSelectTemplate={handleCreateWorkflow} />
+              </TabsContent>
+            </Tabs>
+          </section>
+        )}
         
         <WorkflowTemplateGallery 
           open={templateGalleryOpen}

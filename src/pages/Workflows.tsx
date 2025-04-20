@@ -7,28 +7,38 @@ import { WorkflowList } from '@/components/workflow/WorkflowList';
 import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
 import { Plus } from 'lucide-react';
 import { useChats } from '@/hooks/useChats';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Workflows() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const { createChat } = useChats();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleTemplateSelect = async (templateId: string | null) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
     try {
-      // For now, create a blank workflow regardless of template selection
       const newChat = await createChat('New Workflow');
       
       if (newChat) {
         console.log('Created new workflow with ID:', newChat.id);
         setTemplateGalleryOpen(false);
         
-        // Navigate to the workflow editor with the new ID
         navigate(`/workflow/${newChat.id}`);
       }
     } catch (error) {
       console.error('Error creating workflow:', error);
     }
   };
+
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
 
   return (
     <Layout>
