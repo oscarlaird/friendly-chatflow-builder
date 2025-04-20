@@ -25,6 +25,7 @@ export const WorkflowSidePanel = ({
           <WorkflowStep
             key={`${step.step_number}-${index}`}
             step={step}
+            steps={steps} // Pass the steps array to each WorkflowStep component
             browserEvents={browserEvents[step.function_name]}
             isUserInputStep={step.type === 'user_input'}
             userInputs={userInputs}

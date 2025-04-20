@@ -13,8 +13,8 @@ import { KeyValueDisplay } from "./KeyValueDisplay";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowStepProps {
-  steps: any[];
   step: any;
+  steps?: any[]; // Make this prop optional since it's not always needed
   browserEvents?: BrowserEvent[];
   autoOpen?: boolean;
   hasChildren?: boolean;
@@ -28,8 +28,8 @@ interface WorkflowStepProps {
 }
 
 export const WorkflowStep = ({
-steps,
   step,
+  steps = [], // Provide a default empty array
   browserEvents = [],
   autoOpen = false,
   hasChildren = false,
