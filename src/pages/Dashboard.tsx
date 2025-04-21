@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
@@ -12,6 +11,7 @@ import { ConnectedApps } from '@/components/ui/ConnectedApps';
 import { WorkflowList } from '@/components/workflow/WorkflowList';
 import { WorkflowTemplateGallery } from '@/components/workflow/WorkflowTemplateGallery';
 import { WorkflowGallery } from '@/components/workflow/WorkflowGallery';
+import { RequestWorkflowModal } from '@/components/workflow/RequestWorkflowModal';
 import { RecentRuns } from '@/components/dashboard/RecentRuns';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +31,7 @@ const examplePrompts = [
 export default function Dashboard() {
   const [prompt, setPrompt] = useState('');
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
   const { user } = useAuth();
   const { createChat } = useChats();
   const navigate = useNavigate();
@@ -242,6 +243,12 @@ export default function Dashboard() {
               <TabsContent value="gallery">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Workflow Gallery</h2>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setRequestModalOpen(true)}
+                  >
+                    Request Workflow
+                  </Button>
                 </div>
                 <WorkflowGallery onSelectTemplate={handleSelectTemplate} />
               </TabsContent>
@@ -317,6 +324,11 @@ export default function Dashboard() {
               console.error('Error creating workflow from template:', error);
             }
           }}
+        />
+
+        <RequestWorkflowModal
+          open={requestModalOpen}
+          onOpenChange={setRequestModalOpen}
         />
       </div>
     </TooltipProvider>
