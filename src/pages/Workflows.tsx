@@ -49,37 +49,41 @@ export default function Workflows() {
         .from('templates')
         .select('*')
         .eq('id', templateId)
-        .single();
-      if (error) throw error;
-      if (template) {
-        const newChat = await createChat(template.title);
-        if (newChat) {
-          await supabase
-            .from('chats')
-            .update({
-              script: template.script,
-              steps: template.steps,
-              apps: template.apps,
-              requires_browser: template.requires_browser,
-              requires_code_rewrite: false,
-            })
-            .eq('id', newChat.id);
+        .maybeSingle();
 
-          if (template.instructions) {
-            const { error: messageError } = await supabase
-              .from('messages')
-              .insert({
-                chat_id: newChat.id,
-                content: template.instructions,
-                role: 'assistant',
-                type: 'text_message',
-                uid: user.id
-              });
-            if (messageError) throw messageError;
-          }
-          setTemplateGalleryOpen(false);
-          navigate(`/workflow/${newChat.id}`);
+      if (error) throw error;
+      if (!template) {
+        console.warn("Template not found");
+        return;
+      }
+      
+      const newChat = await createChat(template.title);
+      if (newChat) {
+        await supabase
+          .from('chats')
+          .update({
+            script: template.script,
+            steps: template.steps,
+            apps: template.apps,
+            requires_browser: template.requires_browser,
+            requires_code_rewrite: false, // force false on chat creation from template
+          })
+          .eq('id', newChat.id);
+
+        if (template.instructions) {
+          const { error: messageError } = await supabase
+            .from('messages')
+            .insert({
+              chat_id: newChat.id,
+              content: template.instructions,
+              role: 'assistant',
+              type: 'text_message',
+              uid: user.id
+            });
+          if (messageError) throw messageError;
         }
+        setTemplateGalleryOpen(false);
+        navigate(`/workflow/${newChat.id}`);
       }
     } catch (error) {
       console.error('Error creating workflow from template:', error);

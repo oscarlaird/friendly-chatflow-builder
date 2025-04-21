@@ -1,9 +1,17 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface RequestWorkflowModalProps {
@@ -50,7 +58,7 @@ export function RequestWorkflowModal({ open, onOpenChange }: RequestWorkflowModa
           placeholder="Describe your workflow or paste a Loom link here..."
           value={text}
           onChange={e => setText(e.target.value)}
-          minRows={4}
+          rows={4}
         />
         <div className="mt-4 text-sm text-gray-500">
           We'll get this workflow up for you within <b>12 hours</b> or reach out to you if we need more information.
