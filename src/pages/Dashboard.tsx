@@ -49,6 +49,7 @@ export default function Dashboard() {
       } else {
         console.log("Workflows found, showing my-workflows tab");
         setTabValue('my-workflows');
+        
       }
     }
   }, [user, loading, chats]);
@@ -156,7 +157,7 @@ export default function Dashboard() {
                   <ThemeToggle />
                   <Button 
                     onClick={() => navigate('/auth')}
-                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue)_/0.85)] text-white hover:text-white transition-colors"
                   >
                     Sign In
                   </Button>
@@ -191,7 +192,7 @@ export default function Dashboard() {
                     size="icon" 
                     disabled={!prompt.trim()}
                     onClick={() => handleCreateWorkflow()}
-                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue)_/0.85)] text-white hover:text-white transition-colors"
                   >
                     <SendHorizontal className="h-5 w-5" />
                   </Button>
@@ -235,7 +236,7 @@ export default function Dashboard() {
                   <h2 className="text-2xl font-bold">My Workflows</h2>
                   <Button 
                     onClick={() => setTemplateGalleryOpen(true)}
-                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+                    className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue)_/0.85)] text-white hover:text-white transition-colors"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     New Workflow
@@ -277,19 +278,11 @@ export default function Dashboard() {
           open={templateGalleryOpen}
           onOpenChange={setTemplateGalleryOpen}
           onSelectTemplate={async (templateId) => {
-            if (!templateId) {
-              try {
-                const newChat = await createChat('New Workflow');
-                if (newChat) {
-                  setTemplateGalleryOpen(false);
-                  navigate(`/workflow/${newChat.id}`);
-                }
-              } catch (error) {
-                console.error('Error creating workflow:', error);
-              }
+            if (!user) {
+              navigate('/auth');
               return;
             }
-            
+
             try {
               // Fetch the template details
               const { data: template, error } = await supabase
