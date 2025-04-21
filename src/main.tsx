@@ -6,9 +6,10 @@ import './index.css'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="system">
+  <ThemeProvider attribute="class" defaultTheme="light">
     <TooltipProvider>
       <App />
     </TooltipProvider>
   </ThemeProvider>
 );
+
