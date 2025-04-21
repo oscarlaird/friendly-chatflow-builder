@@ -42,7 +42,7 @@ export function Layout({ children }: LayoutProps) {
       <div className="flex flex-col h-screen">
         {/* Top bar */}
         <div className="flex items-center p-4 border-b">
-          <h1 className="text-lg font-bold">Mill</h1>
+          <h1 className="text-lg font-bold">Macro</h1>
           
           <div className="flex-1" />
           
