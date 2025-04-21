@@ -36,13 +36,20 @@ export default function Dashboard() {
   const { createChat, chats, loading } = useChats();
   const navigate = useNavigate();
 
-  // NEW: Track which tab is selected
+  // Default to my-workflows initially but will be changed based on chats
   const [tabValue, setTabValue] = useState('my-workflows');
-  // NEW: Listen for changes in chats/user to decide which tab is default
+  
+  // Set the active tab based on whether the user has workflows
   useEffect(() => {
     if (user && !loading) {
-      if ((chats?.length ?? 0) === 0) setTabValue('gallery');
-      else setTabValue('my-workflows');
+      // If the user has no workflows, show the gallery tab
+      if (chats?.length === 0) {
+        console.log("No workflows found, showing gallery tab");
+        setTabValue('gallery');
+      } else {
+        console.log("Workflows found, showing my-workflows tab");
+        setTabValue('my-workflows');
+      }
     }
   }, [user, loading, chats]);
 
@@ -158,7 +165,7 @@ export default function Dashboard() {
             </div>
           </div>
         </header>
-
+        
         <div className="relative">
           <div className="absolute inset-0 -z-10 h-72 w-full animated-gradient-bg"></div>
 
