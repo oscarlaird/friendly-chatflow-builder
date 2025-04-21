@@ -98,7 +98,8 @@ export default function Dashboard() {
             script: template.script,
             steps: template.steps,
             apps: template.apps,
-            requires_browser: template.requires_browser
+            requires_browser: template.requires_browser,
+            code_approved: true
           })
           .eq('id', newChat.id);
           

@@ -258,9 +258,11 @@ export const getCodeRewritingStatus = (chat: Chat | undefined): CodeRewritingSta
     code_approved: chat.code_approved 
   });
   
-  if (chat.requires_code_rewrite === null) {
-    return 'thinking';
-  } else if (chat.requires_code_rewrite === false) {
+  // if (chat.requires_code_rewrite === null) {
+  //   return 'thinking';
+  // } else 
+  
+  if (chat.requires_code_rewrite === false) {
     return 'done';
   } else {
     // requires_code_rewrite is true
