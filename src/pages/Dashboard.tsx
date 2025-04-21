@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SendHorizontal, Plus, ChevronRight, Search, FileSpreadsheet, RefreshCw, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,8 +33,18 @@ export default function Dashboard() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const { user } = useAuth();
-  const { createChat } = useChats();
+  const { createChat, chats, loading } = useChats();
   const navigate = useNavigate();
+
+  // NEW: Track which tab is selected
+  const [tabValue, setTabValue] = useState('my-workflows');
+  // NEW: Listen for changes in chats/user to decide which tab is default
+  useEffect(() => {
+    if (user && !loading) {
+      if ((chats?.length ?? 0) === 0) setTabValue('gallery');
+      else setTabValue('my-workflows');
+    }
+  }, [user, loading, chats]);
 
   const handleCreateWorkflow = async (initialPrompt?: string) => {
     const promptText = initialPrompt || prompt;
@@ -206,7 +216,7 @@ export default function Dashboard() {
         {/* Only show workflows section if user is logged in */}
         {user && (
           <section className="container mx-auto py-8 px-4 fade-in delay-300">
-            <Tabs defaultValue="my-workflows" className="w-full">
+            <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
               <TabsList className="mb-8">
                 <TabsTrigger value="my-workflows">My Workflows</TabsTrigger>
                 <TabsTrigger value="recent-runs">Recent Runs</TabsTrigger>
