@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -9,12 +8,23 @@ import { Plus } from 'lucide-react';
 import { useChats } from '@/hooks/useChats';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { RequestWorkflowModal } from "@/components/workflow/RequestWorkflowModal";
 
 export default function Workflows() {
   const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
-  const { createChat } = useChats();
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const { createChat, chats, loading } = useChats();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Automatically open Template Gallery if no workflows (chats)
+  useEffect(() => {
+    if (!loading && user && chats.length === 0 && !templateGalleryOpen) {
+      setTemplateGalleryOpen(true);
+    }
+    // Only when chats have loaded
+    // eslint-disable-next-line
+  }, [loading, user, chats.length]);
 
   const handleTemplateSelect = async (templateId: string | null) => {
     if (!user) {
@@ -61,7 +71,7 @@ export default function Workflows() {
               steps: template.steps,
               apps: template.apps,
               requires_browser: template.requires_browser,
-              requires_code_rewrite: false, // <-- fix: always FALSE from template
+              requires_code_rewrite: false,
             })
             .eq('id', newChat.id);
             
@@ -101,13 +111,21 @@ export default function Workflows() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Workflows</h1>
-          <Button 
-            onClick={() => setTemplateGalleryOpen(true)}
-            className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Workflow
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setTemplateGalleryOpen(true)}
+              className="bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/90%]"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Workflow
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setRequestModalOpen(true)}
+            >
+              Request Workflow
+            </Button>
+          </div>
         </div>
         
         <WorkflowList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
@@ -117,8 +135,12 @@ export default function Workflows() {
           onOpenChange={setTemplateGalleryOpen}
           onSelectTemplate={handleTemplateSelect}
         />
+
+        <RequestWorkflowModal
+          open={requestModalOpen}
+          onOpenChange={setRequestModalOpen}
+        />
       </div>
     </Layout>
   );
 }
-
