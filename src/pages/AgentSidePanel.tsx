@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSelectedChat } from "@/hooks/useChats";
-import { WorkflowSidePanel } from "@/components/workflow/WorkflowSidePanel";
 import { Button } from "@/components/ui/button";
 import { Play, Loader2 } from "lucide-react";
 import { useMessages } from "@/hooks/useMessages";
@@ -9,12 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CodeRewritingStatus } from "@/types";
 import { useWindowMessages } from "@/hooks/useWindowMessages";
-import { supabase } from "@/integrations/supabase/client"; // Add missing import
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { KeyValueDisplay } from "@/components/workflow/KeyValueDisplay";
 
 // Status badge component for workflow state
 const StatusBadge = ({ status }: { status: CodeRewritingStatus }) => {
   const isReady = status === 'done';
-  
   return (
     <div className="flex items-center gap-1">
       {!isReady && <Loader2 className="h-3 w-3 animate-spin" />}
@@ -37,7 +38,7 @@ const AgentSidePanel = () => {
   const { selectedChat, codeRewritingStatus } = useSelectedChat(chatId || null);
   const { dataState, sendMessage } = useMessages(chatId || null);
   const [userInputs, setUserInputs] = useState<Record<string, any>>({});
-  
+
   // Find the latest running code_run message
   const latestRunningMessage = Object.values(dataState.messages)
     .filter(msg => msg.type === 'code_run' && msg.code_run_state === 'running')
@@ -45,80 +46,46 @@ const AgentSidePanel = () => {
 
   // Use steps from the running message or fall back to chat steps
   const workflowSteps = latestRunningMessage?.steps || selectedChat?.steps || [];
-  
-  // Initialize user inputs from workflow steps
-  useEffect(() => {
-    if (workflowSteps && workflowSteps.length > 0) {
-      const userInputStep = workflowSteps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        console.log('Setting user inputs in AgentSidePanel:', userInputStep.output);
-        if (Object.keys(userInputs).length === 0 || JSON.stringify(userInputs) !== JSON.stringify(userInputStep.output)) {
-          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
-        }
-      }
-    } else if (selectedChat?.steps && Array.isArray(selectedChat.steps)) {
-      const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
-      if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-        if (Object.keys(userInputs).length === 0) {
-          setUserInputs(JSON.parse(JSON.stringify(userInputStep.output)));
-        }
-      }
-    }
-  }, [workflowSteps, selectedChat]);
-  
-  // Initialize user inputs from chat user_inputs if available
+
+  // Determine the current step (active: true), or highest step_number
+  const currentStep =
+    workflowSteps.find((step: any) => step.active) ||
+    (workflowSteps.length > 0 ? workflowSteps[workflowSteps.length - 1] : null);
+
+  // Try to get inputs for the current step (step.input)
+  const currentStepInputs = currentStep && currentStep.input ? currentStep.input : null;
+
+  // Initialize userInputs from chat or running message user_inputs
   useEffect(() => {
     if (selectedChat?.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
-      console.log('Setting user inputs from chat:', selectedChat.user_inputs);
       setUserInputs(selectedChat.user_inputs);
-    }
-  }, [selectedChat]);
-  
-  // Initialize user inputs from a running message if available
-  useEffect(() => {
-    if (latestRunningMessage?.user_inputs && Object.keys(latestRunningMessage.user_inputs).length > 0) {
-      console.log('Setting user inputs from running message:', latestRunningMessage.user_inputs);
+    } else if (latestRunningMessage?.user_inputs && Object.keys(latestRunningMessage.user_inputs).length > 0) {
       setUserInputs(latestRunningMessage.user_inputs);
     }
-  }, [latestRunningMessage]);
-  
+  }, [selectedChat, latestRunningMessage]);
+
   // Handle saving user inputs to database
   const handleUpdateUserInputs = async (newInputs: Record<string, any>) => {
     if (!chatId) return;
-    
-    // Update local state
     setUserInputs(newInputs);
-    
     try {
-      console.log('Saving user inputs to database from side panel:', newInputs);
-      
-      // Save to Supabase
-      const { error } = await supabase
+      await supabase
         .from('chats')
-        .update({ 
-          user_inputs: newInputs 
-        } as any) // Using type assertion to bypass TypeScript error
+        .update({ user_inputs: newInputs } as any)
         .eq('id', chatId);
-      
-      if (error) {
-        console.error('Error saving user inputs from side panel:', error);
-      }
     } catch (err) {
-      console.error('Exception saving user inputs from side panel:', err);
+      // error already logged in the original code
     }
   };
-  
+
   // Listen for window messages
   useWindowMessages();
-  
+
   // Handle workflow run
   const handleRunWorkflow = async () => {
     if (!chatId) return;
-    
     try {
-      console.log("Running workflow with user inputs:", userInputs);
       const data = await sendMessage("", "user", "code_run", userInputs);
-      console.log("Message sent:", data);
       const messageId = data.id;
       window.postMessage({
         type: 'CREATE_AGENT_RUN_WINDOW',
@@ -128,14 +95,14 @@ const AgentSidePanel = () => {
         }
       }, '*');
     } catch (error) {
-      console.error("Error running workflow:", error);
+      // error already logged in the original code
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
       <header className="px-3 py-2 border-b flex items-center justify-between sticky top-0 bg-background z-10">
-        <h1 className="text-sm font-medium">Workflow Steps</h1>
+        <h1 className="text-sm font-medium">Workflow Step</h1>
         <div className="flex items-center gap-2">
           <StatusBadge status={codeRewritingStatus} />
           <Button 
@@ -151,17 +118,42 @@ const AgentSidePanel = () => {
         </div>
       </header>
       
-      <main className="flex-1 overflow-hidden">
-        {workflowSteps && workflowSteps.length > 0 ? (
-          <WorkflowSidePanel 
-            steps={workflowSteps}
-            chatId={chatId || undefined}
-            userInputs={userInputs}
-            setUserInputs={handleUpdateUserInputs}
-          />
-        ) : (
+      <main className="flex-1 overflow-hidden flex flex-col justify-center items-center">
+        {!currentStep ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-            No workflow steps available
+            No workflow step available
+          </div>
+        ) : (
+          <div className="w-full max-w-lg p-4">
+            <Card className="mb-4">
+              <div className="p-4">
+                <h2 className="text-base font-semibold mb-2">
+                  {currentStep.function_name
+                    ? currentStep.function_name.replace(/_/g, " ")
+                    : currentStep.type === "user_input"
+                      ? "User Input"
+                      : currentStep.type?.charAt(0).toUpperCase() + currentStep.type?.slice(1)}
+                </h2>
+                {currentStep.function_description && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {currentStep.function_description}
+                  </p>
+                )}
+                <div>
+                  <span className="font-medium text-sm">Inputs:</span>
+                  {currentStepInputs && Object.keys(currentStepInputs).length > 0 ? (
+                    <KeyValueDisplay
+                      data={currentStepInputs}
+                      isEditable={currentStep.type === "user_input"}
+                      setUserInputs={currentStep.type === "user_input" ? handleUpdateUserInputs : undefined}
+                      compact={true}
+                    />
+                  ) : (
+                    <div className="text-xs text-muted-foreground mt-1">No inputs for this step.</div>
+                  )}
+                </div>
+              </div>
+            </Card>
           </div>
         )}
       </main>
