@@ -5,6 +5,7 @@ import { AppConnectButton } from '@/components/chat/AppConnectButton';
 import { Button } from '@/components/ui/button';
 import { useOAuthFlow } from '@/hooks/useOAuthFlow';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
+import { Play } from 'lucide-react';
 
 interface ConnectionModalProps {
   open: boolean;
@@ -15,6 +16,8 @@ interface ConnectionModalProps {
 
 export function ConnectionModal({ open, onOpenChange, missingConnections, onContinue }: ConnectionModalProps) {
   const { connectingApp, initiateOAuthFlow } = useOAuthFlow();
+  const { isAppConnected } = useOAuthConnections();
+  const allConnected = missingConnections.every(app => isAppConnected(app));
   
   if (missingConnections.length === 0) {
     return null;
@@ -36,16 +39,29 @@ export function ConnectionModal({ open, onOpenChange, missingConnections, onCont
               key={appName}
               appName={appName}
               isConnecting={connectingApp === appName}
-              isConnected={false}
+              isConnected={isAppConnected(appName)}
               onConnect={initiateOAuthFlow}
             />
           ))}
         </div>
         
         <DialogFooter>
-          <Button onClick={onContinue} disabled={missingConnections.length > 0}>
-            Continue to Run
-          </Button>
+          {allConnected ? (
+            <Button 
+              onClick={() => {
+                onOpenChange(false);
+                onContinue();
+              }}
+              className="gap-1 bg-[hsl(var(--dropbox-blue))] hover:bg-[hsl(var(--dropbox-blue))/80]"
+            >
+              <Play className="h-4 w-4" />
+              Run Workflow
+            </Button>
+          ) : (
+            <Button onClick={() => onOpenChange(false)} variant="outline">
+              Close
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
