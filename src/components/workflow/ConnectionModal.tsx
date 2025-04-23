@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AppConnectButton } from '@/components/chat/AppConnectButton';
 import { Button } from '@/components/ui/button';
 import { useOAuthFlow } from '@/hooks/useOAuthFlow';
+import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
 import { Play } from 'lucide-react';
 
