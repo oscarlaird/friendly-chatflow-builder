@@ -57,38 +57,6 @@ export type Database = {
           },
         ]
       }
-      bu_requests: {
-        Row: {
-          id: string
-          message_id: string
-          request_data: Json | null
-          response_data: Json | null
-          sender: string | null
-        }
-        Insert: {
-          id?: string
-          message_id: string
-          request_data?: Json | null
-          response_data?: Json | null
-          sender?: string | null
-        }
-        Update: {
-          id?: string
-          message_id?: string
-          request_data?: Json | null
-          response_data?: Json | null
-          sender?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bu_requests_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       chats: {
         Row: {
           apps: string[] | null
