@@ -142,7 +142,7 @@ export default function Dashboard() {
         <header className="border-b">
           <div className="container mx-auto flex items-center justify-between py-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">Macro</h1>
+              <h1 className="text-2xl font-bold">SupaMill</h1>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -177,13 +177,13 @@ export default function Dashboard() {
                 Idea to workflow in seconds.
               </h1>
               <p className="text-xl text-muted-foreground">
-                Macro is your workflow builder assistant.
+                SupaMill is your workflow builder assistant.
               </p>
               
               <div className="max-w-xl mx-auto mt-12 fade-in delay-100">
                 <div className="enhanced-input-container">
                   <Input
-                    placeholder="Ask Macro to automate your workflow..."
+                    placeholder="Ask SupaMill to automate your workflow..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     onKeyDown={handleKeyDown}
