@@ -106,14 +106,14 @@ export const useMessages = (chatId: string | null) => {
         const codeRunIds = codeRunEventsData.map(event => event.id);
         
         if (codeRunIds.length > 0) {
-          // Fix: Use proper table name and type-safe query
-          const { data: browserData, error: browserError } = await supabase
+          // Fix: Use explicit typing to avoid excessive type instantiation
+          const { data, error } = await supabase
             .from('browser_steps')
             .select('*')
             .in('coderun_event_id', codeRunIds);
 
-          if (browserError) throw browserError;
-          browserEventsData = browserData || [];
+          if (error) throw error;
+          browserEventsData = data || [];
         }
       }
 
@@ -370,9 +370,10 @@ export const useMessages = (chatId: string | null) => {
         .channel(`browser-${chatId}`)
         .on(
           'postgres_changes',
-          // Fix: Use browser_steps instead of browser_events
+          // Fix: Explicitly type the payload parameter to avoid excessive type instantiation
           { event: 'INSERT', schema: 'public', table: 'browser_steps', filter: `chat_id=eq.${chatId}` },
-          (payload) => {
+          (payload: { new: any }) => {
+            // Cast the payload to BrowserEvent after receiving
             const newEvent = payload.new as BrowserEvent;
             console.log("New browser event received:", newEvent);
             addBrowserEventToCoderun(newEvent);
