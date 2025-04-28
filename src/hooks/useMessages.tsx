@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -106,14 +105,14 @@ export const useMessages = (chatId: string | null) => {
         const codeRunIds = codeRunEventsData.map(event => event.id);
         
         if (codeRunIds.length > 0) {
-          // Fix: Use explicit typing to avoid excessive type instantiation
-          const { data, error } = await supabase
+          // Use a more explicit approach to avoid excessive type instantiation
+          const response = await supabase
             .from('browser_steps')
             .select('*')
             .in('coderun_event_id', codeRunIds);
 
-          if (error) throw error;
-          browserEventsData = data || [];
+          if (response.error) throw response.error;
+          browserEventsData = response.data || [];
         }
       }
 
@@ -370,13 +369,15 @@ export const useMessages = (chatId: string | null) => {
         .channel(`browser-${chatId}`)
         .on(
           'postgres_changes',
-          // Fix: Explicitly type the payload parameter to avoid excessive type instantiation
+          // Use a more general approach to avoid excessive type instantiation
           { event: 'INSERT', schema: 'public', table: 'browser_steps', filter: `chat_id=eq.${chatId}` },
-          (payload: { new: any }) => {
-            // Cast the payload to BrowserEvent after receiving
-            const newEvent = payload.new as BrowserEvent;
-            console.log("New browser event received:", newEvent);
-            addBrowserEventToCoderun(newEvent);
+          (payload) => {
+            // Safe type assertion after receiving the payload
+            if (payload && payload.new) {
+              const newEvent = payload.new as BrowserEvent;
+              console.log("New browser event received:", newEvent);
+              addBrowserEventToCoderun(newEvent);
+            }
           }
         )
         .subscribe();

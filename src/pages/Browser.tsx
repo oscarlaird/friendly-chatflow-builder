@@ -11,7 +11,7 @@ const Browser = () => {
   const [isDone, setIsDone] = useState(false);
   const { user } = useAuth();
   
-  const handleLinkedInConnect = async () => {
+  const handleConnect = async () => {
     if (!user) return;
     
     setIsProcessing(true);
@@ -21,7 +21,7 @@ const Browser = () => {
       const { error } = await supabase.from('feedback').insert({
         uid: user.id,
         type: 'linkedin_loggedin',
-        content: 'User initiated LinkedIn connection process for Lightning conference'
+        content: 'User initiated connection process'
       });
 
       if (error) throw error;
@@ -30,7 +30,7 @@ const Browser = () => {
       toast.success('Process initiated successfully');
       setIsDone(true);
     } catch (error) {
-      console.error('Error logging LinkedIn action:', error);
+      console.error('Error logging action:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -40,45 +40,39 @@ const Browser = () => {
   return (
     <Layout>
       <div className="flex flex-col h-full">
-        {/* Top bar */}
-        <div className="bg-primary text-white p-4 shadow-md">
+        {/* Shorter top bar */}
+        <div className="bg-primary text-white py-2 px-4 shadow-md">
           <div className="container mx-auto">
-            <div className="flex flex-col space-y-4">
-              <h1 className="text-xl font-bold">LinkedIn Connection Agent</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-base font-medium">Browser Connection</h1>
               
               {!isDone ? (
-                <div className="bg-white/10 rounded-lg p-4">
-                  <p className="mb-4">
-                    Hey {user?.email?.split('@')[0] || 'there'}, once you have logged into LinkedIn click the button below and our agent will 
-                    start working on your behalf to send connect requests to all attendees of the Lightning conference.
-                  </p>
-                  <Button 
-                    onClick={handleLinkedInConnect} 
-                    disabled={isProcessing}
-                    className="bg-white text-primary hover:bg-white/90"
-                  >
-                    {isProcessing ? 'Processing...' : 'Start LinkedIn Connect Process'}
-                  </Button>
-                </div>
+                <Button 
+                  onClick={handleConnect} 
+                  disabled={isProcessing}
+                  className="bg-white text-primary hover:bg-white/90 text-sm h-8 px-3"
+                >
+                  {isProcessing ? 'Processing...' : 'Start Process'}
+                </Button>
               ) : (
-                <div className="bg-white/10 rounded-lg p-4">
-                  <p className="mb-2">
-                    Thank you! You can close this window and our agent will work on this and will send you an email once we have gone through all attendees of the conference.
-                  </p>
-                </div>
+                <span className="text-sm bg-white/10 rounded px-2 py-1">
+                  Processing Complete
+                </span>
               )}
             </div>
           </div>
         </div>
         
-        {/* Iframe container */}
-        <div className="flex-1">
-          <iframe 
-            src="https://browser.macroagents.ai" 
-            className="w-full h-full border-0"
-            title="MacroAgents Browser"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-          />
+        {/* Iframe container with 16:9 aspect ratio */}
+        <div className="flex-1 relative w-full">
+          <div className="absolute inset-0">
+            <iframe 
+              src="https://browser.macroagents.ai" 
+              className="w-full h-full border-0"
+              title="Browser Preview"
+              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+            />
+          </div>
         </div>
       </div>
     </Layout>
