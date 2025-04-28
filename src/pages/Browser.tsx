@@ -48,7 +48,7 @@ const Browser = () => {
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">
-                Hey {firstName}, you can log into your LinkedIn here. Once done, click the button and our agent will shortly get to it.
+                Hey Tim, you can log into your LinkedIn here. Once done, click the button and our agent will shortly get to it.
                 You can close this window after logging in.
               </p>
               
