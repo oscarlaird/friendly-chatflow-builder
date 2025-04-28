@@ -102,13 +102,13 @@ export const useMessages = (chatId: string | null) => {
         if (codeRunError) throw codeRunError;
         codeRunEventsData = codeRunData || [];
 
-        // Fetch browser steps instead of browser_events since that's what exists in the schema
-        // Change: renamed from browser_events to browser_steps
+        // Fetch browser steps since that's what exists in the schema
         const codeRunIds = codeRunEventsData.map(event => event.id);
         
         if (codeRunIds.length > 0) {
+          // Fix: Use proper table name and type-safe query
           const { data: browserData, error: browserError } = await supabase
-            .from('browser_steps')  // Changed from 'browser_events' to 'browser_steps'
+            .from('browser_steps')
             .select('*')
             .in('coderun_event_id', codeRunIds);
 
@@ -365,13 +365,13 @@ export const useMessages = (chatId: string | null) => {
         )
         .subscribe();
 
-      // Subscribe to browser steps for the current chat
-      // Changed: renamed from browser_events to browser_steps
+      // Subscribe to browser steps for the current chat 
       const browserChannel = supabase
         .channel(`browser-${chatId}`)
         .on(
           'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'browser_steps', filter: `chat_id=eq.${chatId}` },  // Changed from 'browser_events' to 'browser_steps'
+          // Fix: Use browser_steps instead of browser_events
+          { event: 'INSERT', schema: 'public', table: 'browser_steps', filter: `chat_id=eq.${chatId}` },
           (payload) => {
             const newEvent = payload.new as BrowserEvent;
             console.log("New browser event received:", newEvent);
