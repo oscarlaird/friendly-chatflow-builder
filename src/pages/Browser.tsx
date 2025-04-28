@@ -37,33 +37,39 @@ const Browser = () => {
     }
   };
 
+  // Extract first name if available
+  const firstName = user?.user_metadata?.name?.split(' ')[0] || 'there';
+
   return (
     <Layout>
       <div className="flex flex-col h-full">
-        {/* Shorter top bar */}
-        <div className="bg-primary text-white py-2 px-4 shadow-md">
+        {/* Shorter, cleaner top bar */}
+        <div className="bg-primary text-white py-1.5 px-4 shadow-md">
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
-              <h1 className="text-base font-medium">Browser Connection</h1>
+              <p className="text-sm font-medium">
+                Hey {firstName}, you can log into your LinkedIn here. Once done, click the button and our agent will shortly get to it.
+                You can close this window after logging in.
+              </p>
               
               {!isDone ? (
                 <Button 
                   onClick={handleConnect} 
                   disabled={isProcessing}
-                  className="bg-white text-primary hover:bg-white/90 text-sm h-8 px-3"
+                  className="bg-white text-primary hover:bg-white/90 text-xs h-7 px-2 ml-2"
                 >
-                  {isProcessing ? 'Processing...' : 'Start Process'}
+                  {isProcessing ? 'Processing...' : 'Complete'}
                 </Button>
               ) : (
-                <span className="text-sm bg-white/10 rounded px-2 py-1">
-                  Processing Complete
+                <span className="text-xs bg-white/10 rounded px-2 py-0.5 ml-2">
+                  Done
                 </span>
               )}
             </div>
           </div>
         </div>
         
-        {/* Iframe container with 16:9 aspect ratio */}
+        {/* Iframe container with 16:9 aspect ratio taking up all remaining space */}
         <div className="flex-1 relative w-full">
           <div className="absolute inset-0">
             <iframe 
