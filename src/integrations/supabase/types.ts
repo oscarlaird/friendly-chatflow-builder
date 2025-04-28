@@ -9,47 +9,34 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      browser_events: {
+      browser_steps: {
         Row: {
-          chat_id: string
-          coderun_event_id: string | null
-          created_at: string
-          data: Json
-          function_name: string | null
+          heartbeat_counter: number | null
           id: string
           message_id: string
-          uid: string
+          request_data: Json | null
+          response_data: Json | null
+          step: Json | null
         }
         Insert: {
-          chat_id: string
-          coderun_event_id?: string | null
-          created_at?: string
-          data: Json
-          function_name?: string | null
+          heartbeat_counter?: number | null
           id?: string
           message_id: string
-          uid: string
+          request_data?: Json | null
+          response_data?: Json | null
+          step?: Json | null
         }
         Update: {
-          chat_id?: string
-          coderun_event_id?: string | null
-          created_at?: string
-          data?: Json
-          function_name?: string | null
+          heartbeat_counter?: number | null
           id?: string
           message_id?: string
-          uid?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          step?: Json | null
         }
         Relationships: [
           {
-            foreignKeyName: "browser_events_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "browser_events_message_id_fkey"
+            foreignKeyName: "bu_requests_message_id_fkey"
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "messages"
@@ -107,66 +94,27 @@ export type Database = {
       }
       coderun_events: {
         Row: {
-          chat_id: string
+          chat_id: string | null
           created_at: string
-          description: string | null
-          function_name: string | null
-          id: string
-          input: Json | null
-          message_id: string
-          n_progress: number | null
-          n_total: number | null
-          output: Json | null
-          progress_title: string | null
-          requires_browser: boolean
-          uid: string
+          id: number
+          message_id: string | null
+          uid: string | null
         }
         Insert: {
-          chat_id: string
+          chat_id?: string | null
           created_at?: string
-          description?: string | null
-          function_name?: string | null
-          id?: string
-          input?: Json | null
-          message_id: string
-          n_progress?: number | null
-          n_total?: number | null
-          output?: Json | null
-          progress_title?: string | null
-          requires_browser?: boolean
-          uid: string
+          id?: number
+          message_id?: string | null
+          uid?: string | null
         }
         Update: {
-          chat_id?: string
+          chat_id?: string | null
           created_at?: string
-          description?: string | null
-          function_name?: string | null
-          id?: string
-          input?: Json | null
-          message_id?: string
-          n_progress?: number | null
-          n_total?: number | null
-          output?: Json | null
-          progress_title?: string | null
-          requires_browser?: boolean
-          uid?: string
+          id?: number
+          message_id?: string | null
+          uid?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "coderun_events_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "coderun_events_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       feedback: {
         Row: {

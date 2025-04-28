@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound';
 import AuthCallback from './pages/AuthCallback';
 import AgentSidePanel from './pages/AgentSidePanel';
 import Index from './pages/Index';
+import Browser from './pages/Browser';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,6 +31,7 @@ function App() {
             <Route path="/auth-callback" element={<AuthCallback />} />
             <Route path="/agent_sidepanel" element={<AgentSidePanel />} />
             <Route path="/old-home" element={<Index />} />
+            <Route path="/browser" element={<Browser />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="top-right" />
