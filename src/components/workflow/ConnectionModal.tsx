@@ -54,7 +54,7 @@ export function ConnectionModal({ open, onOpenChange, missingConnections, onCont
         </div>
         
         <DialogFooter>
-          <Button onClick={onContinue} disabled={!allConnected}>
+          <Button onClick={onContinue} disabled={!allConnected} className={allConnected ? "bg-green-600 hover:bg-green-700" : ""}>
             Continue to Run
           </Button>
         </DialogFooter>
