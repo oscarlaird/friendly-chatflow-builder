@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DataState, Message, CoderunEvent, BrowserEvent } from '@/types';
@@ -369,10 +370,9 @@ export const useMessages = (chatId: string | null) => {
         .channel(`browser-${chatId}`)
         .on(
           'postgres_changes',
-          // Use a more general approach to avoid excessive type instantiation
           { event: 'INSERT', schema: 'public', table: 'browser_steps', filter: `chat_id=eq.${chatId}` },
-          (payload: { new: any }) => {
-            // Use explicit typing to avoid excessive type instantiation
+          (payload: { new: { id: string; coderun_event_id: string; message_id: string; [key: string]: any } }) => {
+            // Use explicit typing for the payload to avoid excessive type instantiation
             const newEvent = payload.new as BrowserEvent;
             console.log("New browser event received:", newEvent);
             addBrowserEventToCoderun(newEvent);

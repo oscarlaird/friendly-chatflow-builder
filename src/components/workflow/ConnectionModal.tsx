@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AppConnectButton } from '@/components/chat/AppConnectButton';
 import { Button } from '@/components/ui/button';
 import { useOAuthFlow } from '@/hooks/useOAuthFlow';
 import { APP_CONFIG } from '@/hooks/useOAuthFlow';
+import { useOAuthConnections } from '@/hooks/useOAuthConnections';
 
 interface ConnectionModalProps {
   open: boolean;
@@ -15,8 +16,18 @@ interface ConnectionModalProps {
 
 export function ConnectionModal({ open, onOpenChange, missingConnections, onContinue }: ConnectionModalProps) {
   const { connectingApp, initiateOAuthFlow } = useOAuthFlow();
+  const { isAppConnected } = useOAuthConnections();
+  const [localMissingConnections, setLocalMissingConnections] = useState<string[]>(missingConnections);
   
-  if (missingConnections.length === 0) {
+  // Update local state when props change
+  useEffect(() => {
+    setLocalMissingConnections(missingConnections);
+  }, [missingConnections]);
+  
+  // Check if all previously missing connections are now connected
+  const allConnected = localMissingConnections.every(app => isAppConnected(app));
+  
+  if (localMissingConnections.length === 0) {
     return null;
   }
   
@@ -31,19 +42,19 @@ export function ConnectionModal({ open, onOpenChange, missingConnections, onCont
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          {missingConnections.map((appName) => (
+          {localMissingConnections.map((appName) => (
             <AppConnectButton
               key={appName}
               appName={appName}
               isConnecting={connectingApp === appName}
-              isConnected={false}
+              isConnected={isAppConnected(appName)}
               onConnect={initiateOAuthFlow}
             />
           ))}
         </div>
         
         <DialogFooter>
-          <Button onClick={onContinue} disabled={missingConnections.length > 0}>
+          <Button onClick={onContinue} disabled={!allConnected}>
             Continue to Run
           </Button>
         </DialogFooter>
