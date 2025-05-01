@@ -54,6 +54,7 @@ export function useOAuthFlow() {
 
     setConnectingApp(appName);
 
+
     try {
       const app = APP_CONFIG[appName as keyof typeof APP_CONFIG];
       if (!app) throw new Error(`Unknown app: ${appName}`);
@@ -69,6 +70,7 @@ export function useOAuthFlow() {
       // Build OAuth URL based on provider
       let authUrl: string;
 
+
       if (appName === 'google_sheets' || appName === 'gmail' || appName === 'google_drive') {
         authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + 
           `client_id=1011255092960-rdmg43m71oubmr1rgvm6r234uop3fseu.apps.googleusercontent.com&` +
@@ -81,11 +83,11 @@ export function useOAuthFlow() {
       } else if (appName === 'outlook') {
         // Placeholder - actual implementation would need Microsoft client ID
         authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?' +
-          `client_id=YOUR_MICROSOFT_CLIENT_ID&` +
+          `client_id=884e1a24-312d-424a-ac1a-36bc17f680ca&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
           `scope=${encodeURIComponent(app.scopes.join(' '))}&` +
           `state=${state}&` +
-          'response_type=code';
+          'response_type=code' ;
       } else {
         throw new Error(`OAuth URL not configured for app: ${appName}`);
       }
