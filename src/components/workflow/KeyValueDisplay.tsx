@@ -1,11 +1,12 @@
 
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DisplayValue } from "./DisplayValue";
+import { DisplayPrimitive } from "./DisplayPrimitive";
+import { SerializedCallPayload, SerializedPrimitive, SerializedTable } from "@/types/call_payload";
 import { DisplayTable } from "./DisplayTable";
 
 interface KeyValueDisplayProps {
-  data: Record<string, any>;
+  data: SerializedCallPayload;
   title?: string;
   isEditable?: boolean;
   compact?: boolean;
@@ -26,9 +27,18 @@ export const KeyValueDisplay = ({
 }: KeyValueDisplayProps) => {
 
   useEffect(() => {
-    console.log('RENDER - KeyValueDisplay component rendered');
     if(isEditable) {
       console.log('data', data);
+      // Check if data passes validation
+      try {
+        const validationResult = SerializedCallPayload.safeParse(data);
+        console.log('Data validation result:', validationResult.success);
+        if (!validationResult.success) {
+          console.error('Validation errors:', validationResult.error.format());
+        }
+      } catch (error) {
+        console.error('Error validating data:', error);
+      }
     }
   }, [data, isEditable]);
 
@@ -48,60 +58,39 @@ export const KeyValueDisplay = ({
     return null;
   }
   
-  // Special case for single values that are arrays of objects (render as table)
-  const keys = Object.keys(data);
-  if (keys.length === 1) {
-    const singleKey = keys[0];
-    const singleValue = data[singleKey];
-    
-    if (Array.isArray(singleValue) && singleValue.length > 0 && 
-        typeof singleValue[0] === 'object' && singleValue[0] !== null) {
-      return (
-        <Card>
-          {title && (
-            <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
-              <span>{title}</span>
-            </div>
-          )}
-          <CardContent className="p-2">
-            <DisplayTable 
-              data={singleValue} 
-              isEditable={isEditable}
-              onTableChange={isEditable && setUserInputs ? 
-                (newValue) => handleValueChange(singleKey, newValue) : 
-                undefined
-              }
-            />
-          </CardContent>
-        </Card>
-      );
-    }
-  }
-  
   // Regular key-value display
   return (
     <Card>
-      {title && (
-        <div className="px-3 py-1.5 border-b bg-muted/50 font-medium text-sm flex justify-between items-center">
-          <span>{title}</span>
-        </div>
-      )}
       <CardContent className={compact ? "p-2" : "p-3"}>
         <div className="space-y-3">
-          {Object.entries(data).map(([key, value]) => (
+          {Object.entries(data.data).map(([key, value]) => (
             <div key={key}>
               <label className="font-medium text-sm text-muted-foreground block mb-1">
                 {formatKeyName(key)}:
               </label>
               <div>
-                <DisplayValue 
-                  value={value} 
-                  isEditable={isEditable}
-                  onValueChange={isEditable && setUserInputs ? 
-                    (newValue) => handleValueChange(key, newValue) : 
-                    undefined
-                  }
-                />
+                {value.orig_type === "table" ? (
+                  <DisplayTable 
+                    table={value as SerializedTable}
+                    isEditable={isEditable}
+                    onTableChange={isEditable && setUserInputs ? 
+                      (newData) => {
+                        const updatedValue = { ...value, value: { ...value.value, items: newData } };
+                        handleValueChange(key, updatedValue);
+                      } : 
+                      undefined
+                    }
+                  />
+                ) : (
+                  <DisplayPrimitive 
+                    primitive={value as SerializedPrimitive} 
+                    isEditable={isEditable}
+                    onValueChange={isEditable && setUserInputs ? 
+                      (newValue) => handleValueChange(key, newValue) : 
+                      undefined
+                    }
+                  />
+                )}
               </div>
             </div>
           ))}

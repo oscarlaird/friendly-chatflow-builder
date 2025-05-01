@@ -1,12 +1,13 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, X } from "lucide-react";
+import { Check, X, Plus } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { SerializedTable } from "@/types/call_payload";
 
 interface DisplayTableProps {
-  data: Record<string, any>[];
+  table: SerializedTable;
   className?: string;
   maxRows?: number;
   isEditable?: boolean;
@@ -22,7 +23,7 @@ const formatCellValue = (value: any): string => {
 
 // PURE component - only state is for UI (showing full table)
 export const DisplayTable = ({
-  data,
+  table,
   className,
   maxRows = 10,
   isEditable = false,
@@ -32,16 +33,17 @@ export const DisplayTable = ({
   const [showFullTable, setShowFullTable] = useState(false);
   
   // Calculate what data to show based on maxRows
-  const visibleData = !showFullTable && data.length > maxRows 
-    ? data.slice(0, maxRows)
-    : data;
+  const tableData = table.value.items;
+  const visibleData = !showFullTable && tableData.length > maxRows 
+    ? tableData.slice(0, maxRows)
+    : tableData;
   
   // Handle cell value changes
   const handleCellChange = (rowIndex: number, column: string, inputValue: string) => {
     if (!onTableChange) return;
     
     // Create a new copy of the data
-    const newData = JSON.parse(JSON.stringify(data));
+    const newData = JSON.parse(JSON.stringify(tableData));
     
     try {
       // Type conversion for values
@@ -66,12 +68,28 @@ export const DisplayTable = ({
     onTableChange(newData);
   };
   
-  // Guard clauses for empty data
-  if (!data || data.length === 0) return null;
-  if (Object.keys(data[0]).length === 0) return null;
+  // Function to add a new row
+  const addRow = () => {
+    // Create an empty row with the same structure as existing rows
+    const emptyRow = Object.keys(tableData[0] || {}).reduce((acc, key) => {
+      acc[key] = '';
+      return acc;
+    }, {});
+    
+    onTableChange([...tableData, emptyRow]);
+  };
   
-  const columns = Object.keys(data[0]);
-  const hasMoreRows = data.length > maxRows;
+  // Function to remove a row
+  const removeRow = (indexToRemove: number) => {
+    onTableChange(tableData.filter((_, index) => index !== indexToRemove));
+  };
+  
+  // Guard clauses for empty data
+  if (!table || !table.value || !table.value.items || table.value.items.length === 0) return null;
+  if (Object.keys(table.value.items[0]).length === 0) return null;
+  
+  const columns = Object.keys(table.value.items[0]);
+  const hasMoreRows = table.value.items.length > maxRows;
   
   return (
     <div className={cn("w-full overflow-x-auto", className)}>
@@ -115,6 +133,17 @@ export const DisplayTable = ({
                   )}
                 </TableCell>
               ))}
+              {isEditable && (
+                <TableCell className="action-cell">
+                  <button 
+                    className="delete-row-btn" 
+                    onClick={() => removeRow(rowIndex)}
+                    aria-label="Delete row"
+                  >
+                    <X size={18} />
+                  </button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
@@ -126,7 +155,19 @@ export const DisplayTable = ({
           className="text-xs mt-1 h-6 p-0"
           onClick={() => setShowFullTable(!showFullTable)}
         >
-          {showFullTable ? "Show less" : `Show all (${data.length} rows)`}
+          {showFullTable ? "Show less" : `Show all (${table.value.items.length} rows)`}
+        </Button>
+      )}
+      
+      {isEditable && (
+        <Button
+          variant="link"
+          className="text-xs mt-1 h-6 p-0"
+          onClick={addRow}
+          aria-label="Add row"
+        >
+          <Plus size={18} />
+          <span>Add Row</span>
         </Button>
       )}
     </div>
