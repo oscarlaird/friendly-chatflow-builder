@@ -114,7 +114,7 @@ export const WorkflowStep = ({
     isDisabled && "opacity-60 bg-muted/20",
     hasChildren && "rounded-t-md",
     hasChildren && getControlBlockStyle(stepType),
-    hasChanged && "ring-2 ring-[hsl(var(--dropbox-blue))] animate-pulse"
+    // hasChanged && "ring-2 ring-[hsl(var(--dropbox-blue))] animate-pulse"
   );
 
   return (
