@@ -58,7 +58,9 @@ export const FlowchartDisplay = ({
         const prevStep = prevStepsMap.get(stepId);
         // Compare relevant properties to detect changes
         if (JSON.stringify(prevStep) !== JSON.stringify(step)) {
-          newChangedStepIds.add(stepId);
+          if (step.type !== "user_input") {
+            newChangedStepIds.add(stepId);
+          }
         }
       }
     });

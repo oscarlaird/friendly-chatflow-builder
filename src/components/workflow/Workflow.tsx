@@ -193,7 +193,6 @@ export const Workflow = ({
     // } else 
     
     if (selectedChat && selectedChat.steps) {
-      console.log("Displaying steps from selected chat:", selectedChat.steps);
       setWorkflowSteps(selectedChat.steps);
       
       // Initialize user inputs from selected chat

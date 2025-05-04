@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { KeyValueDisplay } from "./KeyValueDisplay";
@@ -13,8 +12,13 @@ interface StepFlowModalProps {
 }
 
 export const StepFlowModal = ({ isOpen, onClose, step, title }: StepFlowModalProps) => {
-  const hasInput = step.input && Object.keys(step.input).length > 0;
-  const hasOutput = step.output && Object.keys(step.output).length > 0;
+  const lastRunCall =
+    Array.isArray(step.run_calls) && step.run_calls.length > 0
+      ? step.run_calls.at(-1)!
+      : undefined;
+
+  const hasInput = lastRunCall?.input && Object.keys(lastRunCall.input).length > 0;
+  const hasOutput = lastRunCall?.output && Object.keys(lastRunCall.output).length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -28,7 +32,7 @@ export const StepFlowModal = ({ isOpen, onClose, step, title }: StepFlowModalPro
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-muted-foreground">Inputs</h3>
                 <div className="border rounded-md p-3 bg-muted/30">
-                  <KeyValueDisplay data={step.input} compact={false} />
+                  <KeyValueDisplay data={lastRunCall?.input} compact={false} />
                 </div>
               </div>
             )}
@@ -50,20 +54,12 @@ export const StepFlowModal = ({ isOpen, onClose, step, title }: StepFlowModalPro
             </div>
             
             {hasOutput && (
-              <>
-                <div className="flex justify-center">
-                  <div className="flex items-center justify-center rounded-full bg-[hsl(var(--dropbox-light-blue))] p-1">
-                    <ArrowDown className="h-4 w-4 text-[hsl(var(--dropbox-blue))]" />
-                  </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Outputs</h3>
+                <div className="border rounded-md p-3 bg-muted/30">
+                  <KeyValueDisplay data={lastRunCall?.output} compact={false} />
                 </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Outputs</h3>
-                  <div className="border rounded-md p-3 bg-muted/30">
-                    <KeyValueDisplay data={step.output} compact={false} />
-                  </div>
-                </div>
-              </>
+              </div>
             )}
           </div>
         </ScrollArea>

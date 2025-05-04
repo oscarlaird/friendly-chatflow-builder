@@ -5,7 +5,6 @@ export function useExtensionStatus() {
   const [isExtensionInstalled, setIsExtensionInstalled] = useState<boolean | null>(false);
 
 
-  console.log("21DEBUGU useExtensionStatus", isExtensionInstalled)
   useEffect(() => {
     // Set up message listener for extension detection
     const handleMessage = (event: MessageEvent) => {

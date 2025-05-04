@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { WorkflowStep } from "./WorkflowStep";
 import { BrowserEvent } from "@/types";
@@ -56,7 +55,10 @@ export const WorkflowDisplay = ({
         const prevStep = prevStepsMap.get(stepId);
         // Compare relevant properties to detect changes
         if (JSON.stringify(prevStep) !== JSON.stringify(step)) {
-          newChangedStepIds.add(stepId);
+          // NEW: do not highlight the live-editing user_input step
+          if (step.type !== "user_input") {
+            newChangedStepIds.add(stepId);
+          }
         }
       }
     });

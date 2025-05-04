@@ -21,6 +21,7 @@ export const useMessages = (chatId: string | null) => {
 
   // Helper function to normalize data into our state structure
   const normalizeData = (messagesData: any[], codeRunEventsData: any[] = [], browserEventsData: any[] = []) => {
+    // TODO: coderunEvents and browserEvents are not currently used
     const newState: DataState = {
       messages: {},
       coderunEvents: {},
@@ -145,14 +146,19 @@ export const useMessages = (chatId: string | null) => {
       let script = undefined;
       let steps = undefined;
       
-      if (type === 'code_run') {
-        // Find the current chat to get its script and steps
-        const currentChat = chats.find(chat => chat.id === chatId);
-        if (currentChat) {
-          script = currentChat.script;
-          steps = currentChat.steps;
-        }
+      // Find the current chat to get its script and steps
+      const currentChat = chats.find(chat => chat.id === chatId);
+      if (currentChat) {
+        script = currentChat.script;
+        steps = currentChat.steps;
       }
+
+      // Get the conversation history
+      const sortedMessages = Object.values(dataState.messages).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      const conversationHistory = sortedMessages.map(message => ({
+        content: message.content,
+        role: message.role,
+      }));
       
       const newMessage = {
         chat_id: chatId,
@@ -160,8 +166,10 @@ export const useMessages = (chatId: string | null) => {
         content,
         type,
         uid: user.id,
-        script,             // Add script from chat if type is code_run
-        steps,              // Add steps from chat if type is code_run
+        script,             // Add script from chat 
+        steps,              // Add steps from chat 
+        // copy the conversation_history from the current chat
+        conversation_history: conversationHistory,
         user_inputs: userInputs, // Add user inputs if provided
         code_run_state: type === 'code_run' ? 'running' as const : undefined // Fix: Use as const to specify exact type
       };

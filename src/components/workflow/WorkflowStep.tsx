@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { truncateText } from "./utils/stringUtils";
 import { Badge } from "@/components/ui/badge";
 import { StepFlowModal } from "./StepFlowModal";
 import { KeyValueDisplay } from "./KeyValueDisplay";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowStepProps {
   step: any;
@@ -43,41 +42,24 @@ export const WorkflowStep = ({
 }: WorkflowStepProps) => {
   const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
   
+  // 🔑 pick the data we will show
+  const lastRunCall = Array.isArray(step.run_calls) && step.run_calls.length > 0
+    ? step.run_calls[step.run_calls.length - 1]
+    : undefined;
+
   const stepType = step.type;
   const isActive = step.active || false;
   const isDisabled = step.disabled || false;
-  const hasInput = step.input && Object.keys(step.input).length > 0;
-  const hasOutput = step.output && Object.keys(step.output).length > 0;
 
-  // Handle input changes and save to database
-  const handleInputChange = async (newUserInputs: Record<string, any>) => {
-   
-    if (!chatId || !setUserInputs) return;
-    
-    try {
-      // Update local state
-      
-      
-      setUserInputs(newUserInputs);
-     
-      // Save to database - update type annotation to fix error
-      const new_steps=[...steps]
-      new_steps[0].output=newUserInputs
-      const { error } = await supabase
-        .from('chats')
-        .update({ 
-          steps: new_steps
-        } as any) // Using type assertion to bypass TypeScript error temporarily
-        .eq('id', chatId);
-        
-      if (error) {
-        console.error('Error saving user inputs:', error);
-      }
-    } catch (error) {
-      console.error('Error updating user inputs:', error);
-    }
+  // use the LAST run-call to decide if we have something to preview
+  const hasInput = lastRunCall?.input && Object.keys(lastRunCall.input).length > 0;
+  const hasOutput = lastRunCall?.output && Object.keys(lastRunCall.output).length > 0;
+
+  // Handle input changes and save to DB (debounced)
+  const handleInputChange = (newUserInputs: Record<string, any>) => {
+    setUserInputs?.(newUserInputs);
   };
-  
+
   // Get appropriate background color for control block
   const getControlBlockStyle = (type: string) => {
     switch (type) {
@@ -185,14 +167,14 @@ export const WorkflowStep = ({
             </div>
           </div>
 
-          {/* Show editable KeyValueDisplay for user input steps */}
-          {isUserInputStep && step.output && (
+          {/* Show editable KeyValueDisplay for user-input steps */}
+          {isUserInputStep && (
             <div className="mt-2">
               <KeyValueDisplay
-                data={step.output}
-                isEditable={true}
+                data={userInputs ?? lastRunCall?.output}
+                isEditable
                 setUserInputs={handleInputChange}
-                compact={true}
+                compact
               />
             </div>
           )}
