@@ -192,23 +192,24 @@ export const Workflow = ({
     //   }
     // } else 
     
-    if (selectedChat && selectedChat.steps) {
-      console.log("Displaying steps from selected chat:", selectedChat.steps);
-      setWorkflowSteps(selectedChat.steps);
+    // if (selectedChat && selectedChat.steps) {
+    //   console.log("DEBUG:Displaying steps from selected chat:", selectedChat.steps);
+    //   setWorkflowSteps(selectedChat.steps);
       
-      // Initialize user inputs from selected chat
-      if (selectedChat.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
-        console.log("Setting user inputs from chat:", selectedChat.user_inputs);
-        setUserInputs(selectedChat.user_inputs);
-      } else {
-        // Try to get user inputs from steps if not available in chat
-        const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
-        if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
-          setUserInputs(userInputStep.output);
-        }
-      }
-    } else if (initialSteps.length > 0) {
-      console.log("Displaying initial steps:", initialSteps);
+    //   // Initialize user inputs from selected chat
+    //   if (selectedChat.user_inputs && Object.keys(selectedChat.user_inputs).length > 0) {
+    //     console.log("DEBUG:Setting user inputs from chat:", selectedChat.user_inputs);
+    //     setUserInputs(selectedChat.user_inputs);
+    //   } else {
+    //     // Try to get user inputs from steps if not available in chat
+    //     const userInputStep = selectedChat.steps.find(step => step.type === 'user_input');
+    //     if (userInputStep?.output && Object.keys(userInputStep.output).length > 0) {
+    //       setUserInputs(userInputStep.output);
+    //     }
+    //   }
+    // } else
+     if (initialSteps.length > 0) {
+      console.log("DEBUG:Displaying initial steps:", initialSteps);
       setWorkflowSteps(initialSteps);
     }
     
@@ -266,23 +267,23 @@ export const Workflow = ({
     // Update local state immediately
     setUserInputs(inputs);
     
-    try {
+    // try {
      
       
-      // Save to Supabase - FIX: Use type assertion to bypass TypeScript error
-      const { error } = await supabase
-        .from('chats')
-        .update({ 
-          user_inputs: inputs 
-        } as any) // Using type assertion to bypass TypeScript error
-        .eq('id', chatId);
+    //   // Save to Supabase - FIX: Use type assertion to bypass TypeScript error
+    //   const { error } = await supabase
+    //     .from('chats')
+    //     .update({ 
+    //       user_inputs: inputs 
+    //     } as any) // Using type assertion to bypass TypeScript error
+    //     .eq('id', chatId);
       
-      if (error) {
-        console.error('Error saving user inputs:', error);
-      }
-    } catch (err) {
-      console.error('Exception saving user inputs:', err);
-    }
+    //   if (error) {
+    //     console.error('Error saving user inputs:', error);
+    //   }
+    // } catch (err) {
+    //   console.error('Exception saving user inputs:', err);
+    // }
   };
 
   const handleRunWorkflow = async () => {
