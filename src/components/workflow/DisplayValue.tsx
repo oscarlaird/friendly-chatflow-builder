@@ -58,6 +58,7 @@ export const DisplayValue = ({
       <Input 
         className={cn("h-8 text-sm", className)} 
         value="" 
+        
         onChange={handleInputChange} 
         placeholder="Enter value" 
       /> : 
@@ -85,7 +86,7 @@ export const DisplayValue = ({
         );
       } 
       // Multiline strings use a textarea
-      else if (typeof value === 'string' && value.includes('\n')) {
+      else if (typeof value === 'string' ) {
         return (
           <Textarea 
             className={cn("text-sm", className)} 

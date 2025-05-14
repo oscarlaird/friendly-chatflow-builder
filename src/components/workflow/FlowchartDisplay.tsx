@@ -78,7 +78,7 @@ export const FlowchartDisplay = ({
   // Check if a step has changed
   const hasStepChanged = (step: any) => {
     const stepId = step.id || `step-${step.step_number}`;
-    return changedStepIds.has(stepId);
+    return false; //changedStepIds.has(stepId);
   };
   
   // Get browser events for a specific step

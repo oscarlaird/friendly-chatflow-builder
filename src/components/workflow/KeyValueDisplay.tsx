@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DisplayValue } from "./DisplayValue";
@@ -88,7 +87,9 @@ export const KeyValueDisplay = ({
       )}
       <CardContent className={compact ? "p-2" : "p-3"}>
         <div className="space-y-3">
-          {Object.entries(data).map(([key, value]) => (
+          {Object.entries(data)
+            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+            .map(([key, value]) => (
             <div key={key}>
               <label className="font-medium text-sm text-muted-foreground block mb-1">
                 {formatKeyName(key)}:
