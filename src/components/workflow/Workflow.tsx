@@ -207,7 +207,9 @@ export const Workflow = ({
           setUserInputs(userInputStep.output);
         }
       }
-    } else if (initialSteps.length > 0) {
+    } 
+    
+    if (initialSteps.length > 0) {
       console.log("DEBUG:Displaying initial steps:", initialSteps);
       setWorkflowSteps(initialSteps);
     }
